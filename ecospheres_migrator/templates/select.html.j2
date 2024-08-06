@@ -1,0 +1,39 @@
+{% extends "base.html.j2" %}
+{% block content %}
+  <div class="fr-stepper fr-mt-4v">
+    <h2 class="fr-stepper__title">
+      Sélection des données à migrer
+      <span class="fr-stepper__state">Étape 1 sur 3</span>
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="1" data-fr-steps="3"></div>
+    <p class="fr-stepper__details">
+      <span class="fr-text--bold">Étape suivante :</span> Transformation des données
+    </p>
+  </div>
+  <form hx-validate="true" method="post" action="{{ url_for('transform') }}">
+    <div class="fr-input-group">
+      <label class="fr-label" for="query">URL du catalogue *</label>
+      <input required class="fr-input" type="url" id="url" name="url" value="{{ url }}" />
+    </div>
+    <div class="fr-select-group">
+      <label class="fr-label" for="transformation">Transformation(s) à appliquer *</label>
+      <select class="fr-select" id="transformation" name="transformation">
+        {% for transformation in transformations %}
+          <option value="{{ transformation.id }}">{{ transformation.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="fr-input-group">
+      <label class="fr-label" for="query">Requête de recherche *</label>
+      <input required class="fr-input" type="text" id="query" name="query" />
+    </div>
+    <div class="fr-mt-2w fr-grid-row">
+      <button type="submit"
+              hx-post="{{ url_for('select_preview') }}"
+              hx-target="#select_preview"
+              class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
+      <button type="submit" class="fr-btn">Suivant</button>
+    </div>
+  </form>
+  <div id="select_preview" class="fr-mt-4w"></div>
+{% endblock content %}

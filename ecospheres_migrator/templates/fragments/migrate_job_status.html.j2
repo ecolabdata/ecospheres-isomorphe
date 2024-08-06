@@ -1,0 +1,13 @@
+{% set status = job.get_status(refresh=True) %}
+{% if status in ["queued", "started"] %}
+  <div hx-get="{{ url_for('migrate_job_status', job_id=job.id) }}"
+       hx-trigger="load delay:1s"
+       hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
+{% elif status == "finished" %}
+  <p>Job terminé.</p>
+{% elif status == "failed" %}
+  Le job est en erreur :-/
+  <pre>{{ job.exc_info }}</pre>
+{% else %}
+  Statut inconnu : {{ status }}
+{% endif %}

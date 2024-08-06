@@ -1,0 +1,21 @@
+{% extends "base.html.j2" %}
+{% block content %}
+  <div class="fr-stepper fr-mt-4v">
+    <h2 class="fr-stepper__title">
+      Transformation des données
+      <span class="fr-stepper__state">Étape 2 sur 3</span>
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="2" data-fr-steps="3"></div>
+    <p class="fr-stepper__details">
+      <span class="fr-text--bold">Étape suivante :</span> Migration des données (facultatif)
+    </p>
+  </div>
+  Votre traitement (job) porte l'identifiant <code>{{ job.id }}</code>.
+  Son avancement est présenté ci-dessous.
+  Ne rafraichissez pas la page, le statut est mis à jour automatiquement.
+  <div class="fr-mt-2w">
+    <div hx-get="{{ url_for('transform_job_status', job_id=job.id) }}"
+         hx-trigger="load delay:1s"
+         hx-swap="outerHTML"></div>
+  </div>
+{% endblock content %}
