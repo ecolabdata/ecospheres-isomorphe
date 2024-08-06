@@ -15,7 +15,7 @@ Le parti-pris pour les étapes 2. et 3. est d'utiliser (actuellement simulé) un
 L'application [Flask](https://flask.palletsprojects.com/en/3.0.x/) intègre :
 - le [DSFR](https://www.systeme-de-design.gouv.fr) pour une charte graphique cohérente,
 - [htmx](https://htmx.org) pour dynamiser certains comportements (prévisualisation de la sélection, polling du statut des jobs)
-- (RQ)[https://python-rq.org] pour une gestion de jobs/queue simple, basé sur Redis,
+- [RQ](https://python-rq.org) pour une gestion de jobs/queue simple, basé sur Redis,
     - NB: ce composant est jugé nécessaire car certains traitements peuvent prendre du temps, notamment les opérations sur le catalogue distant. L'architecture permet également de stocker des éléments volumineux (fichier de sortie) entre les requêtes. Si la notion de job/queue n'est plus jugée nécessaire, le Redis pourra être utilisé pour stocker des données de sessions volumineuses.
 - un frontend HTML Flask classique.
 
