@@ -53,5 +53,5 @@ flask run
 Lancement du worker RQ (traitement des jobs en asynchrone) :
 
 ```shell
-rq worker
+rq worker --url $REDIS_URL
 ```
