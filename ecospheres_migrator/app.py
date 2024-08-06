@@ -3,7 +3,7 @@ import os
 
 from datetime import datetime
 
-from flask import Flask, render_template, request, send_file, session, abort
+from flask import Flask, render_template, request, send_file, session, abort, redirect, url_for
 
 from ecospheres_migrator.queue import get_queue, get_job
 from ecospheres_migrator.migrator import Migrator
@@ -19,7 +19,7 @@ def select():
     )
 
 
-@app.route("/select_preview", methods=["POST"])
+@app.route("/select/preview", methods=["POST"])
 def select_preview():
     url = request.form.get("url")
     if not url:
@@ -42,16 +42,21 @@ def transform():
     migrator = Migrator(url=url)
     selection = migrator.select(query=query)
     job = get_queue().enqueue(migrator.transform, transformation, selection)
+    return redirect(url_for("transform_success", job_id=job.id))
+
+
+@app.route("/transform/success/<job_id>")
+def transform_success(job_id):
+    job = get_job(job_id)
+    if not job:
+        abort(404)
     return render_template(
         "transform.html.j2",
-        selection=selection,
-        transformation=transformation,
-        url=url,
         job=job,
     )
 
 
-@app.route("/transform_job_status/<job_id>")
+@app.route("/transform/job_status/<job_id>")
 def transform_job_status(job_id: str):
     return render_template(
         "fragments/transform_job_status.html.j2",
@@ -61,7 +66,7 @@ def transform_job_status(job_id: str):
     )
 
 
-@app.route("/transform_download_result/<job_id>")
+@app.route("/transform/download_result/<job_id>")
 def transform_download_result(job_id: str):
     job = get_job(job_id)
     return send_file(
@@ -81,16 +86,23 @@ def migrate(job_id: str):
     password = request.form.get("password")
     migrator = Migrator(url=session["url"], username=username, password=password)
     migrate_job = get_queue().enqueue(migrator.migrate, transform_job.result)
-    return render_template("migrate.html.j2", job=migrate_job)
+    return redirect(url_for("migrate_success", job_id=migrate_job.id))
 
 
-@app.route("/migrate_job_status/<job_id>")
+@app.route("/migrate/success/<job_id>")
+def migrate_success(job_id: str):
+    job = get_job(job_id)
+    if not job:
+        abort(404)
+    return render_template("migrate.html.j2", job=job)
+
+
+@app.route("/migrate/job_status/<job_id>")
 def migrate_job_status(job_id: str):
     return render_template(
         "fragments/migrate_job_status.html.j2",
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
-        url=session["url"],
     )
 
 
