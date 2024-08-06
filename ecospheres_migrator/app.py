@@ -15,7 +15,7 @@ app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 @app.route("/")
 def select():
     return render_template(
-        "select.html.j2", transformations=Migrator.TRANSFORMATIONS, url=session["url"]
+        "select.html.j2", transformations=Migrator.TRANSFORMATIONS, url=session.get("url", "")
     )
 
 
