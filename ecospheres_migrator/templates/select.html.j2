@@ -12,8 +12,12 @@
   </div>
   <form hx-validate="true" method="post" action="{{ url_for('transform') }}">
     <div class="fr-input-group">
-      <label class="fr-label" for="query">URL du catalogue *</label>
+      <label class="fr-label" for="query">URL du catalogue *<br/><em>Ex : https://www.example.com/geonetwork/srv</em></label>
       <input required class="fr-input" type="url" id="url" name="url" value="{{ url }}" />
+    </div>
+    <div class="fr-input-group">
+      <label class="fr-label" for="query">Requête de recherche *<br/><em>Ex : _source=...,_isHarvested=n,type=dataset</em></label>
+      <input required class="fr-input" type="text" id="query" name="query" />
     </div>
     <div class="fr-select-group">
       <label class="fr-label" for="transformation">Transformation(s) à appliquer *</label>
@@ -22,10 +26,6 @@
           <option value="{{ transformation.id }}">{{ transformation.label }}</option>
         {% endfor %}
       </select>
-    </div>
-    <div class="fr-input-group">
-      <label class="fr-label" for="query">Requête de recherche *</label>
-      <input required class="fr-input" type="text" id="query" name="query" />
     </div>
     <div class="fr-mt-2w fr-grid-row">
       <button type="submit"
