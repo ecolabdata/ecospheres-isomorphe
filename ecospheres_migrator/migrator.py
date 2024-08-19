@@ -1,5 +1,6 @@
 import io
 import logging
+import requests
 import time
 import zipfile
 
@@ -33,22 +34,54 @@ class Migrator:
         self.url = url
         self.password = password
         self.username = username
+        self.api = f"{self.url}/api"
+        self.session = requests.Session()
+
+        # TODO: add authentication
+
+        r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
+        # don't abort on error here, it's expected
+        xsrf_token = r.cookies.get('XSRF-TOKEN')
+
+        self.headers = {
+            'Accept': 'application/json',
+            'X-XSRF-TOKEN': xsrf_token
+        }
+        log.debug(f"Headers: {self.headers}")
 
     def select(self, **kwargs):
         """
         Select data to migrate based on given params
         """
         log.debug(f"Selecting with {kwargs}")
-        return [
-            {
-                "id": "1d0077f3-b62b-4863-821e-46a06ab38456",
-                "title": "une fiche",
-            },
-            {
-                "id": "6265cc1d-b4b3-4067-afb9-61c186e7a2cc",
-                "title": "une autre fiche",
-            }
-        ]
+
+        q_params = {
+            '_content_type': 'json',
+            'buildSummary': 'false',
+            'fast': 'index',    # needed to get info such as title
+            'sortBy': 'title',  # FIXME: or changeDate?
+            'sortOrder': 'reverse'
+        }
+
+        query = kwargs.get('query')
+        if query:
+            q_params |= dict(p.split('=') for p in query.split(','))
+
+        selection = []
+        to = 0
+        while True:
+            r = self.session.get(f"{self.api}/q", headers=self.headers, params=q_params|{'from': to+1})
+            # TODO: abort_on_error logic
+            r.raise_for_status()
+            rsp = r.json()
+            records = Migrator.list_records(rsp.get('metadata', []))
+            if not records:
+                break
+            selection += records
+            to = int(rsp.get('@to'))
+
+        log.debug(f"Selection contains {len(selection)} items")
+        return selection
 
     def create_dummy_output_file(self) -> bytes:
         zip_buffer = io.BytesIO()
@@ -74,3 +107,13 @@ class Migrator:
         log.debug(f"Migrating for {self.url}")
         time.sleep(10)
         log.debug("Migration done.")
+
+    @staticmethod
+    def list_records(metadata: list) -> list[dict]:
+        records = []
+        for m in metadata:
+            records.append({
+                'id': m['geonet:info']['uuid'],
+                'title': m.get('defaultTitle')
+            })
+        return records
