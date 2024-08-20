@@ -47,13 +47,8 @@ class Migrator:
 
         r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
         # don't abort on error here, it's expected
-        xsrf_token = r.cookies.get('XSRF-TOKEN')
-
-        self.headers = {
-            'Accept': 'application/json',
-            'X-XSRF-TOKEN': xsrf_token
-        }
-        log.debug(f"Headers: {self.headers}")
+        self.xsrf_token = r.cookies.get('XSRF-TOKEN')
+        log.debug("XSRF token:", self.xsrf_token)
 
     def select(self, **kwargs) -> list[Record]:
         """
@@ -61,7 +56,7 @@ class Migrator:
         """
         log.debug(f"Selecting with {kwargs}")
 
-        q_params = {
+        params = {
             '_content_type': 'json',
             'buildSummary': 'false',
             'fast': 'index',    # needed to get info such as title
@@ -69,15 +64,21 @@ class Migrator:
             'sortOrder': 'reverse',
             '_isHarvested': 'n'
         }
-
         query = kwargs.get('query')
         if query:
-            q_params |= dict(p.split('=') for p in query.split(','))
+            params |= dict(p.split('=') for p in query.split(','))
 
         selection = []
         to = 0
         while True:
-            r = self.session.get(f"{self.api}/q", headers=self.headers, params=q_params|{'from': to+1})
+            r = self.session.get(
+                f"{self.api}/q",
+                params=params|{'from': to+1},
+                headers={
+                    'Accept': 'application/json',
+                    'X-XSRF-TOKEN': self.xsrf_token
+                }
+            )
             # TODO: abort_on_error logic
             r.raise_for_status()
             rsp = r.json()
