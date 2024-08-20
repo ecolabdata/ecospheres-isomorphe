@@ -5,6 +5,9 @@ import time
 import zipfile
 
 from dataclasses import dataclass
+from lxml import etree
+from lxml.builder import E
+
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
@@ -91,30 +94,63 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def create_dummy_output_file(self) -> bytes:
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w") as zipf:
-            zipf.writestr("dummy_file1.xml", "<xml></xml>")
-        zip_content = zip_buffer.getvalue()
-        return zip_content
-
-
-    def transform(self, transformation: dict, selection: list[dict]) -> bytes:
+    def transform(self, transformation: dict, selection: list[Record]) -> bytes:
         """
         Transform data from a selection
         """
         log.debug(f"Transforming {selection} via {transformation}")
         if transformation["id"] == "error":
             raise Exception("You asked for an error, here you are!")
-        time.sleep(10)
-        output = self.create_dummy_output_file()
+
+        sources = self.get_sources()
+
+        # TODO: load transformation xsl
+
+        zipb = io.BytesIO()
+        with zipfile.ZipFile(zipb, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+            for s in selection:
+                record = self.get_record(s.uuid)
+                info = Migrator.extract_info(record, sources)
+                # TODO: apply transformation
+                Migrator.add_to_zip(zipf, s.uuid, record, info)
+
         log.debug("Transformation done.")
-        return output
+        return zipb.getvalue()
 
     def migrate(self, output_file: bytes):
         log.debug(f"Migrating for {self.url}")
         time.sleep(10)
         log.debug("Migration done.")
+
+    def get_sources(self) -> dict:
+        r = self.session.get(
+            f"{self.api}/sources",
+            headers={
+                'Accept': 'application/json',
+                'X-XSRF-TOKEN': self.xsrf_token
+            }
+        )
+        r.raise_for_status()
+        return {s['uuid']: s['name'] for s in r.json()}
+
+    def get_record(self, uuid: str) -> etree.ElementTree:
+        # log.debug("Processing record:", record)
+        r = self.session.get(
+            f"{self.api}/records/{uuid}/formatters/xml",
+            params={
+                'addSchemaLocation': 'true',
+                'increasePopularity': 'false',
+                'withInfo': 'true',
+                'attachment': 'false',
+                'approved': 'true'  # FIXME: true or false?
+            },
+            headers={
+                'Accept': 'application/xml',
+                'X-XSRF-TOKEN': self.xsrf_token
+            }
+        )
+        r.raise_for_status()
+        return etree.fromstring(r.content)
 
     @staticmethod
     def list_records(metadata: list) -> list[Record]:
@@ -123,3 +159,43 @@ class Migrator:
             records.append(Record(uuid=m['geonet:info']['uuid'],
                                   title=m.get('defaultTitle')))
         return records
+
+    @staticmethod
+    def extract_info(record: etree.ElementTree, sources: dict) -> etree.ElementTree:
+        e = record.xpath('/gmd:MD_Metadata/geonet:info', namespaces=record.nsmap)[0]
+        e.getparent().remove(e)
+        source_id = e.find('source').text
+        info = E.info(
+            E.general(
+                E.createDate(e.find('createDate').text),
+                E.changeDate(e.find('changeDate').text),
+                E.schema(e.find('schema').text),
+                E.isTemplate(e.find('isTemplate').text),
+                E.localId(e.find('id').text),
+                E.format("simple"),
+                E.rating(e.find('rating').text),
+                E.popularity(e.find('popularity').text),
+                E.uuid(e.find('uuid').text),
+                E.siteId(source_id),
+                E.siteName(sources[source_id])
+            ),
+            E.categories(),
+            E.privileges(),
+            E.public(),
+            E.private(),
+            version='1.1'
+        ).getroottree()
+        return info
+
+    @staticmethod
+    def add_to_zip(zip_file: zipfile.ZipFile,
+                   uuid: str,
+                   record: etree.ElementTree,
+                   info: etree.ElementTree):
+        kwargs = {
+            'pretty_print': True,
+            'xml_declaration': True,
+            'encoding': 'utf-8'
+        }
+        zip_file.writestr(f"{uuid}/info.xml", etree.tostring(info, **kwargs))
+        zip_file.writestr(f"{uuid}/metadata/metadata.xml", etree.tostring(record, **kwargs))
