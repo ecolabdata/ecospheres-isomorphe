@@ -51,15 +51,14 @@ class Migrator:
         """
         log.debug(f"Transforming {selection} via {transformation}")
         sources = self.gn.get_sources()
-
-        # TODO: load transformation xsl
+        transform = Migrator.load_transformation(transformation)
 
         mef = MefArchive()
         for s in selection:
-            record = self.gn.get_record(s.uuid)
-            info = extract_record_info(record, sources)
-            # TODO: apply transformation
-            mef.add(s.uuid, record, info)
+            original = self.gn.get_record(s.uuid)
+            info = extract_record_info(original, sources)
+            result = transform(original, CoupledResourceLookUp="'disabled'")
+            mef.add(s.uuid, result, info)
 
         log.debug("Transformation done.")
         return mef.finalize()
@@ -72,3 +71,9 @@ class Migrator:
     @staticmethod
     def list_transformations(path: Path) -> list[Transformation]:
         return [Transformation(p) for p in path.glob("*.xsl")]
+
+    @staticmethod
+    def load_transformation(path: Path) -> etree.XSLT:
+        xslt = etree.parse(path)
+        transform = etree.XSLT(xslt)
+        return transform
