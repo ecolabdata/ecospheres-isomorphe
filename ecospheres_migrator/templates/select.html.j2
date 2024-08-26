@@ -22,6 +22,12 @@
         <span class="fr-hint-text">Ex : _source=&lt;SOURCE_ID&gt;,_isHarvested=n,type=dataset</span>
       </label>
       <input required class="fr-input" type="text" id="query" name="query" />
+      <div class="fr-mt-2w fr-grid-row">
+        <button type="submit"
+                hx-post="{{ url_for('select_preview') }}"
+                hx-target="#select_preview"
+                class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
+      </div>
     </div>
     <div class="fr-select-group">
       <label class="fr-label" for="transformation">Transformation(s) à appliquer *</label>
@@ -32,10 +38,6 @@
       </select>
     </div>
     <div class="fr-mt-2w fr-grid-row">
-      <button type="submit"
-              hx-post="{{ url_for('select_preview') }}"
-              hx-target="#select_preview"
-              class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
       <button type="submit" class="fr-btn">Suivant</button>
     </div>
   </form>
