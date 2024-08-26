@@ -2,6 +2,7 @@ import io
 import os
 
 from datetime import datetime
+from pathlib import Path
 
 from flask import Flask, render_template, request, send_file, session, abort, redirect, url_for
 
@@ -15,7 +16,9 @@ app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 @app.route("/")
 def select():
     return render_template(
-        "select.html.j2", transformations=Migrator.TRANSFORMATIONS, url=session.get("url", "")
+        "select.html.j2",
+        url=session.get("url", ""),
+        transformations=Migrator.list_transformations(Path(app.root_path, "transformations"))
     )
 
 
@@ -34,11 +37,16 @@ def select_preview():
 
 @app.route("/transform", methods=["POST"])
 def transform():
-    url = request.form.get("url") or ""
+    url = request.form.get("url")
+    if not url:
+        abort(400, 'Missing `url` parameter')
     session["url"] = url
     query = request.form.get("query")
-    transformation = request.form.get("transformation") or ""
-    transformation = next(t for t in Migrator.TRANSFORMATIONS if t["id"] == transformation)
+    if not query:
+        abort(400, 'Missing `query` parameter')
+    transformation = request.form.get("transformation")
+    if not transformation:
+        abort(400, 'Missing `transformation` parameter')
     migrator = Migrator(url=url)
     selection = migrator.select(query=query)
     job = get_queue().enqueue(migrator.transform, transformation, selection)
