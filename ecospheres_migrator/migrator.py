@@ -1,7 +1,9 @@
 import logging
 import time
 
+from dataclasses import dataclass
 from lxml import etree
+from pathlib import Path
 
 from ecospheres_migrator.geonetwork import GeonetworkClient, Record, MefArchive, extract_record_info
 
@@ -9,25 +11,16 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-class Migrator:
+@dataclass
+class Transformation:
+    path: Path
 
-    TRANSFORMATIONS = [
-        {
-            "id": "all",
-            "label": "Toutes les transformations",
-            "xslt": None
-        },
-        {
-            "id": "license",
-            "label": "Champ licence",
-            "xslt": "licence.xslt",
-        },
-        {
-            "id": "error",
-            "label": "Retournera une erreur",
-            "xslt": "error.xslt",
-        },
-    ]
+    @property
+    def name(self) -> str:
+        return self.path.stem
+
+
+class Migrator:
 
     def __init__(
         self, *, url: str, username: str | None = None, password: str | None = None
@@ -50,14 +43,11 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: dict, selection: list[Record]) -> bytes:
+    def transform(self, transformation: Path, selection: list[Record]) -> bytes:
         """
         Transform data from a selection
         """
         log.debug(f"Transforming {selection} via {transformation}")
-        if transformation["id"] == "error":
-            raise Exception("You asked for an error, here you are!")
-
         sources = self.gn.get_sources()
 
         # TODO: load transformation xsl
@@ -76,3 +66,7 @@ class Migrator:
         log.debug(f"Migrating for {self.url}")
         time.sleep(10)
         log.debug("Migration done.")
+
+    @staticmethod
+    def list_transformations(path: Path) -> list[Transformation]:
+        return [Transformation(p) for p in path.glob("*.xsl")]
