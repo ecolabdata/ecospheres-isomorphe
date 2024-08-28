@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from lxml import etree
 from pathlib import Path
 
+from ecospheres_migrator.batch import Batch
 from ecospheres_migrator.geonetwork import GeonetworkClient, Record, MefArchive, extract_record_info
+from ecospheres_migrator.util import xml_to_string
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -51,19 +53,31 @@ class Migrator:
         sources = self.gn.get_sources()
         transform = Migrator.load_transformation(transformation)
 
-        mef = MefArchive()
+        batch = Batch()
         for s in selection:
             original = self.gn.get_record(s.uuid)
-            info = extract_record_info(original, sources)
-            result = transform(original, CoupledResourceLookUp="'disabled'")
-            mef.add(s.uuid, result, info)
+            try:
+                info = extract_record_info(original, sources)
+                result = transform(original, CoupledResourceLookUp="'disabled'")
+                # TODO: check if result != original
+                batch.add_success(
+                    uuid=s.uuid,
+                    original=xml_to_string(original),
+                    result=xml_to_string(result),
+                    info=xml_to_string(info))
+            except Exception as e:
+                batch.add_failure(
+                    uuid=s.uuid,
+                    original=xml_to_string(original),
+                    error=str(e))
 
         log.debug("Transformation done.")
-        return mef.finalize()
+        return batch
 
-    def migrate(self, output_file: bytes):
-        log.debug(f"Migrating for {self.url}")
-        time.sleep(10)
+    def migrate(self, batch: Batch):
+        log.debug(f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url}")
+        for r in batch.successes():
+            time.sleep(1)
         log.debug("Migration done.")
 
     @staticmethod

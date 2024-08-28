@@ -102,7 +102,7 @@ class MefArchive:
         self.zipb = io.BytesIO()
         self.zipf = zipfile.ZipFile(self.zipb, 'w', compression=compression)
 
-    def add(self, uuid: str, record: etree._ElementTree, info: etree._ElementTree):
+    def add(self, uuid: str, record: str, info: str):
         """
         Add a record to the MEF archive.
 
@@ -110,13 +110,8 @@ class MefArchive:
         :param record: Record metadata.
         :param info: Record info in MEF `info.xml` format.
         """
-        kwargs = {
-            'encoding': 'utf-8',
-            'pretty_print': True,
-            'xml_declaration': True
-        }
-        self.zipf.writestr(f"{uuid}/info.xml", etree.tostring(info, **kwargs))
-        self.zipf.writestr(f"{uuid}/metadata/metadata.xml", etree.tostring(record, **kwargs))
+        self.zipf.writestr(f"{uuid}/info.xml", info)
+        self.zipf.writestr(f"{uuid}/metadata/metadata.xml", record)
 
     def finalize(self):
         """
