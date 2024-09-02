@@ -11,14 +11,6 @@
   sur le catalogue {{ url }}. Pour ce faire, nous avons besoin d'identifiants privilégiés sur votre catalogue.
   Ces identifiants sont transmis de manière sécurisée et nous ne les stockons pas.</p>
   <form action="{{ url_for('migrate', job_id=job.id) }}" method="post" class="fr-mt-2w">
-    <div class="fr-input-group">
-      <label class="fr-label" for="query">Identifiant sur le catalogue *</label>
-      <input required class="fr-input" type="text" id="username" name="username" />
-    </div>
-    <div class="fr-input-group">
-      <label class="fr-label" for="query">Mot de passe sur le catalogue *</label>
-      <input required class="fr-input" type="password" id="password" name="password" />
-    </div>
     <button type="submit" class="fr-btn">Suivant</button>
   </form>
 {% elif status == "failed" %}
