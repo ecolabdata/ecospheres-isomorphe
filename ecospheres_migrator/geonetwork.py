@@ -57,11 +57,14 @@ class GeonetworkClient:
             )
             r.raise_for_status()
             rsp = r.json()
-            recs = [Record(uuid=m['geonet:info']['uuid'], title=m.get('defaultTitle'))
-                    for m in rsp.get('metadata', [])]
-            if not recs:
+            mds = rsp.get('metadata')
+            if not mds:
                 break
-            records += recs
+            if 'geonet:info' in mds:
+                # When returning a single record, metadata isn't a list :/
+                mds = [mds]
+            records += [Record(uuid=md['geonet:info']['uuid'], title=md.get('defaultTitle'))
+                        for md in mds]
             to = int(rsp.get('@to'))
 
         return records
