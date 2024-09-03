@@ -34,7 +34,7 @@ class GeonetworkClient:
         # don't abort on error here, it's expected
         xsrf_token = r.cookies.get('XSRF-TOKEN')
         self.session.headers.update({'X-XSRF-TOKEN': xsrf_token})
-        log.debug("XSRF token:", xsrf_token)
+        log.debug(f"XSRF token: {xsrf_token}")
 
     def get_records(self, query=None) -> list[Record]:
         params = {
@@ -67,7 +67,7 @@ class GeonetworkClient:
         return records
 
     def get_record(self, uuid: str) -> etree.ElementTree:
-        # log.debug("Processing record:", record)
+        # log.debug(f"Processing record: {record}")
         r = self.session.get(
             f"{self.api}/records/{uuid}/formatters/xml",
             headers = {'Accept': 'application/xml'},
