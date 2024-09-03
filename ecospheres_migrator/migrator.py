@@ -81,8 +81,7 @@ class Migrator:
         for r in batch.successes():
             try:
                 if overwrite:
-                    # TODO
-                    pass
+                    self.gn.update_record(r.uuid, r.result, template=r.template)
                 else:
                     # TODO: publish flag
                     self.gn.duplicate_record(r.uuid, r.result, template=r.template, group=group)
