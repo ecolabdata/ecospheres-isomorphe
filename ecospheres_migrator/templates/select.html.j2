@@ -32,7 +32,7 @@
     <div class="fr-select-group">
       <label class="fr-label" for="transformation">Transformation(s) à appliquer *</label>
       <select required class="fr-select" id="transformation" name="transformation">
-        <option value="">-- Sélectionner une transformation --</option>
+        <option value="" selected disabled hidden>Sélectionner une transformation</option>
         {% for transformation in transformations %}
           <option value="{{ transformation.path }}">{{ transformation.name }}</option>
         {% endfor %}

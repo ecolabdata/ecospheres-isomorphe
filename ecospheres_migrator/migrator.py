@@ -74,6 +74,6 @@ class Migrator:
 
     @staticmethod
     def load_transformation(path: Path) -> etree.XSLT:
-        xslt = etree.parse(path)
+        xslt = etree.parse(path, parser=None)
         transform = etree.XSLT(xslt)
         return transform

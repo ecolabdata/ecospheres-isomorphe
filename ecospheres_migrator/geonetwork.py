@@ -33,7 +33,8 @@ class GeonetworkClient:
         r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
         # don't abort on error here, it's expected
         xsrf_token = r.cookies.get('XSRF-TOKEN')
-        self.session.headers.update({'X-XSRF-TOKEN': xsrf_token})
+        if xsrf_token:
+            self.session.headers.update({'X-XSRF-TOKEN': xsrf_token})
         log.debug(f"XSRF token: {xsrf_token}")
 
     def get_records(self, query=None) -> list[Record]:
@@ -69,7 +70,7 @@ class GeonetworkClient:
 
         return records
 
-    def get_record(self, uuid: str) -> etree.ElementTree:
+    def get_record(self, uuid: str) -> etree._ElementTree:
         # log.debug(f"Processing record: {record}")
         r = self.session.get(
             f"{self.api}/records/{uuid}/formatters/xml",
@@ -83,7 +84,7 @@ class GeonetworkClient:
             }
         )
         r.raise_for_status()
-        return etree.fromstring(r.content)
+        return etree.fromstring(r.content, parser=None)
 
     def get_sources(self) -> dict:
         r = self.session.get(
@@ -101,7 +102,7 @@ class MefArchive:
         self.zipb = io.BytesIO()
         self.zipf = zipfile.ZipFile(self.zipb, 'w', compression=compression)
 
-    def add(self, uuid: str, record: etree.ElementTree, info: etree.ElementTree):
+    def add(self, uuid: str, record: etree._ElementTree, info: etree._ElementTree):
         """
         Add a record to the MEF archive.
 
@@ -125,7 +126,7 @@ class MefArchive:
         return self.zipb.getvalue()
 
 
-def extract_record_info(record: etree.ElementTree, sources: dict) -> etree.ElementTree:
+def extract_record_info(record: etree._ElementTree, sources: dict) -> etree._ElementTree:
     """
     Extract (remove and return) the `geonet:info` structure from the given record.
 
