@@ -7,6 +7,7 @@ from ecospheres_migrator.geonetwork import MefArchive
 class BatchRecord:
     uuid: str
     template: bool
+    status: int | None
     original: str
     result: str | None = None
     info: str | None = None
@@ -21,14 +22,23 @@ class Batch:
     def __init__(self):
         self.records: list[BatchRecord] = []
 
-    def add_success(self, uuid: str, template: bool, original: str, result: str, info: str):
+    def add_success(
+        self, uuid: str, template: bool, status: int | None, original: str, result: str, info: str
+    ):
         self.records.append(
-            BatchRecord(uuid=uuid, template=template, original=original, result=result, info=info)
+            BatchRecord(
+                uuid=uuid,
+                template=template,
+                status=status,
+                original=original,
+                result=result,
+                info=info,
+            )
         )
 
-    def add_failure(self, uuid: str, template: bool, original: str, error: str):
+    def add_failure(self, uuid: str, template: bool, status: int | None, original: str, error: str):
         self.records.append(
-            BatchRecord(uuid=uuid, template=template, original=original, error=error)
+            BatchRecord(uuid=uuid, template=template, status=status, original=original, error=error)
         )
 
     def successes(self):
@@ -42,5 +52,6 @@ class Batch:
         mef = MefArchive()
         for r in self.records:
             if r.success:
+                # TODO: status?
                 mef.add(r.uuid, r.result, r.info)
         return mef.finalize()

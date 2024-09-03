@@ -61,13 +61,18 @@ class Migrator:
                 batch.add_success(
                     uuid=r.uuid,
                     template=r.template,
+                    status=r.status,
                     original=xml_to_string(original),
                     result=xml_to_string(result),
                     info=xml_to_string(info),
                 )
             except Exception as e:
                 batch.add_failure(
-                    uuid=r.uuid, template=r.template, original=xml_to_string(original), error=str(e)
+                    uuid=r.uuid,
+                    template=r.template,
+                    status=r.status,
+                    original=xml_to_string(original),
+                    error=str(e),
                 )
 
         log.debug("Transformation done.")
@@ -81,7 +86,7 @@ class Migrator:
         for r in batch.successes():
             try:
                 if overwrite:
-                    self.gn.update_record(r.uuid, r.result, template=r.template)
+                    self.gn.update_record(r.uuid, r.result, template=r.template, status=r.status)
                 else:
                     # TODO: publish flag
                     self.gn.duplicate_record(r.uuid, r.result, template=r.template, group=group)

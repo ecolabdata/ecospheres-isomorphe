@@ -16,6 +16,7 @@ class Record:
     uuid: str
     title: str
     template: bool
+    status: int | None
 
 
 class GeonetworkClient:
@@ -69,7 +70,10 @@ class GeonetworkClient:
                 uuid = md["geonet:info"]["uuid"]
                 title = md.get("defaultTitle")
                 template = md.get("isTemplate") == "y"
-                recs.append(Record(uuid=uuid, title=title, template=template))
+                # `mdStatus` looks like it should contain the workflow status, but nope.
+                # We need to check status even if draft=n to know if workflow is enabled.
+                status = self.get_record_status(uuid)
+                recs.append(Record(uuid=uuid, title=title, template=template, status=status))
             records += recs
             to = int(rsp.get("@to"))
 
@@ -85,11 +89,21 @@ class GeonetworkClient:
                 "increasePopularity": "false",
                 "withInfo": "true",
                 "attachment": "false",
-                "approved": "true",
+                "approved": "false",  # only relevant when workflow is enabled
             },
         )
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
+
+    def get_record_status(self, uuid: str) -> int | None:
+        # FIXME: fails unless admin
+        r = self.session.get(
+            f"{self.api}/records/{uuid}/status/workflow/last",
+            headers={"Accept": "application/json"},
+        )
+        r.raise_for_status()
+        cs = r.json().get("currentStatus")
+        return int(cs["statusValue"]["id"]) if cs else None
 
     def duplicate_record(self, uuid: str, metadata: str, template: bool, group: int):
         log.debug(f"Duplicating record {uuid}: template={template}, group={group}")
@@ -107,14 +121,14 @@ class GeonetworkClient:
         )
         r.raise_for_status()
 
-    def update_record(self, uuid: str, metadata: str, template: bool):
+    def update_record(self, uuid: str, metadata: str, template: bool, status: int | None = None):
         # PUT /records doesn't work as expected: it delete/recreates the record instead
         # of updating in place, hence losing Geonetwork-specific record metadata like
         # workflow status or access rights.
         # So instead we pretend to be the Geonetwork UI and "edit" the XML view of the
         # record, ignoring the returned editor view and immediately saving our new
         # metadata as the "edit" outcome.
-        log.debug(f"Updating record {uuid}: template={template}")
+        log.debug(f"Updating record {uuid}: template={template}, status={status}")
 
         r = self.session.get(
             f"{self.api}/records/{uuid}/editor",
@@ -136,6 +150,9 @@ class GeonetworkClient:
             "template": "y" if template else "n",
             "data": metadata,
         }
+        if status and status != 1:
+            # FIXME: status=2 fails => commit as status=1 then update to status=2?
+            data["status"] = status
         r = self.session.post(f"{self.api}/records/{uuid}/editor", data=data)
         r.raise_for_status()
 
