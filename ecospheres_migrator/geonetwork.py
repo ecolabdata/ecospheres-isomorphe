@@ -22,10 +22,12 @@ class GeonetworkClient:
         self.url = url
         self.api = f"{self.url}/api"
         self.session = requests.Session()
+        if username and password:
+            self.session.auth = (username, password)
+            log.debug(f"Authenticating as: {username}")
         self.authenticate()
 
     def authenticate(self):
-        # TODO: add authentication
         r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
         # don't abort on error here, it's expected
         xsrf_token = r.cookies.get("XSRF-TOKEN")
