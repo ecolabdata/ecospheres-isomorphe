@@ -4,9 +4,15 @@ import requests
 import time
 import zipfile
 
+from dataclasses import dataclass
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
+
+@dataclass
+class Record:
+    uuid: str
+    title: str
 
 class Migrator:
 
@@ -49,7 +55,7 @@ class Migrator:
         }
         log.debug(f"Headers: {self.headers}")
 
-    def select(self, **kwargs):
+    def select(self, **kwargs) -> list[Record]:
         """
         Select data to migrate based on given params
         """
@@ -109,11 +115,9 @@ class Migrator:
         log.debug("Migration done.")
 
     @staticmethod
-    def list_records(metadata: list) -> list[dict]:
+    def list_records(metadata: list) -> list[Record]:
         records = []
         for m in metadata:
-            records.append({
-                'id': m['geonet:info']['uuid'],
-                'title': m.get('defaultTitle')
-            })
+            records.append(Record(uuid=m['geonet:info']['uuid'],
+                                  title=m.get('defaultTitle')))
         return records
