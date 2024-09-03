@@ -107,8 +107,9 @@ def migrate(job_id: str):
     password = session["password"]
     mode = request.form.get("mode")
     group = request.form.get("group")
+    overwrite = (mode == "overwrite")
     migrator = Migrator(url=session["url"], username=username, password=password)
-    migrate_job = get_queue().enqueue(migrator.migrate, transform_job.result)
+    migrate_job = get_queue().enqueue(migrator.migrate, transform_job.result, overwrite=overwrite, group=group)
     return redirect(url_for("migrate_success", job_id=migrate_job.id))
 
 
