@@ -77,7 +77,7 @@ def transform_job_status(job_id: str):
 def transform_download_result(job_id: str):
     job = get_job(job_id)
     return send_file(
-        io.BytesIO(job.result),
+        io.BytesIO(job.result.to_mef()),
         mimetype="application/zip",
         download_name=f"{job_id}.zip",
         as_attachment=True,
