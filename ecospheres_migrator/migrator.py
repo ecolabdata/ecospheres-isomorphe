@@ -66,7 +66,8 @@ class Migrator:
             'buildSummary': 'false',
             'fast': 'index',    # needed to get info such as title
             'sortBy': 'title',  # FIXME: or changeDate?
-            'sortOrder': 'reverse'
+            'sortOrder': 'reverse',
+            '_isHarvested': 'n'
         }
 
         query = kwargs.get('query')
