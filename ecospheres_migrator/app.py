@@ -108,6 +108,9 @@ def migrate(job_id: str):
     mode = request.form.get("mode")
     group = request.form.get("group")
     overwrite = (mode == "overwrite")
+    if not overwrite and not group:
+        # TODO: display group field only when needed
+        abort(400, "Missing `group` parameter")
     migrator = Migrator(url=session["url"], username=username, password=password)
     migrate_job = get_queue().enqueue(migrator.migrate, transform_job.result, overwrite=overwrite, group=group)
     return redirect(url_for("migrate_success", job_id=migrate_job.id))

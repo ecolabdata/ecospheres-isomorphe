@@ -117,6 +117,42 @@ class GeonetworkClient:
             data = metadata
         )
         r.raise_for_status()
+
+    def update_record(self, uuid: str, metadata: str, template: bool):
+        # PUT /records doesn't work as expected: it delete/recreates the record instead
+        # of updating in place, hence losing Geonetwork-specific record metadata like
+        # workflow status or access rights.
+        # So instead we pretend to be the Geonetwork UI and "edit" the XML view of the
+        # record, ignoring the returned editor view and immediately saving our new
+        # metadata as the "edit" outcome.
+        log.debug(f"Updating record {uuid}: template={template}")
+
+        r = self.session.get(
+            f"{self.api}/records/{uuid}/editor",
+            headers = {'Accept': 'application/xml'},
+            params = {
+                'currTab': 'xml',
+                'withAttributes': 'false'  # FIXME: needed? true/false?
+            }
+        )
+        r.raise_for_status()
+
+        # API expects x-www-form-urlencoded here
+        data = {
+            'tab': 'xml',
+            'withAttributes': 'false',
+            'withValidationErrors': 'false',
+            'commit': 'true',
+            'terminate': 'true',
+            'template': 'y' if template else 'n',
+            'data': metadata
+        }
+        r = self.session.post(
+            f"{self.api}/records/{uuid}/editor",
+            data = data
+        )
+        r.raise_for_status()
+
     def get_sources(self) -> dict:
         r = self.session.get(
             f"{self.api}/sources",
