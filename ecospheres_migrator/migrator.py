@@ -1,5 +1,4 @@
 import logging
-import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,30 +52,46 @@ class Migrator:
         transform = Migrator.load_transformation(transformation)
 
         batch = Batch()
-        for s in selection:
-            original = self.gn.get_record(s.uuid)
+        for r in selection:
+            original = self.gn.get_record(r.uuid)
             try:
                 info = extract_record_info(original, sources)
                 result = transform(original, CoupledResourceLookUp="'disabled'")
                 # TODO: check if result != original
                 batch.add_success(
-                    uuid=s.uuid,
+                    uuid=r.uuid,
+                    template=r.template,
                     original=xml_to_string(original),
                     result=xml_to_string(result),
                     info=xml_to_string(info),
                 )
             except Exception as e:
-                batch.add_failure(uuid=s.uuid, original=xml_to_string(original), error=str(e))
+                batch.add_failure(
+                    uuid=r.uuid, template=r.template, original=xml_to_string(original), error=str(e)
+                )
 
         log.debug("Transformation done.")
         return batch
 
-    def migrate(self, batch: Batch):
+    def migrate(self, batch: Batch, overwrite: bool = False, group: int = None):
         log.debug(
-            f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url}"
+            f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
         )
+        failures = []
         for r in batch.successes():
-            time.sleep(1)
+            try:
+                if overwrite:
+                    # TODO
+                    pass
+                else:
+                    # TODO: publish flag
+                    self.gn.duplicate_record(r.uuid, r.result, template=r.template, group=group)
+            except Exception:
+                failures.append(r.uuid)
+
+        if failures:
+            # TODO: raise exception
+            log.debug(f"Failures: {', '.join(failures)}")
         log.debug("Migration done.")
 
     @staticmethod

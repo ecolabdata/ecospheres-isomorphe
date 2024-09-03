@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 class Record:
     uuid: str
     title: str
+    template: bool
 
 
 class GeonetworkClient:
@@ -62,9 +63,14 @@ class GeonetworkClient:
             if "geonet:info" in mds:
                 # When returning a single record, metadata isn't a list :/
                 mds = [mds]
-            records += [
-                Record(uuid=md["geonet:info"]["uuid"], title=md.get("defaultTitle")) for md in mds
-            ]
+            recs = []
+            for md in mds:
+                log.debug("Record:", md)
+                uuid = md["geonet:info"]["uuid"]
+                title = md.get("defaultTitle")
+                template = md.get("isTemplate") == "y"
+                recs.append(Record(uuid=uuid, title=title, template=template))
+            records += recs
             to = int(rsp.get("@to"))
 
         return records
@@ -75,15 +81,31 @@ class GeonetworkClient:
             f"{self.api}/records/{uuid}/formatters/xml",
             headers={"Accept": "application/xml"},
             params={
-                "addSchemaLocation": "true",
+                "addSchemaLocation": "true",  # FIXME: needed?
                 "increasePopularity": "false",
                 "withInfo": "true",
                 "attachment": "false",
-                "approved": "true",  # FIXME: true or false?
+                "approved": "true",
             },
         )
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
+
+    def duplicate_record(self, uuid: str, metadata: str, template: bool, group: int):
+        log.debug(f"Duplicating record {uuid}: template={template}, group={group}")
+        r = self.session.put(
+            f"{self.api}/records",
+            headers={"Accept": "application/json", "Content-type": "application/xml"},
+            params={
+                "uuidProcessing": "GENERATEUUID",
+                "group": group,
+                "metadataType": "TEMPLATE"
+                if template
+                else "METADATA",  # FIXME: other metadataType ?
+            },
+            data=metadata,
+        )
+        r.raise_for_status()
 
     def get_sources(self) -> dict:
         r = self.session.get(f"{self.api}/sources", headers={"Accept": "application/json"})
