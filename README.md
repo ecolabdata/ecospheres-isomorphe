@@ -55,3 +55,21 @@ Lancement du worker RQ (traitement des jobs en asynchrone) :
 ```shell
 rq worker --url $REDIS_URL
 ```
+
+## Linting
+
+Linting, formatting and import sorting are done automatically by [Ruff](https://docs.astral.sh/ruff/) launched by a pre-commit hook. So, before contributing to the repository, it is necessary to initialize the pre-commit hooks:
+
+```bash
+pre-commit install
+```
+Once this is done, code formatting and linting, as well as import sorting, will be automatically checked before each commit.
+
+If you cannot use pre-commit, it is necessary to format, lint, and sort imports with [Ruff](https://docs.astral.sh/ruff/) before committing:
+
+```bash
+ruff check --fix .
+ruff format .
+```
+
+> WARNING: running `ruff` on the codebase will lint and format all of it, whereas using `pre-commit` will only be done on the staged files.
