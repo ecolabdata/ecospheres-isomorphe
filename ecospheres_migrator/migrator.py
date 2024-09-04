@@ -1,11 +1,11 @@
 import logging
 import time
-
 from dataclasses import dataclass
-from lxml import etree
 from pathlib import Path
 
-from ecospheres_migrator.geonetwork import GeonetworkClient, Record, MefArchive, extract_record_info
+from lxml import etree
+
+from ecospheres_migrator.geonetwork import GeonetworkClient, MefArchive, Record, extract_record_info
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -21,7 +21,6 @@ class Transformation:
 
 
 class Migrator:
-
     def __init__(
         self, *, url: str, username: str | None = None, password: str | None = None
     ) -> None:
@@ -34,9 +33,9 @@ class Migrator:
         """
         log.debug(f"Selecting with {kwargs}")
 
-        query = {'_isHarvested': 'n'}
-        q = kwargs.get('query', '')
-        query |= dict(p.split('=') for p in q.split(','))
+        query = {"_isHarvested": "n"}
+        q = kwargs.get("query", "")
+        query |= dict(p.split("=") for p in q.split(","))
 
         selection = self.gn.get_records(query=query)
 

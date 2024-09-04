@@ -3,3 +3,5 @@ gunicorn
 lxml
 requests
 rq
+pre-commit
+ruff
