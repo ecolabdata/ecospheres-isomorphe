@@ -56,6 +56,16 @@ Lancement du worker RQ (traitement des jobs en asynchrone) :
 rq worker --url $REDIS_URL
 ```
 
+### MacOS caveat
+
+Sur MacOS, il peut être nécessaire d'utiliser la variable d'environnement suivante pour éviter un crash du worker RQ :
+
+```bash
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+```
+
+Référence : https://github.com/rq/rq/issues/2058
+
 ## Linting
 
 Linting, formatting and import sorting are done automatically by [Ruff](https://docs.astral.sh/ruff/) launched by a pre-commit hook. So, before contributing to the repository, it is necessary to initialize the pre-commit hooks:
