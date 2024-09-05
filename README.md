@@ -56,11 +56,25 @@ Lancement du worker RQ (traitement des jobs en asynchrone) :
 rq worker --url $REDIS_URL
 ```
 
+### Lancement des tests
+
+Lancer les services de test :
+
+```shell
+docker compose -f docker-compose.tests.yml up
+```
+
+Lancer les tests :
+
+```shell
+pytest
+```
+
 ### MacOS caveat
 
 Sur MacOS, il peut être nécessaire d'utiliser la variable d'environnement suivante pour éviter un crash du worker RQ :
 
-```bash
+```shell
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 ```
 
