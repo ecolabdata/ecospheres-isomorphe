@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from time import sleep
+from typing import Final
 
 import pytest
 import requests
@@ -9,21 +10,21 @@ from ecospheres_migrator.geonetwork import GeonetworkClient
 
 log = logging.getLogger(__name__)
 
-GN_TEST_URL = "http://localhost:8081/geonetwork/srv"
+GN_TEST_URL: Final = "http://localhost:8081/geonetwork/srv"
 
 
 @pytest.fixture(scope="session", autouse=True)
 def wait_for_gn():
-    def is_service_ready(url):
+    def is_service_ready(url: str):
         try:
             response = requests.get(url)
             return response.status_code == 200
         except requests.RequestException:
             return False
 
-    url = f"{GN_TEST_URL}/api/info?_content_type=json&type=me"
-    max_retries = 30
-    retry_delay = 1  # seconds
+    url: str = f"{GN_TEST_URL}/api/info?_content_type=json&type=me"
+    max_retries: int = 30
+    retry_delay: int = 1  # seconds
 
     for attempt in range(max_retries):
         if is_service_ready(url):
