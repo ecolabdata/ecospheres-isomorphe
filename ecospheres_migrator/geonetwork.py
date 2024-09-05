@@ -157,7 +157,7 @@ class GeonetworkClient:
         r = self.session.delete(
             f"{self.api}/records/{uuid}",
             params={
-                "withBackup": True,
+                "withBackup": False,
             },
         )
         r.raise_for_status()
