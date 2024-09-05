@@ -91,13 +91,20 @@ class GeonetworkClient:
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
 
-    def duplicate_record(self, uuid: str, metadata: str, template: bool, group: int):
+    def duplicate_record(
+        self,
+        uuid: str,
+        metadata: str,
+        template: bool,
+        group: int | None,
+        uuid_processing: str = "GENERATEUUID",
+    ):
         log.debug(f"Duplicating record {uuid}: template={template}, group={group}")
         r = self.session.put(
             f"{self.api}/records",
             headers={"Accept": "application/json", "Content-type": "application/xml"},
             params={
-                "uuidProcessing": "GENERATEUUID",
+                "uuidProcessing": uuid_processing,
                 "group": group,
                 "metadataType": "TEMPLATE"
                 if template
@@ -144,6 +151,16 @@ class GeonetworkClient:
         r.raise_for_status()
         sources = {s["uuid"]: s["name"] for s in r.json()}
         return sources
+
+    def delete_record(self, uuid: str) -> None:
+        log.debug(f"Deleting record: {uuid}")
+        r = self.session.delete(
+            f"{self.api}/records/{uuid}",
+            params={
+                "withBackup": True,
+            },
+        )
+        r.raise_for_status()
 
 
 class MefArchive:

@@ -1,0 +1,11 @@
+name: gn3-standalone-tests
+
+services:
+  geonetwork:
+    image: geonetwork:3.10.4
+    platform: linux/amd64
+    environment:
+      DATA_DIR: /catalog-data
+      TZ: Europe/Paris
+    ports:
+      - 8081:8080
