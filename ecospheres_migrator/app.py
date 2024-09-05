@@ -29,7 +29,13 @@ def select_preview():
     query = request.form.get("query")
     if not query:
         return "Veuillez entrer une requête de recherche"
-    migrator = Migrator(url=url)
+    # Need auth to ensure the records retrieved in selection are consistent with
+    # the records that'll be updated during the migration. Otherwise we might miss
+    # things like workflow status.
+    # TODO: required auth? or skip items with drafts in migration? ...?
+    username = request.form.get("username")
+    password = request.form.get("password")
+    migrator = Migrator(url=url, username=username, password=password)
     results = migrator.select(query=query)
     return render_template("fragments/select_preview.html.j2", results=results)
 
@@ -46,7 +52,12 @@ def transform():
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
-    migrator = Migrator(url=url)
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if username and password:
+        session["username"] = username
+        session["password"] = password
+    migrator = Migrator(url=url, username=username, password=password)
     selection = migrator.select(query=query)
     job = get_queue().enqueue(migrator.transform, transformation, selection)
     return redirect(url_for("transform_success", job_id=job.id))
@@ -70,6 +81,8 @@ def transform_job_status(job_id: str):
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
         url=session["url"],
+        username=session.get("username"),
+        password=session.get("password"),
     )
 
 
@@ -77,7 +90,7 @@ def transform_job_status(job_id: str):
 def transform_download_result(job_id: str):
     job = get_job(job_id)
     return send_file(
-        io.BytesIO(job.result),
+        io.BytesIO(job.result.to_mef()),
         mimetype="application/zip",
         download_name=f"{job_id}.zip",
         as_attachment=True,
@@ -89,10 +102,18 @@ def migrate(job_id: str):
     transform_job = get_job(job_id)
     if not transform_job:
         abort(404)
-    username = request.form.get("username")
-    password = request.form.get("password")
+    username = session["username"]
+    password = session["password"]
+    mode = request.form.get("mode")
+    group = request.form.get("group")
+    overwrite = mode == "overwrite"
+    if not overwrite and not group:
+        # TODO: display group field only when needed
+        abort(400, "Missing `group` parameter")
     migrator = Migrator(url=session["url"], username=username, password=password)
-    migrate_job = get_queue().enqueue(migrator.migrate, transform_job.result)
+    migrate_job = get_queue().enqueue(
+        migrator.migrate, transform_job.result, overwrite=overwrite, group=group
+    )
     return redirect(url_for("migrate_success", job_id=migrate_job.id))
 
 

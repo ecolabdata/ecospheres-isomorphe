@@ -1,11 +1,12 @@
 import logging
-import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from lxml import etree
 
-from ecospheres_migrator.geonetwork import GeonetworkClient, MefArchive, Record, extract_record_info
+from ecospheres_migrator.batch import Batch, FailureBatchRecord, SuccessBatchRecord
+from ecospheres_migrator.geonetwork import GeonetworkClient, Record, extract_record_info
+from ecospheres_migrator.util import xml_to_string
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: Path, selection: list[Record]) -> bytes:
+    def transform(self, transformation: Path, selection: list[Record]) -> Batch:
         """
         Transform data from a selection
         """
@@ -50,19 +51,54 @@ class Migrator:
         sources = self.gn.get_sources()
         transform = Migrator.load_transformation(transformation)
 
-        mef = MefArchive()
-        for s in selection:
-            original = self.gn.get_record(s.uuid)
-            info = extract_record_info(original, sources)
-            result = transform(original, CoupledResourceLookUp="'disabled'")
-            mef.add(s.uuid, result, info)
+        batch = Batch()
+        for r in selection:
+            original = self.gn.get_record(r.uuid)
+            try:
+                info = extract_record_info(original, sources)
+                result = transform(original, CoupledResourceLookUp="'disabled'")
+                # TODO: check if result != original
+                batch.add(
+                    SuccessBatchRecord(
+                        uuid=r.uuid,
+                        template=r.template,
+                        original=xml_to_string(original),
+                        result=xml_to_string(result),
+                        info=xml_to_string(info),
+                    )
+                )
+            except Exception as e:
+                batch.add(
+                    FailureBatchRecord(
+                        uuid=r.uuid,
+                        template=r.template,
+                        original=xml_to_string(original),
+                        error=str(e),
+                    )
+                )
 
         log.debug("Transformation done.")
-        return mef.finalize()
+        return batch
 
-    def migrate(self, output_file: bytes):
-        log.debug(f"Migrating for {self.url}")
-        time.sleep(10)
+    def migrate(self, batch: Batch, overwrite: bool = False, group: int | None = None):
+        log.debug(
+            f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
+        )
+        failures = []
+        for r in batch.successes():
+            try:
+                if overwrite:
+                    self.gn.update_record(r.uuid, r.result, template=r.template)
+                else:
+                    assert group is not None
+                    # TODO: publish flag
+                    self.gn.duplicate_record(r.uuid, r.result, template=r.template, group=group)
+            except Exception:
+                failures.append(r.uuid)
+
+        if failures:
+            # TODO: raise exception
+            log.debug(f"Failures: {', '.join(failures)}")
         log.debug("Migration done.")
 
     @staticmethod
