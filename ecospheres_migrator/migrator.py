@@ -4,7 +4,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from ecospheres_migrator.batch import Batch
+from ecospheres_migrator.batch import Batch, FailureBatchRecord, SuccessBatchRecord
 from ecospheres_migrator.geonetwork import GeonetworkClient, Record, extract_record_info
 from ecospheres_migrator.util import xml_to_string
 
@@ -43,7 +43,7 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: Path, selection: list[Record]) -> bytes:
+    def transform(self, transformation: Path, selection: list[Record]) -> Batch:
         """
         Transform data from a selection
         """
@@ -58,22 +58,29 @@ class Migrator:
                 info = extract_record_info(original, sources)
                 result = transform(original, CoupledResourceLookUp="'disabled'")
                 # TODO: check if result != original
-                batch.add_success(
-                    uuid=r.uuid,
-                    template=r.template,
-                    original=xml_to_string(original),
-                    result=xml_to_string(result),
-                    info=xml_to_string(info),
+                batch.add(
+                    SuccessBatchRecord(
+                        uuid=r.uuid,
+                        template=r.template,
+                        original=xml_to_string(original),
+                        result=xml_to_string(result),
+                        info=xml_to_string(info),
+                    )
                 )
             except Exception as e:
-                batch.add_failure(
-                    uuid=r.uuid, template=r.template, original=xml_to_string(original), error=str(e)
+                batch.add(
+                    FailureBatchRecord(
+                        uuid=r.uuid,
+                        template=r.template,
+                        original=xml_to_string(original),
+                        error=str(e),
+                    )
                 )
 
         log.debug("Transformation done.")
         return batch
 
-    def migrate(self, batch: Batch, overwrite: bool = False, group: int = None):
+    def migrate(self, batch: Batch, overwrite: bool = False, group: int | None = None):
         log.debug(
             f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
         )
@@ -83,6 +90,7 @@ class Migrator:
                 if overwrite:
                     self.gn.update_record(r.uuid, r.result, template=r.template)
                 else:
+                    assert group is not None
                     # TODO: publish flag
                     self.gn.duplicate_record(r.uuid, r.result, template=r.template, group=group)
             except Exception:
