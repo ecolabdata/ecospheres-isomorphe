@@ -3,7 +3,7 @@
   {{ results|length }} résultat(s)
   <ul>
   {%- for result in results -%}
-    <li>{{ result.uuid }} [{{ "T" if result.template else "R"}}]: {{ result.title }}</li>
+    <li>{{ result.uuid }} [{{ "T" if result.template else "R" }}] [{{ "d" if (result.state and result.state.stage == "working_copy") else "-" }}{{ result.state.status if result.state else "-" }}]: {{ result.title }}</li>
   {%- endfor -%}
   </ul>
 {% else -%}
