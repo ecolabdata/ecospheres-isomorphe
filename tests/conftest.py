@@ -72,7 +72,7 @@ def md_fixtures(gn_client: GeonetworkClient):
 
 
 @pytest.fixture
-def clean_md_fixtures(gn_client):
+def clean_md_fixtures(gn_client: GeonetworkClient):
     """Force fixtures recreation when used explicitely"""
     log.debug("Cleaning fixtures...")
     seed_fixtures(gn_client)
