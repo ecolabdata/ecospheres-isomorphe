@@ -61,7 +61,7 @@ def seed_fixtures(gn_client: GeonetworkClient):
         with fixture.open() as ff:
             log.debug(f"Creating new record {uuid}...")
             gn_client.duplicate_record(
-                "test-uuid", ff.read(), False, None, uuid_processing="NOTHING"
+                uuid="test-uuid", metadata=ff.read(), template=False, group=None, uuid_processing="NOTHING"
             )
 
 
