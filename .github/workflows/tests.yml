@@ -16,7 +16,7 @@ jobs:
           DATA_DIR: /catalog-data
           TZ: Europe/Paris
         ports:
-          - 8081:8080
+          - 57455:8080
 
     steps:
       - uses: actions/checkout@v3
@@ -24,7 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -35,7 +35,7 @@ jobs:
       - name: Wait for Geonetwork to start
         run: |
           echo "Waiting for Geonetwork to start..."
-          timeout 300 bash -c "until curl http://localhost:8081/geonetwork; do sleep 10; done"
+          timeout 300 bash -c "until curl http://localhost:57455/geonetwork; do sleep 10; done"
 
       - name: Run tests
         run: |

@@ -10,7 +10,7 @@ from ecospheres_migrator.geonetwork import GeonetworkClient
 
 log = logging.getLogger(__name__)
 
-GN_TEST_URL: Final = "http://localhost:8081/geonetwork/srv"
+GN_TEST_URL: Final = "http://localhost:57455/geonetwork/srv"
 
 
 @pytest.fixture(scope="session", autouse=True)
