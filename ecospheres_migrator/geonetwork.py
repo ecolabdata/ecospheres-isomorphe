@@ -91,7 +91,7 @@ class GeonetworkClient:
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
 
-    def duplicate_record(
+    def put_record(
         self,
         uuid: str,
         metadata: str,

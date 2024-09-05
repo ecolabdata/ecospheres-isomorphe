@@ -92,7 +92,7 @@ class Migrator:
                 else:
                     assert group is not None
                     # TODO: publish flag
-                    self.gn.duplicate_record(r.uuid, r.result, template=r.template, group=group)
+                    self.gn.put_record(r.uuid, r.result, template=r.template, group=group)
             except Exception:
                 failures.append(r.uuid)
 

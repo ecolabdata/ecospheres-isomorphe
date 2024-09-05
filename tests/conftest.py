@@ -60,8 +60,12 @@ def seed_fixtures(gn_client: GeonetworkClient):
             gn_client.delete_record(uuid)
         with fixture.open() as ff:
             log.debug(f"Creating new record {uuid}...")
-            gn_client.duplicate_record(
-                uuid="test-uuid", metadata=ff.read(), template=False, group=None, uuid_processing="NOTHING"
+            gn_client.put_record(
+                uuid="test-uuid",
+                metadata=ff.read(),
+                template=False,
+                group=None,
+                uuid_processing="NOTHING",
             )
 
 
