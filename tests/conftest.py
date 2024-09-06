@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from time import sleep
 from typing import Final
@@ -7,10 +8,20 @@ import pytest
 import requests
 
 from ecospheres_migrator.geonetwork import GeonetworkClient
+from ecospheres_migrator.migrator import Migrator
 
 log = logging.getLogger(__name__)
 
 GN_TEST_URL: Final = "http://localhost:57455/geonetwork/srv"
+GN_TEST_USER: Final = "admin"
+GN_TEST_PASSWORD: Final = "admin"
+
+
+@dataclass(kw_only=True)
+class Fixture:
+    uuid: str
+    name: str
+    content: str
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -39,18 +50,19 @@ def wait_for_gn():
 
 @pytest.fixture(scope="session")
 def gn_client(wait_for_gn) -> GeonetworkClient:
-    return GeonetworkClient(f"{GN_TEST_URL}", "admin", "admin")
+    return GeonetworkClient(f"{GN_TEST_URL}", GN_TEST_USER, GN_TEST_PASSWORD)
 
 
-def seed_fixtures(gn_client: GeonetworkClient):
+def seed_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
     """
     (Re)create records from fixtures directory.
     If a record with the same UUID already exists it will be deleted and recreated.
     Naming pattern of fixture files is: `<prefix>_<uuid>.xml` where prefix is the catalog
     and uuid is the record UUID.
     """
-    fixtures = Path("tests/fixtures").glob("*.xml")
-    for fixture in fixtures:
+    fixtures = []
+    fixtures_files = Path("tests/fixtures").glob("*.xml")
+    for fixture in fixtures_files:
         uuid = fixture.stem.split("_")[1]
         try:
             gn_client.get_record(uuid)
@@ -60,23 +72,31 @@ def seed_fixtures(gn_client: GeonetworkClient):
             gn_client.delete_record(uuid)
         with fixture.open() as ff:
             log.debug(f"Creating new record {uuid}...")
+            content = ff.read()
             gn_client.put_record(
                 uuid="test-uuid",
-                metadata=ff.read(),
+                metadata=content,
                 template=False,
                 group=None,
                 uuid_processing="NOTHING",
             )
+            fixtures.append(Fixture(uuid=uuid, name=fixture.stem, content=content))
+    return fixtures
 
 
 @pytest.fixture(scope="session", autouse=True)
-def md_fixtures(gn_client: GeonetworkClient):
+def md_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
     log.debug("Seeding fixtures...")
-    seed_fixtures(gn_client)
+    return seed_fixtures(gn_client)
 
 
 @pytest.fixture
-def clean_md_fixtures(gn_client: GeonetworkClient):
+def clean_md_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
     """Force fixtures recreation when used explicitely"""
     log.debug("Cleaning fixtures...")
-    seed_fixtures(gn_client)
+    return seed_fixtures(gn_client)
+
+
+@pytest.fixture
+def migrator() -> Migrator:
+    return Migrator(url=GN_TEST_URL, username=GN_TEST_USER, password=GN_TEST_PASSWORD)
