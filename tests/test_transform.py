@@ -2,6 +2,8 @@ from pathlib import Path
 
 from conftest import Fixture
 
+from ecospheres_migrator.batch import Batch
+from ecospheres_migrator.geonetwork import Record
 from ecospheres_migrator.migrator import Migrator
 
 
@@ -13,17 +15,19 @@ def get_transformation_path(name: str) -> Path:
     return transformation.path
 
 
-def test_transform_noop(md_fixtures: list[Fixture], migrator: Migrator):
+def get_transform_results(transformation: str, migrator: Migrator) -> tuple[Batch, list[Record]]:
     selection = migrator.select(query="type=dataset")
     assert len(selection) > 0
-    results = migrator.transform(get_transformation_path("noop"), selection)
+    return migrator.transform(get_transformation_path(transformation), selection), selection
+
+
+def test_transform_noop(md_fixtures: list[Fixture], migrator: Migrator):
+    results, selection = get_transform_results("noop", migrator)
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
 
 
 def test_transform_error(md_fixtures: list[Fixture], migrator: Migrator):
-    selection = migrator.select(query="type=dataset")
-    assert len(selection) > 0
-    results = migrator.transform(get_transformation_path("error"), selection)
+    results, selection = get_transform_results("error", migrator)
     assert len(results.successes()) == 0
     assert len(results.failures()) == len(selection)
