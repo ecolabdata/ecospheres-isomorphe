@@ -20,12 +20,14 @@ def get_transform_results(transformation: str, migrator: Migrator) -> tuple[Batc
 
 
 def test_transform_noop(migrator: Migrator):
+    """`noop` transform is always successful"""
     results, selection = get_transform_results("noop", migrator)
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
 
 
 def test_transform_error(migrator: Migrator):
+    """`error` transform is never successful"""
     results, selection = get_transform_results("error", migrator)
     assert len(results.successes()) == 0
     assert len(results.failures()) == len(selection)

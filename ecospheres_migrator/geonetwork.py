@@ -162,6 +162,36 @@ class GeonetworkClient:
         )
         r.raise_for_status()
 
+    def add_group(self, name: str, description: str = ""):
+        log.debug(f"Adding group: {name}")
+        r = self.session.put(
+            f"{self.api}/groups",
+            headers={"Accept": "application/json"},
+            json={
+                "name": name,
+                "description": description,
+                "id": -99,
+                "label": {},
+                "email": "",
+                "enableAllowedCategories": False,
+                "allowedCategories": [],
+                "defaultCategory": None,
+                "logo": None,
+                "referrer": None,
+                "website": None,
+            },
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def get_groups(self) -> dict:
+        r = self.session.get(
+            f"{self.api}/groups",
+            headers={"Accept": "application/json"},
+        )
+        r.raise_for_status()
+        return r.json()
+
 
 class MefArchive:
     def __init__(self, compression=zipfile.ZIP_DEFLATED):

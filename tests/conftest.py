@@ -53,7 +53,7 @@ def gn_client(wait_for_gn) -> GeonetworkClient:
     return GeonetworkClient(f"{GN_TEST_URL}", GN_TEST_USER, GN_TEST_PASSWORD)
 
 
-def seed_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
+def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixture]:
     """
     (Re)create records from fixtures directory.
     If a record with the same UUID already exists it will be deleted and recreated.
@@ -62,6 +62,14 @@ def seed_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
     """
     fixtures = []
     fixtures_files = Path("tests/fixtures").glob("*.xml")
+
+    # remove records from test-group (used for duplicated records)
+    group_records = gn_client.get_records(query={"facet.q": f"groupOwner/{group_fixture}"})
+    for record in group_records:
+        log.debug(f"Deleting record {record.uuid}...")
+        gn_client.delete_record(record.uuid)
+
+    # create records from fixtures directory
     for fixture in fixtures_files:
         uuid = fixture.stem.split("_")[1]
         try:
@@ -85,16 +93,28 @@ def seed_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def md_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
+def md_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixture]:
     log.debug("Seeding fixtures...")
-    return seed_fixtures(gn_client)
+    return seed_fixtures(gn_client, group_fixture)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def group_fixture(gn_client: GeonetworkClient) -> int:
+    log.debug("Creating group...")
+    group_name = "test-group"
+    groups = gn_client.get_groups()
+    if any(group["name"] == group_name for group in groups):
+        log.debug("Group already exists, skipping creation...")
+        group = next(group for group in groups if group["name"] == group_name)
+        return group["id"]
+    return gn_client.add_group(group_name)
 
 
 @pytest.fixture
-def clean_md_fixtures(gn_client: GeonetworkClient) -> list[Fixture]:
+def clean_md_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixture]:
     """Force fixtures recreation when used explicitely"""
     log.debug("Cleaning fixtures...")
-    return seed_fixtures(gn_client)
+    return seed_fixtures(gn_client, group_fixture)
 
 
 @pytest.fixture
