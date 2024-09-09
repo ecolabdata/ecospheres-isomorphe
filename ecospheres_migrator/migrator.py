@@ -5,7 +5,12 @@ from pathlib import Path
 from lxml import etree
 
 from ecospheres_migrator.batch import Batch, FailureBatchRecord, SuccessBatchRecord
-from ecospheres_migrator.geonetwork import GeonetworkClient, Record, extract_record_info
+from ecospheres_migrator.geonetwork import (
+    GeonetworkClient,
+    Record,
+    WorkflowStage,
+    extract_record_info,
+)
 from ecospheres_migrator.util import xml_to_string
 
 logging.basicConfig(level=logging.DEBUG)
@@ -53,7 +58,19 @@ class Migrator:
 
         batch = Batch()
         for r in selection:
+            log.debug(f"Processing {r.uuid} (template={r.template} state={r.state})")
             original = self.gn.get_record(r.uuid)
+            if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
+                batch.add(
+                    FailureBatchRecord(
+                        uuid=r.uuid,
+                        template=r.template,
+                        state=r.state,
+                        original=xml_to_string(original),
+                        error="Record has a working copy",
+                    )
+                )
+                continue
             try:
                 info = extract_record_info(original, sources)
                 result = transform(original, CoupledResourceLookUp="'disabled'")
@@ -62,6 +79,7 @@ class Migrator:
                     SuccessBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
+                        state=r.state,
                         original=xml_to_string(original),
                         result=xml_to_string(result),
                         info=xml_to_string(info),
@@ -72,6 +90,7 @@ class Migrator:
                     FailureBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
+                        state=r.state,
                         original=xml_to_string(original),
                         error=str(e),
                     )
@@ -88,12 +107,13 @@ class Migrator:
         for r in batch.successes():
             try:
                 if overwrite:
-                    self.gn.update_record(r.uuid, r.result, template=r.template)
+                    self.gn.update_record(r.uuid, r.result, template=r.template, state=r.state)
                 else:
                     assert group is not None
                     # TODO: publish flag
                     self.gn.put_record(r.uuid, r.result, template=r.template, group=group)
             except Exception:
+                # TODO: track failure cause like in transform()
                 failures.append(r.uuid)
 
         if failures:
