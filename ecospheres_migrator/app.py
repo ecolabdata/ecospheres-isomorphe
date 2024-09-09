@@ -16,7 +16,7 @@ from flask import (
     url_for,
 )
 
-from ecospheres_migrator.auth import authenticated
+from ecospheres_migrator.auth import authenticated, connection_infos
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
 
@@ -71,12 +71,9 @@ def select():
 
 
 @app.route("/select/preview", methods=["POST"])
-# TODO: pass url, username, password from decorator or helper
 @authenticated(redirect=False)
 def select_preview():
-    url = session.get("url")
-    username = session.get("username")
-    password = session.get("password")
+    url, username, password = connection_infos()
     if not url:
         return "Veuillez entrer une URL de catalogue"
     query = request.form.get("query")
@@ -90,11 +87,7 @@ def select_preview():
 @app.route("/transform", methods=["POST"])
 @authenticated()
 def transform():
-    url = session.get("url")
-    username = session.get("username")
-    password = session.get("password")
-    if not url:
-        abort(400, "Missing `url` parameter")
+    url, username, password = connection_infos()
     query = request.form.get("query")
     if not query:
         abort(400, "Missing `query` parameter")
@@ -147,15 +140,14 @@ def migrate(job_id: str):
     transform_job = get_job(job_id)
     if not transform_job:
         abort(404)
-    username = session["username"]
-    password = session["password"]
+    url, username, password = connection_infos()
     mode = request.form.get("mode")
     group = request.form.get("group")
     overwrite = mode == "overwrite"
     if not overwrite and not group:
         # TODO: display group field only when needed
         abort(400, "Missing `group` parameter")
-    migrator = Migrator(url=session["url"], username=username, password=password)
+    migrator = Migrator(url=url, username=username, password=password)
     migrate_job = get_queue().enqueue(
         migrator.migrate, transform_job.result, overwrite=overwrite, group=group
     )
