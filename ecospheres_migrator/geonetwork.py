@@ -167,6 +167,14 @@ class GeonetworkClient:
         )
         r.raise_for_status()
 
+    def get_groups(self) -> dict:
+        r = self.session.get(
+            f"{self.api}/groups",
+            headers={"Accept": "application/json"},
+        )
+        r.raise_for_status()
+        return r.json()
+
 
 class MefArchive:
     def __init__(self, compression=zipfile.ZIP_DEFLATED):

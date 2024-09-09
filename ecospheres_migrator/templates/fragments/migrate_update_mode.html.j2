@@ -1,0 +1,11 @@
+{% if mode == "create" %}
+<div class="fr-select-group fr-mb-2w">
+  <label class="fr-label" for="mode">Groupe de rattachement *</label>
+  <select required class="fr-select" id="group" name="group">
+    <option value="" selected disabled hidden>Sélectionner un groupe de rattachement</option>
+    {% for group in groups %}
+    <option value="{{ group.id }}">{{ group.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}
