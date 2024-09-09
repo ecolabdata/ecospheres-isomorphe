@@ -136,6 +136,8 @@ def transform_job_status(job_id: str):
 @app.route("/transform/download_result/<job_id>")
 def transform_download_result(job_id: str):
     job = get_job(job_id)
+    if not job:
+        abort(404)
     return send_file(
         io.BytesIO(job.result.to_mef()),
         mimetype="application/zip",
