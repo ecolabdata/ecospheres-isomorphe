@@ -5,6 +5,43 @@
        hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
 {% elif status == "finished" %}
   <p>Job terminé.</p>
+  <div class="fr-table" id="table-md-component">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table id="table-md">
+            <caption>Récapitulatif de la migration</caption>
+            <thead>
+              <tr>
+                <th scope="col">Statut</th>
+                {% if job.result.mode == "create" %}
+                <th scope="col">Fiche originale</th>
+                {% endif %}
+                <th scope="col">Fiche migrée</th>
+                <th scope="col">Erreur</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in job.result.records %}
+              <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
+                <td>{{ "❌" if record.error else "✅" }}</td>
+                {% if job.result.mode == "create" %}
+                <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.source_uuid }}" target="_blank" rel="noopener">{{ record.source_uuid }}</a></td>
+                {% endif %}
+                <td>
+                  {% if not record.error %}
+                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.target_uuid }}" target="_blank" rel="noopener">{{ record.target_uuid }}</a>
+                  {% endif %}
+                </td>
+                <td>{{ record.error }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 {% elif status == "failed" %}
   Le job est en erreur :-/
   <pre>{{ job.exc_info }}</pre>
