@@ -174,11 +174,14 @@ def migrate_success(job_id: str):
 
 
 @app.route("/migrate/job_status/<job_id>")
+@authenticated()
 def migrate_job_status(job_id: str):
+    url, _, _ = connection_infos()
     return render_template(
         "fragments/migrate_job_status.html.j2",
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
+        url=url,
     )
 
 
