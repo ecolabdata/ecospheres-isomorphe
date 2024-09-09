@@ -3,7 +3,18 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, abort, redirect, render_template, request, send_file, session, url_for
+import requests
+from flask import (
+    Flask,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    session,
+    url_for,
+)
 
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
@@ -13,6 +24,46 @@ app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 
 
 @app.route("/")
+def login_form():
+    return render_template(
+        "login.html.j2",
+        url=session.get("url", ""),
+        username=session.get("username", ""),
+        password=session.get("password", ""),
+    )
+
+
+# TODO: allow GET and skip form? or select is enough
+@app.route("/login", methods=["POST"])
+def login():
+    url = request.form.get("url")
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if not username or not password or not url:
+        abort(400, "Missing login parameter(s)")
+
+    migrator = Migrator(url=url, username=username, password=password)
+    try:
+        gn_info = migrator.gn.info()
+        print("GN info", gn_info)
+    except requests.exceptions.HTTPError as e:
+        flash(f"Problème d'authentification ({e})", "error")
+        return redirect(url_for("login_form"))
+    else:
+        authenticated = gn_info.get("me", {}).get("@authenticated", "false") == "true"
+        if not authenticated:
+            flash("Problème d'authentification (retour api geonetwork)", "error")
+            return redirect(url_for("login_form"))
+
+    session["url"] = url
+    session["username"] = username
+    session["password"] = password
+    return redirect(url_for("select"))
+
+
+# TODO: protect route (@authenticated)
+# and maybe pass url, username, password from decorator or helper
+@app.route("/select")
 def select():
     return render_template(
         "select.html.j2",
@@ -21,42 +72,36 @@ def select():
     )
 
 
+# TODO: protect route (@authenticated)
 @app.route("/select/preview", methods=["POST"])
 def select_preview():
-    url = request.form.get("url")
+    url = session.get("url")
+    username = session.get("username")
+    password = session.get("password")
     if not url:
         return "Veuillez entrer une URL de catalogue"
     query = request.form.get("query")
     if not query:
         return "Veuillez entrer une requête de recherche"
-    # Need auth to ensure the records retrieved in selection are consistent with
-    # the records that'll be updated during the migration. Otherwise we might miss
-    # things like workflow status.
-    # TODO: required auth? or skip items with drafts in migration? ...?
-    username = request.form.get("username")
-    password = request.form.get("password")
     migrator = Migrator(url=url, username=username, password=password)
     results = migrator.select(query=query)
     return render_template("fragments/select_preview.html.j2", results=results)
 
 
+# TODO: protect route (@authenticated)
 @app.route("/transform", methods=["POST"])
 def transform():
-    url = request.form.get("url")
+    url = session.get("url")
+    username = session.get("username")
+    password = session.get("password")
     if not url:
         abort(400, "Missing `url` parameter")
-    session["url"] = url
     query = request.form.get("query")
     if not query:
         abort(400, "Missing `query` parameter")
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
-    username = request.form.get("username")
-    password = request.form.get("password")
-    if username and password:
-        session["username"] = username
-        session["password"] = password
     migrator = Migrator(url=url, username=username, password=password)
     selection = migrator.select(query=query)
     job = get_queue().enqueue(migrator.transform, transformation, selection)

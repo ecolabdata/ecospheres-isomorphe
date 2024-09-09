@@ -28,6 +28,11 @@ class GeonetworkClient:
             log.debug(f"Authenticating as: {username}")
         self.authenticate()
 
+    def info(self):
+        r = self.session.get(f"{self.api}/info?_content_type=json&type=me")
+        r.raise_for_status()
+        return r.json()
+
     def authenticate(self):
         r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
         # don't abort on error here, it's expected
