@@ -6,6 +6,7 @@ from pathlib import Path
 import requests
 from flask import (
     Flask,
+    Response,
     abort,
     flash,
     redirect,
@@ -110,15 +111,25 @@ def transform_success(job_id):
     )
 
 
+@app.route("/transform/success/<job_id>/result/<uuid>")
+def transform_result(job_id: str, uuid: str):
+    job = get_job(job_id)
+    if not job or not job.result:
+        abort(404)
+    result = next((j for j in job.result.successes() if j.uuid == uuid), None)
+    if not result or not result.result:
+        abort(404)
+    return Response(result.result, mimetype="text/xml", headers={"Content-Type": "text/xml"})
+
+
 @app.route("/transform/job_status/<job_id>")
 def transform_job_status(job_id: str):
+    url, _, _ = connection_infos()
     return render_template(
         "fragments/transform_job_status.html.j2",
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
         url=session["url"],
-        username=session.get("username"),
-        password=session.get("password"),
     )
 
 
