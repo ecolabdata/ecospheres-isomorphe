@@ -16,6 +16,7 @@ from flask import (
     url_for,
 )
 
+from ecospheres_migrator.auth import authenticated
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
 
@@ -33,7 +34,6 @@ def login_form():
     )
 
 
-# TODO: allow GET and skip form? or select is enough
 @app.route("/login", methods=["POST"])
 def login():
     url = request.form.get("url")
@@ -61,8 +61,6 @@ def login():
     return redirect(url_for("select"))
 
 
-# TODO: protect route (@authenticated)
-# and maybe pass url, username, password from decorator or helper
 @app.route("/select")
 def select():
     return render_template(
@@ -72,8 +70,9 @@ def select():
     )
 
 
-# TODO: protect route (@authenticated)
 @app.route("/select/preview", methods=["POST"])
+# TODO: pass url, username, password from decorator or helper
+@authenticated(redirect=False)
 def select_preview():
     url = session.get("url")
     username = session.get("username")
@@ -88,8 +87,8 @@ def select_preview():
     return render_template("fragments/select_preview.html.j2", results=results)
 
 
-# TODO: protect route (@authenticated)
 @app.route("/transform", methods=["POST"])
+@authenticated()
 def transform():
     url = session.get("url")
     username = session.get("username")
@@ -143,6 +142,7 @@ def transform_download_result(job_id: str):
 
 
 @app.route("/migrate/<job_id>", methods=["POST"])
+@authenticated()
 def migrate(job_id: str):
     transform_job = get_job(job_id)
     if not transform_job:
