@@ -67,6 +67,7 @@ class Migrator:
                 # TODO: check if result != original
                 batch.add(
                     SuccessBatchRecord(
+                        url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
                         original=xml_to_string(original),
@@ -77,6 +78,7 @@ class Migrator:
             except Exception as e:
                 batch.add(
                     FailureBatchRecord(
+                        url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
                         original=xml_to_string(original),
@@ -100,6 +102,7 @@ class Migrator:
                     self.gn.update_record(r.uuid, r.result, template=r.template)
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
+                            url=self.gn.url,
                             source_uuid=r.uuid,
                             target_uuid=r.uuid,
                             template=r.template,
@@ -115,6 +118,7 @@ class Migrator:
                     )
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
+                            url=self.gn.url,
                             source_uuid=r.uuid,
                             target_uuid=new_record["uuid"],
                             template=r.template,
@@ -125,6 +129,7 @@ class Migrator:
             except Exception as e:
                 migrate_batch.add(
                     FailureMigrateBatchRecord(
+                        url=self.gn.url,
                         source_uuid=r.uuid,
                         template=r.template,
                         source_content=r.original,
