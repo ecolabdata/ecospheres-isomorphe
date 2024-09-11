@@ -171,7 +171,6 @@ def migrate(job_id: str):
     group = request.form.get("group")
     overwrite = mode == "overwrite"
     if not overwrite and not group:
-        # TODO: display group field only when needed
         abort(400, "Missing `group` parameter")
     migrator = Migrator(url=url, username=username, password=password)
     migrate_job = get_queue().enqueue(
@@ -194,6 +193,22 @@ def migrate_job_status(job_id: str):
         "fragments/migrate_job_status.html.j2",
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
+    )
+
+
+@app.route("/migrate/update_mode")
+@authenticated()
+def migrate_update_mode():
+    mode = request.args.get("mode")
+    groups = []
+    if mode == "create":
+        url, username, password = connection_infos()
+        migrator = Migrator(url=url, username=username, password=password)
+        groups = migrator.gn.get_groups()
+    return render_template(
+        "fragments/migrate_update_mode.html.j2",
+        mode=mode,
+        groups=groups,
     )
 
 
