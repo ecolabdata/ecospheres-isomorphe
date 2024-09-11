@@ -13,6 +13,15 @@
     {% include "header.html.j2" %}
     <main role="main" id="content">
       <div class="fr-container fr-mb-4w">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="fr-alert fr-alert--{{ category }} fr-mt-2w">
+                <p>{{ message }}</p>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
         {% block content %}
         {% endblock content %}
       </div>

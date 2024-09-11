@@ -4,12 +4,12 @@
        hx-trigger="load delay:1s"
        hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
 {% elif status == "finished" %}
+  {# TODO: add normalized info about current connected catalog #}
   <p>Job terminé.</p>
   <p>Vous pouvez <a href="{{ url_for('transform_download_result', job_id=job.id) }}">télécharger le résultat</a>
   et appliquer vous-mêmes les modifications sur votre catalogue en important le fichier.</p>
   <p>Vous pouvez également utiliser le formulaire ci-dessous pour appliquer les modifications automatiquement
-  sur le catalogue {{ url }}. Pour ce faire, nous avons besoin d'identifiants privilégiés sur votre catalogue.
-  Ces identifiants sont transmis de manière sécurisée et nous ne les stockons pas.</p>
+  sur le catalogue {{ url }}.</p>
   <form action="{{ url_for('migrate', job_id=job.id) }}" method="post" class="fr-mt-2w">
     <div class="fr-select-group">
       <label class="fr-label" for="mode">Mode de mise à jour *</label>
