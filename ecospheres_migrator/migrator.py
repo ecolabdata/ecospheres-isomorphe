@@ -13,7 +13,12 @@ from ecospheres_migrator.batch import (
     SuccessTransformBatchRecord,
     TransformBatch,
 )
-from ecospheres_migrator.geonetwork import GeonetworkClient, Record, extract_record_info
+from ecospheres_migrator.geonetwork import (
+    GeonetworkClient,
+    Record,
+    WorkflowStage,
+    extract_record_info,
+)
 from ecospheres_migrator.util import xml_to_string
 
 logging.basicConfig(level=logging.DEBUG)
@@ -61,7 +66,19 @@ class Migrator:
 
         batch = TransformBatch()
         for r in selection:
+            log.debug(f"Processing {r.uuid} (template={r.template} state={r.state})")
             original = self.gn.get_record(r.uuid)
+            if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
+                batch.add(
+                    FailureTransformBatchRecord(
+                        uuid=r.uuid,
+                        template=r.template,
+                        state=r.state,
+                        original=xml_to_string(original),
+                        error="Record has a working copy",
+                    )
+                )
+                continue
             try:
                 info = extract_record_info(original, sources)
                 result = transform(original, CoupledResourceLookUp="'disabled'")
@@ -70,6 +87,7 @@ class Migrator:
                     SuccessTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
+                        state=r.state,
                         original=xml_to_string(original),
                         result=xml_to_string(result),
                         info=xml_to_string(info),
@@ -80,6 +98,7 @@ class Migrator:
                     FailureTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
+                        state=r.state,
                         original=xml_to_string(original),
                         error=str(e),
                     )

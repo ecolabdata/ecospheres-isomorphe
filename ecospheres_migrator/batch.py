@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from ecospheres_migrator.geonetwork import MefArchive
+from ecospheres_migrator.geonetwork import MefArchive, WorkflowState
 
 
 @dataclass(kw_only=True)
 class TransformBatchRecord:
     uuid: str
     template: bool
+    state: WorkflowState | None
     original: str
 
 

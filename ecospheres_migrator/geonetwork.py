@@ -2,6 +2,8 @@ import io
 import logging
 import zipfile
 from dataclasses import dataclass
+from enum import IntEnum, StrEnum, auto
+from typing import Any
 
 import requests
 from lxml import etree
@@ -11,11 +13,51 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
+class WorkflowStatus(IntEnum):
+    UNKNOWN = 0
+    DRAFT = 1
+    APPROVED = 2
+    RETIRED = 3
+    SUBMITTED = 4
+    REJECTED = 5
+
+
+class WorkflowStage(StrEnum):
+    NEVER_APPROVED = auto()
+    APPROVED = auto()
+    WORKING_COPY = auto()
+
+
+@dataclass
+class WorkflowState:
+    # [Stage]  NEVER_APPROVED ------> APPROVED <-> WORKING_COPY (WC)
+    # [Status] DRAFT -> SUBMITTED? -> APPROVED  -> DRAFT -> SUBMITTED? -\
+    #                -> REJECTED -\                      -> REJECTED -\  |
+    #                <------------/                      <------------/  |
+    #                                           <--- WC applied --------/|
+    #                                           <--- WC dropped --------/
+    #
+    # Each of those stages require a different treatment:
+    # - NEVER_APPROVED:
+    #   - Status is reported in `medatadata.mdStatus`.
+    #   - Updating a never-approved record updates the record itself.
+    # - APPROVED:
+    #   - Status is reported in `metadata.mdStatus` (= APPROVED).
+    #   - Updating an approved record creates a working copy containing the update.
+    # - WORKING_COPY:
+    #   - Working copy status must be queried from `/records/{uuid}/status`, since
+    #     `metadata.mdStatus` always reports the record status.
+    #   - Updating a record with a working copy MUST update the working copy.
+    stage: WorkflowStage
+    status: WorkflowStatus  # working copy status in WORKING_COPY stage, otherwise record status
+
+
 @dataclass
 class Record:
     uuid: str
     title: str
     template: bool
+    state: WorkflowState | None
 
 
 class GeonetworkClient:
@@ -70,11 +112,29 @@ class GeonetworkClient:
                 mds = [mds]
             recs = []
             for md in mds:
-                log.debug("Record:", md)
                 uuid = md["geonet:info"]["uuid"]
                 title = md.get("defaultTitle")
                 template = md.get("isTemplate") == "y"
-                recs.append(Record(uuid=uuid, title=title, template=template))
+                state = None
+                if "mdStatus" in md:  # workflow enabled
+                    if not md.get("draft") == "e":
+                        status = WorkflowStatus(int(md["mdStatus"]))
+                        stage = (
+                            WorkflowStage.APPROVED
+                            if status == WorkflowStatus.APPROVED
+                            else WorkflowStage.NEVER_APPROVED
+                        )
+                    else:
+                        # Not supported in migration().
+                        # We don't bother setting the status (requires an API call), but
+                        # still include it in `records` so we can report on it.
+                        stage = WorkflowStage.WORKING_COPY
+                        status = WorkflowStatus.UNKNOWN
+                    state = WorkflowState(stage=stage, status=status)
+                    log.debug(f"Workflow state: {state}")
+                rec = Record(uuid=uuid, title=title, template=template, state=state)
+                log.debug(f"Record: {rec}")
+                recs.append(rec)
             records += recs
             to = int(rsp.get("@to"))
 
@@ -90,7 +150,7 @@ class GeonetworkClient:
                 "increasePopularity": "false",
                 "withInfo": "true",
                 "attachment": "false",
-                "approved": "true",
+                "approved": "false",  # only relevant when workflow is enabled
             },
         )
         r.raise_for_status()
@@ -120,14 +180,16 @@ class GeonetworkClient:
         r.raise_for_status()
         return r.json()
 
-    def update_record(self, uuid: str, metadata: str, template: bool):
+    def update_record(
+        self, uuid: str, metadata: str, template: bool, state: WorkflowState | None = None
+    ):
         # PUT /records doesn't work as expected: it delete/recreates the record instead
         # of updating in place, hence losing Geonetwork-specific record metadata like
-        # workflow status or access rights.
+        # workflow state or access rights.
         # So instead we pretend to be the Geonetwork UI and "edit" the XML view of the
         # record, ignoring the returned editor view and immediately saving our new
         # metadata as the "edit" outcome.
-        log.debug(f"Updating record {uuid}: template={template}")
+        log.debug(f"Updating record {uuid}: template={template}, state={state}")
 
         r = self.session.get(
             f"{self.api}/records/{uuid}/editor",
@@ -140,7 +202,7 @@ class GeonetworkClient:
         r.raise_for_status()
 
         # API expects x-www-form-urlencoded here
-        data = {
+        data: dict[str, Any] = {
             "tab": "xml",
             "withAttributes": "false",
             "withValidationErrors": "false",
@@ -149,8 +211,35 @@ class GeonetworkClient:
             "template": "y" if template else "n",
             "data": metadata,
         }
+        if state:
+            if state.stage == WorkflowStage.WORKING_COPY:
+                raise NotImplementedError("Migrating working copies is not supported")
+            if state.status == WorkflowStatus.APPROVED:
+                # The /editor API endpoint rejects requests setting the record status
+                # directly to APPROVED (since it can't be done through the editor UI).
+                # This means updates of records in WorkflowStage.APPROVED have to go
+                # through creating a working copy.
+                # We create that working copy as SUBMITTED so the update will have more
+                # chances to get noticed (requiring action from a reviewer) in case the
+                # follow-up request to re-approve the record fails.
+                data["status"] = WorkflowStatus.SUBMITTED
+            else:
+                data["status"] = state.status
         r = self.session.post(f"{self.api}/records/{uuid}/editor", data=data)
         r.raise_for_status()
+
+        if state and state.stage == WorkflowStage.APPROVED:
+            # If the record was already approved, transparently approve the working copy
+            # we created above when updating the record.
+            r = self.session.put(
+                f"{self.api}/records/{uuid}/status",
+                headers={"Content-Type": "application/json"},
+                json={
+                    "changeMessage": "Approved by Migrator",
+                    "status": WorkflowStatus.APPROVED,
+                },
+            )
+            r.raise_for_status()
 
     def get_sources(self) -> dict:
         r = self.session.get(f"{self.api}/sources", headers={"Accept": "application/json"})
@@ -167,6 +256,28 @@ class GeonetworkClient:
             },
         )
         r.raise_for_status()
+
+    def add_group(self, name: str, description: str = ""):
+        log.debug(f"Adding group: {name}")
+        r = self.session.put(
+            f"{self.api}/groups",
+            headers={"Accept": "application/json"},
+            json={
+                "name": name,
+                "description": description,
+                "id": -99,
+                "label": {},
+                "email": "",
+                "enableAllowedCategories": False,
+                "allowedCategories": [],
+                "defaultCategory": None,
+                "logo": None,
+                "referrer": None,
+                "website": None,
+            },
+        )
+        r.raise_for_status()
+        return r.json()
 
     def get_groups(self) -> dict:
         r = self.session.get(
