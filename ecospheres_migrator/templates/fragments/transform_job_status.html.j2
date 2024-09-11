@@ -16,6 +16,7 @@
               <tr>
                 <th scope="col">Statut</th>
                 <th scope="col">Fiche originale</th>
+                <th scope="col">XML original</th>
                 <th scope="col">XML transformé</th>
                 <th scope="col">Erreur</th>
               </tr>
@@ -25,9 +26,10 @@
               <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                 <td>{{ "❌" if record.error else "✅" }}</td>
                 <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}" target="_blank" rel="noopener">{{ record.uuid }}</a></td>
+                <td><a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir le XML</a></td>
                 <td>
                   {% if not record.error %}
-                  <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir</a>
+                  <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir le XML</a>
                   {% endif %}
                 </td>
                 <td>{{ record.error }}</td>
