@@ -18,7 +18,7 @@ from flask import (
 )
 
 from ecospheres_migrator.auth import authenticated, connection_infos
-from ecospheres_migrator.batch import BatchRecord, MigrateMode, SuccessBatchRecord
+from ecospheres_migrator.batch import MigrateMode, SuccessTransformBatchRecord, TransformBatchRecord
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
 
@@ -121,7 +121,7 @@ def transform_result(job_id: str, uuid: str):
     job = get_job(job_id)
     if not job or not job.result:
         abort(404)
-    result: SuccessBatchRecord | None = next(
+    result: SuccessTransformBatchRecord | None = next(
         (j for j in job.result.successes() if j.uuid == uuid), None
     )
     if not result or not result.result:
@@ -134,7 +134,9 @@ def transform_original(job_id: str, uuid: str):
     job = get_job(job_id)
     if not job or not job.result:
         abort(404)
-    result: BatchRecord | None = next((j for j in job.result.successes() if j.uuid == uuid), None)
+    result: TransformBatchRecord | None = next(
+        (j for j in job.result.successes() if j.uuid == uuid), None
+    )
     if not result or not result.original:
         abort(404)
     return Response(result.original, mimetype="text/xml", headers={"Content-Type": "text/xml"})
