@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 from ecospheres_migrator.geonetwork import MefArchive
 
@@ -61,8 +62,13 @@ class FailureMigrateBatchRecord(MigrateBatchRecord):
     error: str
 
 
+class MigrateMode(Enum):
+    CREATE = "create"
+    OVERWRITE = "overwrite"
+
+
 class MigrateBatch:
-    def __init__(self, mode: str):
+    def __init__(self, mode: MigrateMode):
         self.records: list[MigrateBatchRecord] = []
         self.mode = mode
 

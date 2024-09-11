@@ -5,7 +5,7 @@
        hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
 {% elif status == "finished" %}
   <p>Job terminé.</p>
-
+  <p>Mode de migration : {% if job.result.mode == modes.CREATE %}création de nouvelles fiches{% else %}mise à jour des fiches existantes{% endif %}.</p>
   {% set successes = job.result.successes() %}
   {% set failures = job.result.failures() %}
   <div class="fr-accordions-group fr-mb-4w">
@@ -25,7 +25,7 @@
                   <thead>
                     <tr>
                       <th scope="col">Statut</th>
-                      {% if job.result.mode == "create" %}
+                      {% if job.result.mode == modes.CREATE %}
                       <th scope="col">Fiche originale</th>
                       {% endif %}
                       <th scope="col">Erreur</th>
@@ -35,7 +35,7 @@
                     {% for record in failures %}
                     <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                       <td>❌</td>
-                      {% if job.result.mode == "create" %}
+                      {% if job.result.mode == modes.CREATE %}
                       <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.source_uuid }}" target="_blank" rel="noopener">{{ record.source_uuid }}</a></td>
                       {% endif %}
                       <td>{{ record.error }}</td>
@@ -66,7 +66,7 @@
                   <thead>
                     <tr>
                       <th scope="col">Statut</th>
-                      {% if job.result.mode == "create" %}
+                      {% if job.result.mode == modes.CREATE %}
                       <th scope="col">Fiche originale</th>
                       {% endif %}
                       <th scope="col">Fiche migrée</th>
@@ -76,7 +76,7 @@
                     {% for record in successes %}
                     <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                       <td>✅</td>
-                      {% if job.result.mode == "create" %}
+                      {% if job.result.mode == modes.CREATE %}
                       <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.source_uuid }}" target="_blank" rel="noopener">{{ record.source_uuid }}</a></td>
                       {% endif %}
                       <td>

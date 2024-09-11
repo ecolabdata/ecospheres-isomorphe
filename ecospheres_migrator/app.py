@@ -18,6 +18,7 @@ from flask import (
 )
 
 from ecospheres_migrator.auth import authenticated, connection_infos
+from ecospheres_migrator.batch import MigrateMode
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
 
@@ -129,7 +130,8 @@ def transform_job_status(job_id: str):
         "fragments/transform_job_status.html.j2",
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
-        url=session["url"],
+        url=url,
+        modes=MigrateMode,
     )
 
 
@@ -154,8 +156,9 @@ def migrate(job_id: str):
         abort(404)
     url, username, password = connection_infos()
     mode = request.form.get("mode")
+    mode = MigrateMode(mode)
     group = request.form.get("group")
-    overwrite = mode == "overwrite"
+    overwrite = mode == MigrateMode.OVERWRITE
     if not overwrite and not group:
         abort(400, "Missing `group` parameter")
     migrator = Migrator(url=url, username=username, password=password)
@@ -182,6 +185,7 @@ def migrate_job_status(job_id: str):
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
         url=url,
+        modes=MigrateMode,
     )
 
 
@@ -189,14 +193,15 @@ def migrate_job_status(job_id: str):
 @authenticated()
 def migrate_update_mode():
     mode = request.args.get("mode")
+    mode = MigrateMode(mode)
     groups = []
-    if mode == "create":
+    if is_create_mode := (mode == MigrateMode.CREATE):
         url, username, password = connection_infos()
         migrator = Migrator(url=url, username=username, password=password)
         groups = migrator.gn.get_groups()
     return render_template(
         "fragments/migrate_update_mode.html.j2",
-        mode=mode,
+        is_create_mode=is_create_mode,
         groups=groups,
     )
 
