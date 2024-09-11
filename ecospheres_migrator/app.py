@@ -45,7 +45,7 @@ def login():
     migrator = Migrator(url=url, username=username, password=password)
     try:
         gn_info = migrator.gn.info()
-    except requests.exceptions.HTTPError as e:
+    except requests.exceptions.RequestException as e:
         flash(f"Problème d'authentification ({e})", "error")
         return redirect(url_for("login_form"))
     else:
