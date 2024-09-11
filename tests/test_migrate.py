@@ -22,6 +22,7 @@ def test_migrate_noop_overwrite(migrator: Migrator, md_fixtures: list[Fixture]):
 
     records_after = get_records(migrator, md_fixtures)
 
+    # content has changed on original records (especially geonet:info//changedDate)
     for uuid in [f.uuid for f in md_fixtures]:
         assert records_after[uuid] != records_before[uuid]
 
@@ -40,7 +41,7 @@ def test_migrate_noop_duplicate(
 
     records_after = get_records(migrator, clean_md_fixtures)
 
-    # content has not changed on original records
+    # content has not changed on original records (especially geonet:info//changedDate)
     for uuid in [f.uuid for f in clean_md_fixtures]:
         assert records_after[uuid] == records_before[uuid]
 
@@ -58,6 +59,7 @@ def test_migrate_error_overwrite(migrator: Migrator, md_fixtures: list[Fixture])
 
     records_after = get_records(migrator, md_fixtures)
 
+    # content has not changed on original records (especially geonet:info//changedDate)
     for uuid in [f.uuid for f in md_fixtures]:
         assert records_after[uuid] == records_before[uuid]
 
@@ -76,7 +78,7 @@ def test_migrate_error_duplicate(
 
     records_after = get_records(migrator, clean_md_fixtures)
 
-    # content has not changed on original records
+    # content has not changed on original records (especially geonet:info//changedDate)
     for uuid in [f.uuid for f in clean_md_fixtures]:
         assert records_after[uuid] == records_before[uuid]
 
