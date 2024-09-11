@@ -1,45 +1,47 @@
 from dataclasses import dataclass
+from enum import Enum
 
-from ecospheres_migrator.geonetwork import MefArchive
+from ecospheres_migrator.geonetwork import MefArchive, WorkflowState
 
 
 @dataclass(kw_only=True)
-class BatchRecord:
+class TransformBatchRecord:
     uuid: str
     template: bool
+    state: WorkflowState | None
     original: str
     url: str
 
 
 @dataclass(kw_only=True)
-class SuccessBatchRecord(BatchRecord):
+class SuccessTransformBatchRecord(TransformBatchRecord):
     result: str
     info: str
 
 
 @dataclass(kw_only=True)
-class FailureBatchRecord(BatchRecord):
+class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
 
 
-class Batch:
+class TransformBatch:
     def __init__(self):
-        self.records: list[BatchRecord] = []
+        self.records: list[TransformBatchRecord] = []
 
-    def add(self, batch: BatchRecord):
+    def add(self, batch: TransformBatchRecord):
         self.records.append(batch)
 
-    def successes(self) -> list[SuccessBatchRecord]:
-        return [r for r in self.records if isinstance(r, SuccessBatchRecord)]
+    def successes(self) -> list[SuccessTransformBatchRecord]:
+        return [r for r in self.records if isinstance(r, SuccessTransformBatchRecord)]
 
-    def failures(self) -> list[FailureBatchRecord]:
-        return [r for r in self.records if isinstance(r, FailureBatchRecord)]
+    def failures(self) -> list[FailureTransformBatchRecord]:
+        return [r for r in self.records if isinstance(r, FailureTransformBatchRecord)]
 
     # FIXME: needed?
     def to_mef(self):
         mef = MefArchive()
         for r in self.records:
-            if isinstance(r, SuccessBatchRecord):
+            if isinstance(r, SuccessTransformBatchRecord):
                 mef.add(r.uuid, r.result, r.info)
         return mef.finalize()
 
@@ -63,8 +65,13 @@ class FailureMigrateBatchRecord(MigrateBatchRecord):
     error: str
 
 
+class MigrateMode(Enum):
+    CREATE = "create"
+    OVERWRITE = "overwrite"
+
+
 class MigrateBatch:
-    def __init__(self, mode: str):
+    def __init__(self, mode: MigrateMode):
         self.records: list[MigrateBatchRecord] = []
         self.mode = mode
 

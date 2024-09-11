@@ -5,14 +5,20 @@ from pathlib import Path
 from lxml import etree
 
 from ecospheres_migrator.batch import (
-    Batch,
-    FailureBatchRecord,
     FailureMigrateBatchRecord,
+    FailureTransformBatchRecord,
     MigrateBatch,
-    SuccessBatchRecord,
+    MigrateMode,
     SuccessMigrateBatchRecord,
+    SuccessTransformBatchRecord,
+    TransformBatch,
 )
-from ecospheres_migrator.geonetwork import GeonetworkClient, Record, extract_record_info
+from ecospheres_migrator.geonetwork import (
+    GeonetworkClient,
+    Record,
+    WorkflowStage,
+    extract_record_info,
+)
 from ecospheres_migrator.util import xml_to_string
 
 logging.basicConfig(level=logging.DEBUG)
@@ -50,7 +56,7 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: Path, selection: list[Record]) -> Batch:
+    def transform(self, transformation: Path, selection: list[Record]) -> TransformBatch:
         """
         Transform data from a selection
         """
@@ -58,18 +64,32 @@ class Migrator:
         sources = self.gn.get_sources()
         transform = Migrator.load_transformation(transformation)
 
-        batch = Batch()
+        batch = TransformBatch()
         for r in selection:
+            log.debug(f"Processing {r.uuid} (template={r.template} state={r.state})")
             original = self.gn.get_record(r.uuid)
+            if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
+                batch.add(
+                    FailureTransformBatchRecord(
+                        url=self.gn.url,
+                        uuid=r.uuid,
+                        template=r.template,
+                        state=r.state,
+                        original=xml_to_string(original),
+                        error="Record has a working copy",
+                    )
+                )
+                continue
             try:
                 info = extract_record_info(original, sources)
                 result = transform(original, CoupledResourceLookUp="'disabled'")
                 # TODO: check if result != original
                 batch.add(
-                    SuccessBatchRecord(
+                    SuccessTransformBatchRecord(
                         url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
+                        state=r.state,
                         original=xml_to_string(original),
                         result=xml_to_string(result),
                         info=xml_to_string(info),
@@ -77,10 +97,11 @@ class Migrator:
                 )
             except Exception as e:
                 batch.add(
-                    FailureBatchRecord(
+                    FailureTransformBatchRecord(
                         url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
+                        state=r.state,
                         original=xml_to_string(original),
                         error=str(e),
                     )
@@ -90,12 +111,12 @@ class Migrator:
         return batch
 
     def migrate(
-        self, batch: Batch, overwrite: bool = False, group: int | None = None
+        self, batch: TransformBatch, overwrite: bool = False, group: int | None = None
     ) -> MigrateBatch:
         log.debug(
             f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
         )
-        migrate_batch = MigrateBatch(mode="overwrite" if overwrite else "create")
+        migrate_batch = MigrateBatch(MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE)
         for r in batch.successes():
             try:
                 if overwrite:
