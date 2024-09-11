@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ecospheres_migrator.batch import Batch
+from ecospheres_migrator.batch import TransformBatch
 from ecospheres_migrator.geonetwork import Record
 from ecospheres_migrator.migrator import Migrator
 
@@ -13,7 +13,9 @@ def get_transformation_path(name: str) -> Path:
     return transformation.path
 
 
-def get_transform_results(transformation: str, migrator: Migrator) -> tuple[Batch, list[Record]]:
+def get_transform_results(
+    transformation: str, migrator: Migrator
+) -> tuple[TransformBatch, list[Record]]:
     selection = migrator.select(query="type=dataset")
     assert len(selection) > 0
     return migrator.transform(get_transformation_path(transformation), selection), selection
