@@ -71,6 +71,7 @@ class Migrator:
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.add(
                     FailureTransformBatchRecord(
+                        url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
                         state=r.state,
@@ -85,6 +86,7 @@ class Migrator:
                 # TODO: check if result != original
                 batch.add(
                     SuccessTransformBatchRecord(
+                        url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
                         state=r.state,
@@ -96,6 +98,7 @@ class Migrator:
             except Exception as e:
                 batch.add(
                     FailureTransformBatchRecord(
+                        url=self.gn.url,
                         uuid=r.uuid,
                         template=r.template,
                         state=r.state,
@@ -120,6 +123,7 @@ class Migrator:
                     self.gn.update_record(r.uuid, r.result, template=r.template)
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
+                            url=self.gn.url,
                             source_uuid=r.uuid,
                             target_uuid=r.uuid,
                             template=r.template,
@@ -135,6 +139,7 @@ class Migrator:
                     )
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
+                            url=self.gn.url,
                             source_uuid=r.uuid,
                             target_uuid=new_record["uuid"],
                             template=r.template,
@@ -145,6 +150,7 @@ class Migrator:
             except Exception as e:
                 migrate_batch.add(
                     FailureMigrateBatchRecord(
+                        url=self.gn.url,
                         source_uuid=r.uuid,
                         template=r.template,
                         source_content=r.original,

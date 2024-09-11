@@ -24,6 +24,8 @@ from ecospheres_migrator.queue import get_job, get_queue
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
+app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
+app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 
 
 @app.route("/")
@@ -97,7 +99,9 @@ def transform():
         abort(400, "Missing `transformation` parameter")
     migrator = Migrator(url=url, username=username, password=password)
     selection = migrator.select(query=query)
-    job = get_queue().enqueue(migrator.transform, transformation, selection)
+    job = get_queue().enqueue(
+        migrator.transform, transformation, selection, result_ttl=app.config["TRANSFORM_TTL"]
+    )
     return redirect(url_for("transform_success", job_id=job.id))
 
 
@@ -176,7 +180,11 @@ def migrate(job_id: str):
         abort(400, "Missing `group` parameter")
     migrator = Migrator(url=url, username=username, password=password)
     migrate_job = get_queue().enqueue(
-        migrator.migrate, transform_job.result, overwrite=overwrite, group=group
+        migrator.migrate,
+        transform_job.result,
+        overwrite=overwrite,
+        group=group,
+        result_ttl=app.config["MIGRATE_TTL"],
     )
     return redirect(url_for("migrate_success", job_id=migrate_job.id))
 

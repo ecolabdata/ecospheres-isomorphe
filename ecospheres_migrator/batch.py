@@ -10,6 +10,7 @@ class TransformBatchRecord:
     template: bool
     state: WorkflowState | None
     original: str
+    url: str
 
 
 @dataclass(kw_only=True)
@@ -51,6 +52,7 @@ class MigrateBatchRecord:
     source_content: str
     target_content: str
     template: bool
+    url: str
 
 
 @dataclass(kw_only=True)
