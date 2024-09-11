@@ -163,7 +163,7 @@ class GeonetworkClient:
         template: bool,
         group: int | None,
         uuid_processing: str = "GENERATEUUID",
-    ):
+    ) -> dict:
         log.debug(f"Duplicating record {uuid}: template={template}, group={group}")
         r = self.session.put(
             f"{self.api}/records",
@@ -178,6 +178,7 @@ class GeonetworkClient:
             data=metadata,
         )
         r.raise_for_status()
+        return r.json()
 
     def update_record(
         self, uuid: str, metadata: str, template: bool, state: WorkflowState | None = None

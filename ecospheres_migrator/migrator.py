@@ -4,7 +4,15 @@ from pathlib import Path
 
 from lxml import etree
 
-from ecospheres_migrator.batch import Batch, FailureBatchRecord, SuccessBatchRecord
+from ecospheres_migrator.batch import (
+    FailureMigrateBatchRecord,
+    FailureTransformBatchRecord,
+    MigrateBatch,
+    MigrateMode,
+    SuccessMigrateBatchRecord,
+    SuccessTransformBatchRecord,
+    TransformBatch,
+)
 from ecospheres_migrator.geonetwork import (
     GeonetworkClient,
     Record,
@@ -48,7 +56,7 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: Path, selection: list[Record]) -> Batch:
+    def transform(self, transformation: Path, selection: list[Record]) -> TransformBatch:
         """
         Transform data from a selection
         """
@@ -56,13 +64,13 @@ class Migrator:
         sources = self.gn.get_sources()
         transform = Migrator.load_transformation(transformation)
 
-        batch = Batch()
+        batch = TransformBatch()
         for r in selection:
             log.debug(f"Processing {r.uuid} (template={r.template} state={r.state})")
             original = self.gn.get_record(r.uuid)
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.add(
-                    FailureBatchRecord(
+                    FailureTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
                         state=r.state,
@@ -76,7 +84,7 @@ class Migrator:
                 result = transform(original, CoupledResourceLookUp="'disabled'")
                 # TODO: check if result != original
                 batch.add(
-                    SuccessBatchRecord(
+                    SuccessTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
                         state=r.state,
@@ -87,7 +95,7 @@ class Migrator:
                 )
             except Exception as e:
                 batch.add(
-                    FailureBatchRecord(
+                    FailureTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
                         state=r.state,
@@ -99,27 +107,53 @@ class Migrator:
         log.debug("Transformation done.")
         return batch
 
-    def migrate(self, batch: Batch, overwrite: bool = False, group: int | None = None):
+    def migrate(
+        self, batch: TransformBatch, overwrite: bool = False, group: int | None = None
+    ) -> MigrateBatch:
         log.debug(
             f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
         )
-        failures = []
+        migrate_batch = MigrateBatch(MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE)
         for r in batch.successes():
             try:
                 if overwrite:
-                    self.gn.update_record(r.uuid, r.result, template=r.template, state=r.state)
+                    self.gn.update_record(r.uuid, r.result, template=r.template)
+                    migrate_batch.add(
+                        SuccessMigrateBatchRecord(
+                            source_uuid=r.uuid,
+                            target_uuid=r.uuid,
+                            template=r.template,
+                            source_content=r.original,
+                            target_content=r.result,
+                        )
+                    )
                 else:
                     assert group is not None
                     # TODO: publish flag
-                    self.gn.put_record(r.uuid, r.result, template=r.template, group=group)
-            except Exception:
-                # TODO: track failure cause like in transform()
-                failures.append(r.uuid)
-
-        if failures:
-            # TODO: raise exception
-            log.debug(f"Failures: {', '.join(failures)}")
+                    new_record = self.gn.put_record(
+                        r.uuid, r.result, template=r.template, group=group
+                    )
+                    migrate_batch.add(
+                        SuccessMigrateBatchRecord(
+                            source_uuid=r.uuid,
+                            target_uuid=new_record["uuid"],
+                            template=r.template,
+                            source_content=r.original,
+                            target_content=r.result,
+                        )
+                    )
+            except Exception as e:
+                migrate_batch.add(
+                    FailureMigrateBatchRecord(
+                        source_uuid=r.uuid,
+                        template=r.template,
+                        source_content=r.original,
+                        target_content=r.result,
+                        error=str(e),
+                    )
+                )
         log.debug("Migration done.")
+        return migrate_batch
 
     @staticmethod
     def list_transformations(path: Path) -> list[Transformation]:
