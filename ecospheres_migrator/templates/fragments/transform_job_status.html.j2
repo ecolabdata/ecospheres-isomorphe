@@ -6,32 +6,30 @@
 {% elif status == "finished" %}
   {# TODO: add normalized info about current connected catalog #}
   <p>Job terminé.</p>
+  {% set successes = job.result.successes() %}
+  {% set failures = job.result.failures() %}
+
+  {% if failures %}
   <div class="fr-table" id="table-md-component">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
         <div class="fr-table__content">
           <table id="table-md">
-            <caption>Récapitulatif des transformations</caption>
+            <caption>Transformations en échec</caption>
             <thead>
               <tr>
                 <th scope="col">Statut</th>
                 <th scope="col">Fiche originale</th>
                 <th scope="col">XML original</th>
-                <th scope="col">XML transformé</th>
                 <th scope="col">Erreur</th>
               </tr>
             </thead>
             <tbody>
               {% for record in job.result.records %}
               <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
-                <td>{{ "❌" if record.error else "✅" }}</td>
+                <td>❌</td>
                 <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}" target="_blank" rel="noopener">{{ record.uuid }}</a></td>
                 <td><a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir le XML</a></td>
-                <td>
-                  {% if not record.error %}
-                  <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir le XML</a>
-                  {% endif %}
-                </td>
                 <td>{{ record.error }}</td>
               </tr>
               {% endfor %}
@@ -41,6 +39,39 @@
       </div>
     </div>
   </div>
+  {% endif %}
+
+  {% if successes %}
+  <div class="fr-table" id="table-md-component">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table id="table-md">
+            <caption>Transformations réussies</caption>
+            <thead>
+              <tr>
+                <th scope="col">Statut</th>
+                <th scope="col">Fiche originale</th>
+                <th scope="col">XML original</th>
+                <th scope="col">XML transformé</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in job.result.records %}
+              <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
+                <td>✅</td>
+                <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}" target="_blank" rel="noopener">{{ record.uuid }}</a></td>
+                <td><a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir le XML</a></td>
+                <td><a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}" target="_blank" rel="noopener">Voir le XML</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
   <p>
     Vous pouvez <a href="{{ url_for('transform_download_result', job_id=job.id) }}">télécharger le résultat</a>
     et appliquer vous-mêmes les modifications sur votre catalogue en important le fichier.
