@@ -42,8 +42,8 @@ def login():
     if not username or not password or not url:
         abort(400, "Missing login parameter(s)")
 
-    migrator = Migrator(url=url, username=username, password=password)
     try:
+        migrator = Migrator(url=url, username=username, password=password)
         gn_info = migrator.gn.info()
     except requests.exceptions.RequestException as e:
         flash(f"Problème d'authentification ({e})", "error")
