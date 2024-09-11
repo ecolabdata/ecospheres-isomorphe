@@ -23,8 +23,8 @@ from ecospheres_migrator.queue import get_job, get_queue
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
-app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7  # 1 week
-app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30  # 1 month
+app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
+app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 
 
 @app.route("/")
