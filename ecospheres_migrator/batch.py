@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 
-from ecospheres_migrator.geonetwork import MefArchive
+from ecospheres_migrator.geonetwork import MefArchive, WorkflowState
 
 
 @dataclass(kw_only=True)
 class BatchRecord:
     uuid: str
     template: bool
+    state: WorkflowState | None
     original: str
 
 
@@ -39,5 +40,6 @@ class Batch:
         mef = MefArchive()
         for r in self.records:
             if isinstance(r, SuccessBatchRecord):
+                # TODO: state?
                 mef.add(r.uuid, r.result, r.info)
         return mef.finalize()

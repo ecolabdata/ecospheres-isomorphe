@@ -4,25 +4,132 @@
        hx-trigger="load delay:1s"
        hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
 {% elif status == "finished" %}
+  {# TODO: add normalized info about current connected catalog #}
   <p>Job terminé.</p>
-  <p>Vous pouvez <a href="{{ url_for('transform_download_result', job_id=job.id) }}">télécharger le résultat</a>
-  et appliquer vous-mêmes les modifications sur votre catalogue en important le fichier.</p>
-  <p>Vous pouvez également utiliser le formulaire ci-dessous pour appliquer les modifications automatiquement
-  sur le catalogue {{ url }}. Pour ce faire, nous avons besoin d'identifiants privilégiés sur votre catalogue.
-  Ces identifiants sont transmis de manière sécurisée et nous ne les stockons pas.</p>
-  <form action="{{ url_for('migrate', job_id=job.id) }}" method="post" class="fr-mt-2w">
+  {% set successes = job.result.successes() %}
+  {% set failures = job.result.failures() %}
+  <div class="fr-accordions-group fr-mb-4w">
+    {% if failures %}
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn"
+                aria-expanded="true"
+                aria-controls="accordion-failures">Transformations en échec ({{ failures|length }})</button>
+      </h3>
+      <div class="fr-collapse" id="accordion-failures">
+        <div class="fr-table fr-mb-1w" id="table-md-component">
+          <div class="fr-table__wrapper">
+            <div class="fr-table__container">
+              <div class="fr-table__content">
+                <table id="table-md">
+                  <thead>
+                    <tr>
+                      <th scope="col">Statut</th>
+                      <th scope="col">Fiche originale</th>
+                      <th scope="col">XML original</th>
+                      <th scope="col">Erreur</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for record in failures %}
+                      <tr id="table-md-row-key-{{ loop.index }}"
+                          data-row-key="{{ loop.index }}">
+                        <td>❌</td>
+                        <td>
+                          <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
+                            target="_blank"
+                            rel="noopener">{{ record.uuid }}</a>
+                        </td>
+                        <td>
+                          <a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}"
+                            target="_blank"
+                            rel="noopener">Voir le XML</a>
+                        </td>
+                        <td>{{ record.error }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+    {% if successes %}
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-successes">Transformations réussies ({{ successes|length }})</button>
+      </h3>
+      <div class="fr-collapse" id="accordion-successes">
+        <div class="fr-table fr-mb-1w" id="table-md-component">
+          <div class="fr-table__wrapper">
+            <div class="fr-table__container">
+              <div class="fr-table__content">
+                <table id="table-md">
+                  <thead>
+                    <tr>
+                      <th scope="col">Statut</th>
+                      <th scope="col">Fiche originale</th>
+                      <th scope="col">XML original</th>
+                      <th scope="col">XML transformé</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for record in successes %}
+                      <tr id="table-md-row-key-{{ loop.index }}"
+                          data-row-key="{{ loop.index }}">
+                        <td>✅</td>
+                        <td>
+                          <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
+                            target="_blank"
+                            rel="noopener">{{ record.uuid }}</a>
+                        </td>
+                        <td>
+                          <a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}"
+                            target="_blank"
+                            rel="noopener">Voir le XML</a>
+                        </td>
+                        <td>
+                          <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}"
+                            target="_blank"
+                            rel="noopener">Voir le XML</a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+  <p>
+    Vous pouvez <a href="{{ url_for('transform_download_result', job_id=job.id) }}">télécharger le résultat</a>
+    et appliquer vous-mêmes les modifications sur votre catalogue en important le fichier.
+  </p>
+  <p>
+    Vous pouvez également utiliser le formulaire ci-dessous pour appliquer les modifications automatiquement
+    sur le catalogue {{ url }}.
+  </p>
+  <form action="{{ url_for('migrate', job_id=job.id) }}"
+        method="post"
+        class="fr-mt-2w">
     <div class="fr-select-group">
       <label class="fr-label" for="mode">Mode de mise à jour *</label>
-      <select required class="fr-select" id="mode" name="mode">
+      <select hx-get="{{ url_for('migrate_update_mode') }}" hx-target="#migrate-form-group-field" hx-trigger="change" required class="fr-select" id="mode" name="mode">
         <option value="" selected disabled hidden>Sélectionner un mode</option>
         <option value="create">Création de nouvelles fiches (GENERATEUUID)</option>
         <option value="overwrite">Mise à jour des fiches existantes (OVERWRITE)</option>
       </select>
     </div>
-    <div class="fr-input-group">
-      <label class="fr-label" for="group">Identifiant du groupe de rattachement</label>
-      <input class="fr-input" type="text" id="group" name="group" />
-    </div>
+    <div id="migrate-form-group-field"></div>
     <button type="submit" class="fr-btn">Suivant</button>
   </form>
 {% elif status == "failed" %}

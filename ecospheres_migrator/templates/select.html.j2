@@ -3,28 +3,15 @@
   <div class="fr-stepper fr-mt-4v">
     <h2 class="fr-stepper__title">
       Sélection des données à migrer
-      <span class="fr-stepper__state">Étape 1 sur 3</span>
+      <span class="fr-stepper__state">Étape 2 sur 4</span>
     </h2>
-    <div class="fr-stepper__steps" data-fr-current-step="1" data-fr-steps="3"></div>
+    <div class="fr-stepper__steps" data-fr-current-step="2" data-fr-steps="4"></div>
     <p class="fr-stepper__details">
       <span class="fr-text--bold">Étape suivante :</span> Transformation des données
     </p>
   </div>
   <form hx-validate="true" method="post" action="{{ url_for('transform') }}">
-    <div class="fr-input-group">
-      <label class="fr-label" for="query">URL du catalogue *
-        <span class="fr-hint-text">Ex : https://www.example.com/geonetwork/srv</span>
-      </label>
-      <input required class="fr-input" type="url" id="url" name="url" value="{{ url }}" />
-    </div>
-    <div class="fr-input-group">
-      <label class="fr-label" for="username">Identifiant sur le catalogue *</label>
-      <input required class="fr-input" type="text" id="username" name="username" />
-    </div>
-    <div class="fr-input-group">
-      <label class="fr-label" for="password">Mot de passe sur le catalogue *</label>
-      <input required class="fr-input" type="password" id="password" name="password" />
-    </div>
+    {# TODO: add info about current connected catalog #}
     <div class="fr-input-group">
       <label class="fr-label" for="query">Requête de recherche *
         <span class="fr-hint-text">Ex : _source=&lt;SOURCE_ID&gt;,type=dataset</span>

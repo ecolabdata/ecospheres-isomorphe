@@ -1,0 +1,33 @@
+{% extends "base.html.j2" %}
+{% block content %}
+  <div class="fr-stepper fr-mt-4v">
+    <h2 class="fr-stepper__title">
+      Connexion au catalogue
+      <span class="fr-stepper__state">Étape 1 sur 4</span>
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="1" data-fr-steps="4"></div>
+    <p class="fr-stepper__details">
+      <span class="fr-text--bold">Étape suivante :</span> Sélection des données
+    </p>
+  </div>
+  <form method="post" action="{{ url_for('login') }}">
+    <div class="fr-input-group">
+      <label class="fr-label" for="query">URL du catalogue *
+        <span class="fr-hint-text">Ex : https://www.example.com/geonetwork/srv</span>
+      </label>
+      <input required class="fr-input" type="url" id="url" name="url" value="{{ url }}" />
+    </div>
+    <div class="fr-input-group">
+      <label class="fr-label" for="username">Identifiant sur le catalogue *</label>
+      <input required class="fr-input" type="text" id="username" name="username" value="{{ username }}" />
+    </div>
+    <div class="fr-input-group">
+      <label class="fr-label" for="password">Mot de passe sur le catalogue *</label>
+      <input required class="fr-input" type="password" id="password" name="password" value="{{ password }}" />
+    </div>
+    <div class="fr-hint-text">Les données de ce formulaire sont chiffrées et stockées uniquement sur votre navigateur.</div>
+    <div class="fr-mt-2w fr-grid-row">
+      <button type="submit" class="fr-btn">Suivant</button>
+    </div>
+  </form>
+{% endblock content %}
