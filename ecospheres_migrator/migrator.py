@@ -5,12 +5,12 @@ from pathlib import Path
 from lxml import etree
 
 from ecospheres_migrator.batch import (
-    Batch,
-    FailureBatchRecord,
     FailureMigrateBatchRecord,
+    FailureTransformBatchRecord,
     MigrateBatch,
-    SuccessBatchRecord,
     SuccessMigrateBatchRecord,
+    SuccessTransformBatchRecord,
+    TransformBatch,
 )
 from ecospheres_migrator.geonetwork import GeonetworkClient, Record, extract_record_info
 from ecospheres_migrator.util import xml_to_string
@@ -50,7 +50,7 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: Path, selection: list[Record]) -> Batch:
+    def transform(self, transformation: Path, selection: list[Record]) -> TransformBatch:
         """
         Transform data from a selection
         """
@@ -58,7 +58,7 @@ class Migrator:
         sources = self.gn.get_sources()
         transform = Migrator.load_transformation(transformation)
 
-        batch = Batch()
+        batch = TransformBatch()
         for r in selection:
             original = self.gn.get_record(r.uuid)
             try:
@@ -66,7 +66,7 @@ class Migrator:
                 result = transform(original, CoupledResourceLookUp="'disabled'")
                 # TODO: check if result != original
                 batch.add(
-                    SuccessBatchRecord(
+                    SuccessTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
                         original=xml_to_string(original),
@@ -76,7 +76,7 @@ class Migrator:
                 )
             except Exception as e:
                 batch.add(
-                    FailureBatchRecord(
+                    FailureTransformBatchRecord(
                         uuid=r.uuid,
                         template=r.template,
                         original=xml_to_string(original),
@@ -88,7 +88,7 @@ class Migrator:
         return batch
 
     def migrate(
-        self, batch: Batch, overwrite: bool = False, group: int | None = None
+        self, batch: TransformBatch, overwrite: bool = False, group: int | None = None
     ) -> MigrateBatch:
         log.debug(
             f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
