@@ -42,6 +42,7 @@ def test_migrate_noop_duplicate(
     records_after = get_records(migrator, clean_md_fixtures)
 
     # content has not changed on original records (especially geonet:info//changedDate)
+    # but new records have been created in the test group (see below)
     for uuid in [f.uuid for f in clean_md_fixtures]:
         assert records_after[uuid] == records_before[uuid]
 
