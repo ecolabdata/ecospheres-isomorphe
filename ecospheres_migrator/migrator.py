@@ -111,12 +111,18 @@ class Migrator:
         return batch
 
     def migrate(
-        self, batch: TransformBatch, overwrite: bool = False, group: int | None = None
+        self,
+        batch: TransformBatch,
+        overwrite: bool = False,
+        group: int | None = None,
+        transform_job_id: str | None = None,
     ) -> MigrateBatch:
         log.debug(
             f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
         )
-        migrate_batch = MigrateBatch(MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE)
+        migrate_batch = MigrateBatch(
+            MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE, transform_job_id
+        )
         for r in batch.successes():
             try:
                 if overwrite:
