@@ -184,6 +184,8 @@ class GeonetworkClient:
                 if uuid_match:
                     uuid_match = uuid_match.group(1)
                     break
+            if uuid_match:
+                break
 
         return uuid_match
 
