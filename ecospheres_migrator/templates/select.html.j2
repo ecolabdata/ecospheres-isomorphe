@@ -21,6 +21,7 @@
         <button type="submit"
                 hx-post="{{ url_for('select_preview') }}"
                 hx-target="#select_preview"
+                hx-swap="innerHTML show:top"
                 class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
       </div>
     </div>
