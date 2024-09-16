@@ -121,7 +121,8 @@ class Migrator:
             f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
         )
         migrate_batch = MigrateBatch(
-            MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE, transform_job_id
+            mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
+            transform_job_id=transform_job_id,
         )
         for r in batch.successes():
             try:
