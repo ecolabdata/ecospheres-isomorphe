@@ -78,10 +78,10 @@ def select():
 def select_preview():
     url, username, password = connection_infos()
     if not url:
-        return "Veuillez entrer une URL de catalogue"
+        return "<i>Veuillez entrer une URL de catalogue.</i>"
     query = request.form.get("query")
     if not query:
-        return "Veuillez entrer une requête de recherche"
+        return "<i>Veuillez entrer une requête de recherche.</i>"
     migrator = Migrator(url=url, username=username, password=password)
     results = migrator.select(query=query)
     return render_template("fragments/select_preview.html.j2", results=results)
