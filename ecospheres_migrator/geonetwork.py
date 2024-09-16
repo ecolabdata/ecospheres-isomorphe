@@ -169,6 +169,7 @@ class GeonetworkClient:
                 }
             ]
         },
+        ```
         """
         metadata_infos = payload.get("metadataInfos")
         if not metadata_infos:
