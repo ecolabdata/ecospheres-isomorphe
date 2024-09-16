@@ -182,10 +182,7 @@ class GeonetworkClient:
                     r"'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'", message
                 )
                 if uuid_match:
-                    uuid_match = uuid_match.group(1)
-                    break
-            if uuid_match:
-                break
+                    return uuid_match.group(1)
 
         return uuid_match
 
