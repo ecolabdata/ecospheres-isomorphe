@@ -157,7 +157,7 @@ class GeonetworkClient:
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
 
-    def _extract_uuid_from_put_response(self, payload: dict):
+    def _extract_uuid_from_put_response(self, payload: dict) -> str | None:
         """
         Create record UUID is not in the `uuid` but in `metadatasInfos`:
         ```
@@ -175,7 +175,6 @@ class GeonetworkClient:
         if not metadata_infos:
             return None
 
-        uuid_match = None
         for md_info in metadata_infos.values():
             for info in md_info:
                 message = info.get("message")
@@ -184,8 +183,6 @@ class GeonetworkClient:
                 )
                 if uuid_match:
                     return uuid_match.group(1)
-
-        return uuid_match
 
     def put_record(
         self,
