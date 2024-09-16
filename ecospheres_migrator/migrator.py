@@ -141,7 +141,7 @@ class Migrator:
                         SuccessMigrateBatchRecord(
                             url=self.gn.url,
                             source_uuid=r.uuid,
-                            target_uuid=new_record["uuid"],
+                            target_uuid=new_record["new_record_uuid"],
                             template=r.template,
                             source_content=r.original,
                             target_content=r.result,

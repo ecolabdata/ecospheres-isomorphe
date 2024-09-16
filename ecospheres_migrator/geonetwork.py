@@ -1,5 +1,6 @@
 import io
 import logging
+import re
 import zipfile
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
@@ -156,6 +157,33 @@ class GeonetworkClient:
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
 
+    def _extract_uuid_from_put_response(self, payload: dict) -> str | None:
+        """
+        Create record UUID is not in the `uuid` but in `metadatasInfos`:
+        ```
+        "metadataInfos":{
+            "259":[
+                {
+                    "message":"Metadata imported from XML with UUID '7d447744-1be5-4be0-8b46-6be0d36ec90f'",
+                    "date":"2024-09-12T15:39:41"
+                }
+            ]
+        },
+        ```
+        """
+        metadata_infos = payload.get("metadataInfos")
+        if not metadata_infos:
+            return None
+
+        for md_info in metadata_infos.values():
+            for info in md_info:
+                message = info.get("message")
+                uuid_match = re.search(
+                    r"'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'", message
+                )
+                if uuid_match:
+                    return uuid_match.group(1)
+
     def put_record(
         self,
         uuid: str,
@@ -178,7 +206,9 @@ class GeonetworkClient:
             data=metadata,
         )
         r.raise_for_status()
-        return r.json()
+        data = r.json()
+        data["new_record_uuid"] = self._extract_uuid_from_put_response(data)
+        return data
 
     def update_record(
         self, uuid: str, metadata: str, template: bool, state: WorkflowState | None = None
