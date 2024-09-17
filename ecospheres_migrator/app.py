@@ -187,6 +187,7 @@ def migrate(job_id: str):
         overwrite=overwrite,
         group=group,
         result_ttl=app.config["MIGRATE_TTL"],
+        transform_job_id=job_id,
     )
     return redirect(url_for("migrate_success", job_id=migrate_job.id))
 

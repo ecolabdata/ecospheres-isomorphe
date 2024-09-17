@@ -89,6 +89,10 @@ def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixtu
                 uuid_processing="NOTHING",
             )
             fixtures.append(Fixture(uuid=uuid, name=fixture.stem, content=content))
+
+    total_records = gn_client.get_records()
+    assert len(total_records) == len(fixtures), "GN test instance records do not match fixtures"
+
     return fixtures
 
 

@@ -71,9 +71,10 @@ class MigrateMode(Enum):
 
 
 class MigrateBatch:
-    def __init__(self, mode: MigrateMode):
+    def __init__(self, mode: MigrateMode, transform_job_id: str | None):
         self.records: list[MigrateBatchRecord] = []
         self.mode = mode
+        self.transform_job_id = transform_job_id
 
     def add(self, batch: MigrateBatchRecord):
         self.records.append(batch)
