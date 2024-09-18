@@ -50,6 +50,9 @@ class TransformBatch:
     def skipped(self) -> list[SkippedTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
 
+    def __repr__(self):
+        return f"TransformBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
+
     # FIXME: needed?
     def to_mef(self):
         mef = MefArchive()
@@ -97,3 +100,6 @@ class MigrateBatch:
 
     def failures(self) -> list[FailureMigrateBatchRecord]:
         return [r for r in self.records if isinstance(r, FailureMigrateBatchRecord)]
+
+    def __repr__(self):
+        return f"MigrateBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes)"

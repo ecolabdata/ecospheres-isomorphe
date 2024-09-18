@@ -87,6 +87,7 @@ class Migrator:
                 )
                 continue
             try:
+                # FIXME: extract_record_info() mutates original
                 info = extract_record_info(original, sources)
                 result = transform(original)
                 result_str = xml_to_string(result)
