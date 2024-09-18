@@ -7,7 +7,7 @@
   <xsl:strip-space elements="*"/>
 
   <xsl:template match="/gmd:MD_Metadata/gmd:language/gco:CharacterString/text()">
-    <xsl:text>xxx</xsl:text>
+    <xsl:text>eng</xsl:text>
   </xsl:template>
 
   <xsl:template match="@*|node()">

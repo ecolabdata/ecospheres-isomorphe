@@ -24,6 +24,16 @@ class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
 
 
+class SkipReason(Enum):
+    NO_CHANGES = "no changes"
+
+
+@dataclass(kw_only=True)
+class SkippedTransformBatchRecord(TransformBatchRecord):
+    reason: SkipReason
+    info: str
+
+
 class TransformBatch:
     def __init__(self):
         self.records: list[TransformBatchRecord] = []
@@ -36,6 +46,9 @@ class TransformBatch:
 
     def failures(self) -> list[FailureTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, FailureTransformBatchRecord)]
+
+    def skipped(self) -> list[SkippedTransformBatchRecord]:
+        return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
 
     # FIXME: needed?
     def to_mef(self):

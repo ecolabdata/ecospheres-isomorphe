@@ -16,11 +16,11 @@ def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, str
     return records
 
 
-def test_migrate_noop_overwrite(migrator: Migrator, md_fixtures: list[Fixture]):
-    """`noop` migration in overwrite mode should update content"""
+def test_migrate_change_language_overwrite(migrator: Migrator, md_fixtures: list[Fixture]):
+    """`change-language` migration in overwrite mode should update content"""
     records_before = get_records(migrator, md_fixtures)
 
-    batch, _ = get_transform_results("noop", migrator)
+    batch, _ = get_transform_results("change-language", migrator)
     migrate_batch = migrator.migrate(batch, overwrite=True, group=None)
     assert len(migrate_batch.successes()) == len(batch.successes())
     assert len(migrate_batch.failures()) == 0
@@ -32,16 +32,16 @@ def test_migrate_noop_overwrite(migrator: Migrator, md_fixtures: list[Fixture]):
         assert records_after[uuid] != records_before[uuid]
 
 
-def test_migrate_noop_duplicate(
+def test_migrate_change_language_duplicate(
     migrator: Migrator, clean_md_fixtures: list[Fixture], group_fixture: int
 ):
     """
-    `noop` migration in duplicate mode should create new records in specific group.
+    `change-language` migration in duplicate mode should create new records in specific group.
     Use `clean_md_fixtures` to remove all records from the group before running the test.
     """
     records_before = get_records(migrator, clean_md_fixtures)
 
-    batch, _ = get_transform_results("noop", migrator)
+    batch, _ = get_transform_results("change-language", migrator)
     migrate_batch = migrator.migrate(batch, overwrite=False, group=group_fixture)
     assert len(migrate_batch.successes()) == len(batch.successes())
     assert len(migrate_batch.failures()) == 0
@@ -104,49 +104,57 @@ def test_migrate_transform_job_id(migrator: Migrator):
     assert migrate_batch.transform_job_id == "xxx"
 
 
-def test_migrate_batch_records_success(migrator: Migrator, md_fixtures: list[Fixture]):
-    batch, _ = get_transform_results("noop", migrator)
-    migrate_batch = migrator.migrate(batch, overwrite=False, group=None)
+def test_migrate_batch_records_success(
+    migrator: Migrator, md_fixtures: list[Fixture], group_fixture: int
+):
+    batch, _ = get_transform_results("change-language", migrator)
+    migrate_batch = migrator.migrate(batch, overwrite=False, group=group_fixture)
+    assert len(migrate_batch.successes())
     for record in migrate_batch.successes():
         assert record.source_uuid in [f.uuid for f in md_fixtures]
         assert record.target_uuid not in [f.uuid for f in md_fixtures]
         assert record.url == GN_TEST_URL
-        assert record.source_content is not None  # TODO: check content when formatting is done
-        assert record.target_content is not None  # TODO: check content when formatting is done
+        assert record.source_content is not None
+        assert record.target_content is not None
+        assert record.source_content != record.target_content
         assert record.template is False
 
 
 def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fixture]):
-    batch, _ = get_transform_results("noop", migrator)
+    batch, _ = get_transform_results("change-language", migrator)
     with patch("ecospheres_migrator.geonetwork.GeonetworkClient.update_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked update_record error")
         migrate_batch = migrator.migrate(batch, overwrite=False, group=None)
+    assert len(migrate_batch.failures())
     for record in migrate_batch.failures():
         assert record.source_uuid in [f.uuid for f in md_fixtures]
         assert record.url == GN_TEST_URL
-        assert record.source_content is not None  # TODO: check content when formatting is done
-        assert record.target_content is not None  # TODO: check content when formatting is done
+        assert record.source_content is not None
+        assert record.target_content is not None
+        assert record.source_content != record.target_content
         assert record.template is False
         assert record.error is not None  # actual error is tested below
 
 
 def test_migrate_overwrite_gn_error(migrator: Migrator, md_fixtures: list[Fixture]):
-    batch, _ = get_transform_results("noop", migrator)
+    batch, _ = get_transform_results("change-language", migrator)
     with patch("ecospheres_migrator.geonetwork.GeonetworkClient.update_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked update_record error")
         migrate_batch = migrator.migrate(batch, overwrite=True, group=None)
     assert len(migrate_batch.failures()) == len(md_fixtures)
     assert migrate_batch.mode == MigrateMode.OVERWRITE
+    assert len(migrate_batch.failures())
     for record in migrate_batch.failures():
         assert record.error == "Mocked update_record error"
 
 
 def test_migrate_duplicate_gn_error(migrator: Migrator, md_fixtures: list[Fixture]):
-    batch, _ = get_transform_results("noop", migrator)
+    batch, _ = get_transform_results("change-language", migrator)
     with patch("ecospheres_migrator.geonetwork.GeonetworkClient.put_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked put_record error")
         migrate_batch = migrator.migrate(batch, overwrite=False, group=1)
     assert len(migrate_batch.failures()) == len(md_fixtures)
     assert migrate_batch.mode == MigrateMode.CREATE
+    assert len(migrate_batch.failures())
     for record in migrate_batch.failures():
         assert record.error == "Mocked put_record error"
