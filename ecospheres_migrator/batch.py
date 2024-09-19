@@ -24,6 +24,25 @@ class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
 
 
+class SkipReasonMessage(Enum):
+    """
+    We don't use `SkipReason.value` for this because we pickle the reason
+    and want to be able to change the associated message inbetween jobs.
+    """
+
+    NO_CHANGES = "Pas de modification lors de la transformation."
+
+
+class SkipReason(Enum):
+    NO_CHANGES = "no changes"
+
+
+@dataclass(kw_only=True)
+class SkippedTransformBatchRecord(TransformBatchRecord):
+    reason: SkipReason
+    info: str
+
+
 class TransformBatch:
     def __init__(self):
         self.records: list[TransformBatchRecord] = []
@@ -36,6 +55,12 @@ class TransformBatch:
 
     def failures(self) -> list[FailureTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, FailureTransformBatchRecord)]
+
+    def skipped(self) -> list[SkippedTransformBatchRecord]:
+        return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
+
+    def __repr__(self):
+        return f"TransformBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
 
     # FIXME: needed?
     def to_mef(self):
@@ -84,3 +109,6 @@ class MigrateBatch:
 
     def failures(self) -> list[FailureMigrateBatchRecord]:
         return [r for r in self.records if isinstance(r, FailureMigrateBatchRecord)]
+
+    def __repr__(self):
+        return f"MigrateBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes)"

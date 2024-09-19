@@ -18,7 +18,12 @@ from flask import (
 )
 
 from ecospheres_migrator.auth import authenticated, connection_infos
-from ecospheres_migrator.batch import MigrateMode, SuccessTransformBatchRecord, TransformBatchRecord
+from ecospheres_migrator.batch import (
+    MigrateMode,
+    SkipReasonMessage,
+    SuccessTransformBatchRecord,
+    TransformBatchRecord,
+)
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
 
@@ -151,6 +156,7 @@ def transform_job_status(job_id: str):
         now=datetime.now().isoformat(timespec="seconds"),
         url=url,
         modes=MigrateMode,
+        reasons=SkipReasonMessage,
     )
 
 

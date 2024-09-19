@@ -9,9 +9,12 @@ from ecospheres_migrator.batch import (
     FailureTransformBatchRecord,
     MigrateBatch,
     MigrateMode,
+    SkippedTransformBatchRecord,
+    SkipReason,
     SuccessMigrateBatchRecord,
     SuccessTransformBatchRecord,
     TransformBatch,
+    TransformBatchRecord,
 )
 from ecospheres_migrator.geonetwork import (
     GeonetworkClient,
@@ -68,41 +71,47 @@ class Migrator:
         for r in selection:
             log.debug(f"Processing {r.uuid} (template={r.template} state={r.state})")
             original = self.gn.get_record(r.uuid)
+            batch_record = TransformBatchRecord(
+                url=self.gn.url,
+                uuid=r.uuid,
+                template=r.template,
+                state=r.state,
+                original=xml_to_string(original),
+            )
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.add(
                     FailureTransformBatchRecord(
-                        url=self.gn.url,
-                        uuid=r.uuid,
-                        template=r.template,
-                        state=r.state,
-                        original=xml_to_string(original),
+                        **batch_record.__dict__,
                         error="Record has a working copy",
                     )
                 )
                 continue
             try:
+                # FIXME: extract_record_info() mutates original
                 info = extract_record_info(original, sources)
-                result = transform(original, CoupledResourceLookUp="'disabled'")
-                # TODO: check if result != original
-                batch.add(
-                    SuccessTransformBatchRecord(
-                        url=self.gn.url,
-                        uuid=r.uuid,
-                        template=r.template,
-                        state=r.state,
-                        original=xml_to_string(original),
-                        result=xml_to_string(result),
-                        info=xml_to_string(info),
+                result = transform(original)
+                result_str = xml_to_string(result)
+                original_str = xml_to_string(original)
+                if result_str != original_str:
+                    batch.add(
+                        SuccessTransformBatchRecord(
+                            **batch_record.__dict__,
+                            result=result_str,
+                            info=xml_to_string(info),
+                        )
                     )
-                )
+                else:
+                    batch.add(
+                        SkippedTransformBatchRecord(
+                            **batch_record.__dict__,
+                            info=xml_to_string(info),
+                            reason=SkipReason.NO_CHANGES,
+                        )
+                    )
             except Exception as e:
                 batch.add(
                     FailureTransformBatchRecord(
-                        url=self.gn.url,
-                        uuid=r.uuid,
-                        template=r.template,
-                        state=r.state,
-                        original=xml_to_string(original),
+                        **batch_record.__dict__,
                         error=str(e),
                     )
                 )
@@ -117,9 +126,7 @@ class Migrator:
         group: int | None = None,
         transform_job_id: str | None = None,
     ) -> MigrateBatch:
-        log.debug(
-            f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
-        )
+        log.debug(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
         migrate_batch = MigrateBatch(
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
@@ -139,7 +146,7 @@ class Migrator:
                         )
                     )
                 else:
-                    assert group is not None
+                    assert group is not None, "Group must be set when not overwriting"
                     # TODO: publish flag
                     new_record = self.gn.put_record(
                         r.uuid, r.result, template=r.template, group=group
