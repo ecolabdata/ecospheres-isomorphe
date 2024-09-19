@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum, StrEnum
 
-from ecospheres_migrator.geonetwork import MefArchive, WorkflowState
+from ecospheres_migrator.geonetwork import MefArchive, MetadataType, WorkflowState
 
 
 @dataclass(kw_only=True)
 class TransformBatchRecord:
     uuid: str
-    template: bool
+    md_type: MetadataType
     state: WorkflowState | None
     original: str
     url: str
@@ -24,17 +24,19 @@ class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
 
 
-class SkipReasonMessage(Enum):
+class SkipReasonMessage(StrEnum):
     """
     We don't use `SkipReason.value` for this because we pickle the reason
     and want to be able to change the associated message inbetween jobs.
     """
 
     NO_CHANGES = "Pas de modification lors de la transformation."
+    UNSUPPORTED_METADATA_TYPE = "Type d'enregistrement non supporté."
 
 
-class SkipReason(Enum):
-    NO_CHANGES = "no changes"
+class SkipReason(IntEnum):
+    NO_CHANGES = 1
+    UNSUPPORTED_METADATA_TYPE = 2
 
 
 @dataclass(kw_only=True)
@@ -76,7 +78,7 @@ class MigrateBatchRecord:
     source_uuid: str
     source_content: str
     target_content: str
-    template: bool
+    md_type: MetadataType
     url: str
 
 
@@ -90,7 +92,7 @@ class FailureMigrateBatchRecord(MigrateBatchRecord):
     error: str
 
 
-class MigrateMode(Enum):
+class MigrateMode(StrEnum):
     CREATE = "create"
     OVERWRITE = "overwrite"
 

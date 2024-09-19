@@ -1,6 +1,6 @@
 from conftest import Fixture
 
-from ecospheres_migrator.geonetwork import GeonetworkClient
+from ecospheres_migrator.geonetwork import GeonetworkClient, MetadataType
 
 
 def test_duplicate_uuid(
@@ -9,7 +9,7 @@ def test_duplicate_uuid(
     record = gn_client.put_record(
         uuid="test-uuid-put",
         metadata=md_fixtures[0].content,
-        template=False,
+        md_type=MetadataType.METADATA,
         # create in test group so that it can be cleaned up
         group=group_fixture,
         uuid_processing="GENERATEUUID",

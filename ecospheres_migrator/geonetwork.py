@@ -14,6 +14,13 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
+class MetadataType(StrEnum):
+    METADATA = "n"
+    TEMPLATE = "y"
+    SUB_TEMPLATE = "s"
+    TEMPLATE_OF_SUB_TEMPLATE = "t"
+
+
 class WorkflowStatus(IntEnum):
     UNKNOWN = 0
     DRAFT = 1
@@ -57,7 +64,7 @@ class WorkflowState:
 class Record:
     uuid: str
     title: str
-    template: bool
+    md_type: MetadataType
     state: WorkflowState | None
 
 
@@ -83,6 +90,9 @@ class GeonetworkClient:
         if xsrf_token:
             self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
         log.debug(f"XSRF token: {xsrf_token}")
+
+    def _get_md_type(self, md: dict) -> MetadataType:
+        return MetadataType(md.get("isTemplate", MetadataType.METADATA))
 
     def get_records(self, query=None) -> list[Record]:
         params = {
@@ -115,7 +125,7 @@ class GeonetworkClient:
             for md in mds:
                 uuid = md["geonet:info"]["uuid"]
                 title = md.get("defaultTitle")
-                template = md.get("isTemplate") == "y"
+                md_type = self._get_md_type(md)
                 state = None
                 if "mdStatus" in md:  # workflow enabled
                     if not md.get("draft") == "e":
@@ -133,7 +143,7 @@ class GeonetworkClient:
                         status = WorkflowStatus.UNKNOWN
                     state = WorkflowState(stage=stage, status=status)
                     log.debug(f"Workflow state: {state}")
-                rec = Record(uuid=uuid, title=title, template=template, state=state)
+                rec = Record(uuid=uuid, title=title, md_type=md_type, state=state)
                 log.debug(f"Record: {rec}")
                 recs.append(rec)
             records += recs
@@ -188,20 +198,18 @@ class GeonetworkClient:
         self,
         uuid: str,
         metadata: str,
-        template: bool,
+        md_type: MetadataType,
         group: int | None,
         uuid_processing: str = "GENERATEUUID",
     ) -> dict:
-        log.debug(f"Duplicating record {uuid}: template={template}, group={group}")
+        log.debug(f"Duplicating record {uuid}: md_type={md_type.name}, group={group}")
         r = self.session.put(
             f"{self.api}/records",
             headers={"Accept": "application/json", "Content-type": "application/xml"},
             params={
                 "uuidProcessing": uuid_processing,
                 "group": group,
-                "metadataType": "TEMPLATE"
-                if template
-                else "METADATA",  # FIXME: other metadataType ?
+                "metadataType": md_type.name,
             },
             data=metadata,
         )
@@ -211,7 +219,7 @@ class GeonetworkClient:
         return data
 
     def update_record(
-        self, uuid: str, metadata: str, template: bool, state: WorkflowState | None = None
+        self, uuid: str, metadata: str, md_type: MetadataType, state: WorkflowState | None = None
     ):
         # PUT /records doesn't work as expected: it delete/recreates the record instead
         # of updating in place, hence losing Geonetwork-specific record metadata like
@@ -219,7 +227,7 @@ class GeonetworkClient:
         # So instead we pretend to be the Geonetwork UI and "edit" the XML view of the
         # record, ignoring the returned editor view and immediately saving our new
         # metadata as the "edit" outcome.
-        log.debug(f"Updating record {uuid}: template={template}, state={state}")
+        log.debug(f"Updating record {uuid}: md_type={md_type.value}, state={state}")
 
         r = self.session.get(
             f"{self.api}/records/{uuid}/editor",
@@ -238,7 +246,7 @@ class GeonetworkClient:
             "withValidationErrors": "false",
             "commit": "true",
             "terminate": "true",
-            "template": "y" if template else "n",
+            "template": md_type.value,
             "data": metadata,
         }
         if state:

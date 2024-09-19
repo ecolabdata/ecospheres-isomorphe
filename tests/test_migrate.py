@@ -5,6 +5,7 @@ from lxml import etree
 from test_transform import get_transform_results
 
 from ecospheres_migrator.batch import MigrateMode, TransformBatch
+from ecospheres_migrator.geonetwork import MetadataType
 from ecospheres_migrator.migrator import Migrator
 
 
@@ -117,7 +118,7 @@ def test_migrate_batch_records_success(
         assert record.source_content is not None
         assert record.target_content is not None
         assert record.source_content != record.target_content
-        assert record.template is False
+        assert record.md_type == MetadataType.METADATA
 
 
 def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fixture]):
@@ -132,7 +133,7 @@ def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fix
         assert record.source_content is not None
         assert record.target_content is not None
         assert record.source_content != record.target_content
-        assert record.template is False
+        assert record.md_type == MetadataType.METADATA
         assert record.error is not None  # actual error is tested below
 
 
