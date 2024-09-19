@@ -95,11 +95,7 @@
                             rel="noopener">Voir le XML</a>
                         </td>
                         <td>
-                          {% if record.reason.name == "NO_CHANGES" %}
-                          Pas de modification lors de la transformation.
-                          {% else %}
-                          {{ record.reason.name }}
-                          {% endif %}
+                          {{ reasons[record.reason.name].value }}
                         </td>
                       </tr>
                     {% endfor %}

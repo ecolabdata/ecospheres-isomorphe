@@ -24,6 +24,15 @@ class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
 
 
+class SkipReasonMessage(Enum):
+    """
+    We don't use `SkipReason.value` for this because we pickle the reason
+    and want to be able to change the associated message inbetween jobs.
+    """
+
+    NO_CHANGES = "Pas de modification lors de la transformation."
+
+
 class SkipReason(Enum):
     NO_CHANGES = "no changes"
 
