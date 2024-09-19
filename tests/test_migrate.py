@@ -109,7 +109,7 @@ def test_migrate_batch_records_success(
 ):
     batch, _ = get_transform_results("change-language", migrator)
     migrate_batch = migrator.migrate(batch, overwrite=False, group=group_fixture)
-    assert len(migrate_batch.successes())
+    assert len(migrate_batch.successes()) == len(batch.records)
     for record in migrate_batch.successes():
         assert record.source_uuid in [f.uuid for f in md_fixtures]
         assert record.target_uuid not in [f.uuid for f in md_fixtures]
@@ -125,7 +125,7 @@ def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fix
     with patch("ecospheres_migrator.geonetwork.GeonetworkClient.update_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked update_record error")
         migrate_batch = migrator.migrate(batch, overwrite=False, group=None)
-    assert len(migrate_batch.failures())
+    assert len(migrate_batch.failures()) == len(migrate_batch.records)
     for record in migrate_batch.failures():
         assert record.source_uuid in [f.uuid for f in md_fixtures]
         assert record.url == GN_TEST_URL
@@ -141,9 +141,8 @@ def test_migrate_overwrite_gn_error(migrator: Migrator, md_fixtures: list[Fixtur
     with patch("ecospheres_migrator.geonetwork.GeonetworkClient.update_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked update_record error")
         migrate_batch = migrator.migrate(batch, overwrite=True, group=None)
-    assert len(migrate_batch.failures()) == len(md_fixtures)
     assert migrate_batch.mode == MigrateMode.OVERWRITE
-    assert len(migrate_batch.failures())
+    assert len(migrate_batch.failures()) == len(md_fixtures)
     for record in migrate_batch.failures():
         assert record.error == "Mocked update_record error"
 
@@ -153,8 +152,7 @@ def test_migrate_duplicate_gn_error(migrator: Migrator, md_fixtures: list[Fixtur
     with patch("ecospheres_migrator.geonetwork.GeonetworkClient.put_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked put_record error")
         migrate_batch = migrator.migrate(batch, overwrite=False, group=1)
-    assert len(migrate_batch.failures()) == len(md_fixtures)
     assert migrate_batch.mode == MigrateMode.CREATE
-    assert len(migrate_batch.failures())
+    assert len(migrate_batch.failures()) == len(md_fixtures)
     for record in migrate_batch.failures():
         assert record.error == "Mocked put_record error"
