@@ -71,7 +71,7 @@ class Migrator:
 
         batch = TransformBatch()
         for r in selection:
-            log.debug(f"Processing {r.uuid} (md_type={r.md_type.name} state={r.state})")
+            log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
