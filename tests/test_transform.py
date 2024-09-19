@@ -70,6 +70,8 @@ def test_transform_metadata_type(
     with patch.object(GeonetworkClient, "_get_md_type", patched_get_md_type):
         results, selection = get_transform_results("change-language", migrator)
 
+    assert len(selection) > 0
+
     if md_type[1] == "success":
         assert len(results.successes()) == len(selection)
     elif md_type[1] == "skipped":
