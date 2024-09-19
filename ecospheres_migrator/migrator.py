@@ -126,9 +126,7 @@ class Migrator:
         group: int | None = None,
         transform_job_id: str | None = None,
     ) -> MigrateBatch:
-        log.debug(
-            f"Migrating batch ({len(batch.successes())}/{len(batch.failures())}) for {self.url} (overwrite={overwrite})"
-        )
+        log.debug(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
         migrate_batch = MigrateBatch(
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
