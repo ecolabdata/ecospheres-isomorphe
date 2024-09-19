@@ -1,9 +1,11 @@
 from pathlib import Path
+from unittest.mock import patch
 
+import pytest
 from conftest import Fixture
 
 from ecospheres_migrator.batch import TransformBatch
-from ecospheres_migrator.geonetwork import Record
+from ecospheres_migrator.geonetwork import GeonetworkClient, MetadataType, Record
 from ecospheres_migrator.migrator import Migrator
 
 
@@ -45,3 +47,30 @@ def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[F
     assert len(results.skipped()) == 0
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
+
+
+@pytest.mark.parametrize(
+    "md_type",
+    [
+        # md_type, expected_result
+        (MetadataType.METADATA, "success"),
+        (MetadataType.TEMPLATE, "success"),
+        (MetadataType.SUB_TEMPLATE, "skipped"),
+        (MetadataType.TEMPLATE_OF_SUB_TEMPLATE, "skipped"),
+    ],
+)
+def test_transform_metadata_type(
+    migrator: Migrator,
+    md_type: tuple[MetadataType, str],
+):
+    def patched_get_md_type(self, md):
+        """Force the metadata type in GN record to be the one in the test"""
+        return md_type[0]
+
+    with patch.object(GeonetworkClient, "_get_md_type", patched_get_md_type):
+        results, selection = get_transform_results("change-language", migrator)
+
+    if md_type[1] == "success":
+        assert len(results.successes()) == len(selection)
+    elif md_type[1] == "skipped":
+        assert len(results.skipped()) == len(selection)

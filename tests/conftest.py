@@ -7,7 +7,7 @@ from typing import Final
 import pytest
 import requests
 
-from ecospheres_migrator.geonetwork import GeonetworkClient
+from ecospheres_migrator.geonetwork import GeonetworkClient, MetadataType
 from ecospheres_migrator.migrator import Migrator
 
 log = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixtu
             gn_client.put_record(
                 uuid="test-uuid",
                 metadata=content,
-                template=False,
+                md_type=MetadataType.METADATA,
                 group=None,
                 uuid_processing="NOTHING",
             )

@@ -117,7 +117,7 @@ def test_migrate_batch_records_success(
         assert record.source_content is not None
         assert record.target_content is not None
         assert record.source_content != record.target_content
-        assert record.template is False
+        assert record.md_type.name == "METADATA"
 
 
 def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fixture]):
@@ -132,7 +132,7 @@ def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fix
         assert record.source_content is not None
         assert record.target_content is not None
         assert record.source_content != record.target_content
-        assert record.template is False
+        assert record.md_type.name == "METADATA"
         assert record.error is not None  # actual error is tested below
 
 

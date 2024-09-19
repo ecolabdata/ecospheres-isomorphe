@@ -8,6 +8,7 @@ from ecospheres_migrator.batch import (
     FailureMigrateBatchRecord,
     FailureTransformBatchRecord,
     MigrateBatch,
+    MigrateBatchRecord,
     MigrateMode,
     SkippedTransformBatchRecord,
     SkipReason,
@@ -18,6 +19,7 @@ from ecospheres_migrator.batch import (
 )
 from ecospheres_migrator.geonetwork import (
     GeonetworkClient,
+    MetadataType,
     Record,
     WorkflowStage,
     extract_record_info,
@@ -69,15 +71,24 @@ class Migrator:
 
         batch = TransformBatch()
         for r in selection:
-            log.debug(f"Processing {r.uuid} (template={r.template} state={r.state})")
+            log.debug(f"Processing {r.uuid} (md_type={r.md_type.name} state={r.state})")
             original = self.gn.get_record(r.uuid)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
-                template=r.template,
+                md_type=r.md_type,
                 state=r.state,
                 original=xml_to_string(original),
             )
+            if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
+                batch.add(
+                    SkippedTransformBatchRecord(
+                        **batch_record.__dict__,
+                        reason=SkipReason.UNSUPPORTED_METADATA_TYPE,
+                        info="",
+                    )
+                )
+                continue
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.add(
                     FailureTransformBatchRecord(
@@ -132,43 +143,38 @@ class Migrator:
             transform_job_id=transform_job_id,
         )
         for r in batch.successes():
+            batch_record = MigrateBatchRecord(
+                url=self.gn.url,
+                source_uuid=r.uuid,
+                md_type=r.md_type,
+                source_content=r.original,
+                target_content=r.result,
+            )
             try:
                 if overwrite:
-                    self.gn.update_record(r.uuid, r.result, template=r.template)
+                    self.gn.update_record(r.uuid, r.result, md_type=r.md_type)
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
-                            url=self.gn.url,
-                            source_uuid=r.uuid,
+                            **batch_record.__dict__,
                             target_uuid=r.uuid,
-                            template=r.template,
-                            source_content=r.original,
-                            target_content=r.result,
                         )
                     )
                 else:
                     assert group is not None, "Group must be set when not overwriting"
                     # TODO: publish flag
                     new_record = self.gn.put_record(
-                        r.uuid, r.result, template=r.template, group=group
+                        r.uuid, r.result, md_type=r.md_type, group=group
                     )
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
-                            url=self.gn.url,
-                            source_uuid=r.uuid,
+                            **batch_record.__dict__,
                             target_uuid=new_record["new_record_uuid"],
-                            template=r.template,
-                            source_content=r.original,
-                            target_content=r.result,
                         )
                     )
             except Exception as e:
                 migrate_batch.add(
                     FailureMigrateBatchRecord(
-                        url=self.gn.url,
-                        source_uuid=r.uuid,
-                        template=r.template,
-                        source_content=r.original,
-                        target_content=r.result,
+                        **batch_record.__dict__,
                         error=str(e),
                     )
                 )
