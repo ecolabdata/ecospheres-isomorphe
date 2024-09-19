@@ -92,7 +92,7 @@ class GeonetworkClient:
         log.debug(f"XSRF token: {xsrf_token}")
 
     def _get_md_type(self, md: dict) -> MetadataType:
-        return MetadataType(md.get("isTemplate", "n"))
+        return MetadataType(md.get("isTemplate", MetadataType.METADATA))
 
     def get_records(self, query=None) -> list[Record]:
         params = {
