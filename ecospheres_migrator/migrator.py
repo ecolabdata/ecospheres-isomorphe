@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 
 from lxml import etree
@@ -30,6 +31,13 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
+@dataclass(kw_only=True)
+class TransformationParam:
+    name: str
+    default_value: str
+    required: bool
+
+
 @dataclass
 class Transformation:
     path: Path
@@ -37,6 +45,28 @@ class Transformation:
     @property
     def name(self) -> str:
         return self.path.stem
+
+    @cached_property
+    def params(self) -> list[TransformationParam]:
+        xslt = etree.parse(self.path, parser=None)
+        root = xslt.getroot()
+        params = []
+        ns = {"xsl": "http://www.w3.org/1999/XSL/Transform"}
+        for param in root.xpath("//xsl:param", namespaces=ns):
+            param_info = TransformationParam(
+                name=param.attrib["name"],
+                # remove string literal single quotes, they'll be added back by etree.XSLT.strparam()
+                default_value=param.attrib.get("select", "").strip("'"),
+                required=param.attrib.get("required") == "yes",
+            )
+            params.append(param_info)
+        return params
+
+    @property
+    def transform(self) -> etree.XSLT:
+        xslt = etree.parse(self.path, parser=None)
+        transform = etree.XSLT(xslt)
+        return transform
 
 
 class Migrator:
@@ -61,13 +91,17 @@ class Migrator:
         log.debug(f"Selection contains {len(selection)} items")
         return selection
 
-    def transform(self, transformation: Path, selection: list[Record]) -> TransformBatch:
+    def transform(
+        self,
+        transformation: Transformation,
+        selection: list[Record],
+        transformation_params: dict[str, str] = {},
+    ) -> TransformBatch:
         """
         Transform data from a selection
         """
         log.debug(f"Transforming {selection} via {transformation}")
         sources = self.gn.get_sources()
-        transform = Migrator.load_transformation(transformation)
 
         batch = TransformBatch()
         for r in selection:
@@ -101,7 +135,13 @@ class Migrator:
             try:
                 # FIXME: extract_record_info() mutates original
                 info = extract_record_info(original, sources)
-                result = transform(original)
+                log.debug(
+                    f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
+                )
+                transformation_params_quoted = {
+                    k: etree.XSLT.strparam(v) for k, v in transformation_params.items()
+                }  # type: ignore (stub is wrong for strparam)
+                result = transformation.transform(original, **transformation_params_quoted)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
                 if result_str != original_str:
@@ -187,7 +227,5 @@ class Migrator:
         return [Transformation(p) for p in path.glob("*.xsl")]
 
     @staticmethod
-    def load_transformation(path: Path) -> etree.XSLT:
-        xslt = etree.parse(path, parser=None)
-        transform = etree.XSLT(xslt)
-        return transform
+    def get_transformation(path: Path) -> Transformation:
+        return Transformation(path)

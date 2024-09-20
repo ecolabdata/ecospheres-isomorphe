@@ -10,16 +10,17 @@
       <span class="fr-text--bold">Étape suivante :</span> Transformation des données
     </p>
   </div>
-  <form hx-validate="true" method="post" action="{{ url_for('transform') }}">
+  <form hx-validate="true" method="post" action="{{ url_for("transform") }}">
     {# TODO: add info about current connected catalog #}
     <div class="fr-input-group">
-      <label class="fr-label" for="query">Requête de recherche *
+      <label class="fr-label" for="query">
+        Requête de recherche *
         <span class="fr-hint-text">Ex : _source=&lt;SOURCE_ID&gt;,type=dataset</span>
       </label>
       <input required class="fr-input" type="text" id="query" name="query" />
       <div class="fr-mt-2w fr-grid-row">
         <button type="submit"
-                hx-post="{{ url_for('select_preview') }}"
+                hx-post="{{ url_for("select_preview") }}"
                 hx-target="#select_preview"
                 hx-swap="innerHTML show:top"
                 class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
@@ -27,13 +28,20 @@
     </div>
     <div class="fr-select-group">
       <label class="fr-label" for="transformation">Transformation(s) à appliquer *</label>
-      <select required class="fr-select" id="transformation" name="transformation">
+      <select hx-get="{{ url_for("select_transformation") }}"
+              hx-target="#select-form-transformation-params"
+              hx-trigger="change"
+              required
+              class="fr-select"
+              id="transformation"
+              name="transformation">
         <option value="" selected disabled hidden>Sélectionner une transformation</option>
         {% for transformation in transformations %}
           <option value="{{ transformation.path }}">{{ transformation.name }}</option>
         {% endfor %}
       </select>
     </div>
+    <div id="select-form-transformation-params"></div>
     <div class="fr-mt-2w fr-grid-row">
       <button type="submit" class="fr-btn">Suivant</button>
     </div>

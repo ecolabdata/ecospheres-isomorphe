@@ -78,6 +78,16 @@ def select():
     )
 
 
+@app.route("/select_transformation")
+def select_transformation():
+    # FIXME: do not pass the full path, here and from select to transform
+    transformation_path = request.args.get("transformation")
+    if not transformation_path:
+        abort(400, "Missing `transformation` parameter")
+    transformation = Migrator.get_transformation(Path(transformation_path))
+    return render_template("fragments/select_transformation.html.j2", transformation=transformation)
+
+
 @app.route("/select/preview", methods=["POST"])
 @authenticated(redirect=False)
 def select_preview():
@@ -102,10 +112,22 @@ def transform():
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
+    # FIXME: no full path
+    transformation = Migrator.get_transformation(Path(transformation))
+    transformation_params = {}
+    for param in transformation.params:
+        form_param_name = f"param-{param.name}"
+        if form_param_name not in request.form:
+            abort(400, f"Missing `{param.name}` parameter for transformmation")
+        transformation_params[param.name] = request.form.get(form_param_name)
     migrator = Migrator(url=url, username=username, password=password)
     selection = migrator.select(query=query)
     job = get_queue().enqueue(
-        migrator.transform, transformation, selection, result_ttl=app.config["TRANSFORM_TTL"]
+        migrator.transform,
+        transformation,
+        selection,
+        transformation_params=transformation_params,
+        result_ttl=app.config["TRANSFORM_TTL"],
     )
     return redirect(url_for("transform_success", job_id=job.id))
 
