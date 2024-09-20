@@ -28,6 +28,6 @@ def test_order_migrate():
     )
     # unordered by default
     assert batch.records[0].uuid == "1"
-    ordered = batch.successes(order_by_changed_date=True)
+    ordered = batch.successes(order_by_change_date=True)
     # oldest one is the first one
     assert ordered[0].uuid == "2"

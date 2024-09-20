@@ -142,7 +142,7 @@ class Migrator:
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
         )
-        for r in batch.successes(order_by_changed_date=True):
+        for r in batch.successes(order_by_change_date=True):
             batch_record = MigrateBatchRecord(
                 url=self.gn.url,
                 source_uuid=r.uuid,
