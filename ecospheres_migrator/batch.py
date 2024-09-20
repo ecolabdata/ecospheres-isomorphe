@@ -60,14 +60,9 @@ class TransformBatch:
             return root.xpath("//changeDate/text()")[0]
 
         results = [r for r in self.records if isinstance(r, SuccessTransformBatchRecord)]
-
-        if not order_by_change_date:
-            return results
-        else:
-            return sorted(
-                results,
-                key=get_change_date_from_info,
-            )
+        if order_by_change_date:
+            results.sort(key=get_change_date_from_info)
+        return results
 
     def failures(self) -> list[FailureTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, FailureTransformBatchRecord)]
