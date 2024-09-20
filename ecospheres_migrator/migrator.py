@@ -139,8 +139,9 @@ class Migrator:
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
                 )
                 transformation_params_quoted = {
-                    k: etree.XSLT.strparam(v) for k, v in transformation_params.items()
-                }  # type: ignore (stub is wrong for strparam)
+                    k: etree.XSLT.strparam(v)  # type: ignore (stub is wrong for strparam)
+                    for k, v in transformation_params.items()
+                }
                 result = transformation.transform(original, **transformation_params_quoted)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)

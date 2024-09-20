@@ -121,7 +121,7 @@ def test_load_transformation_params():
     assert transformation.params == [
         TransformationParam(
             name="language",
-            default_value="'eng'",
+            default_value="eng",
             required=False,
         ),
     ]
