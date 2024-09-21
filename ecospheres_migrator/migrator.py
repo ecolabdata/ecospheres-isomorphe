@@ -103,7 +103,7 @@ class Migrator:
         log.debug(f"Transforming {selection} via {transformation}")
         sources = self.gn.get_sources()
 
-        batch = TransformBatch()
+        batch = TransformBatch(transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
@@ -224,9 +224,9 @@ class Migrator:
         return migrate_batch
 
     @staticmethod
-    def list_transformations(path: Path) -> list[Transformation]:
-        return [Transformation(p) for p in path.glob("*.xsl")]
+    def list_transformations(root_path: Path) -> list[Transformation]:
+        return [Transformation(p) for p in root_path.glob("*.xsl")]
 
     @staticmethod
-    def get_transformation(path: Path) -> Transformation:
-        return Transformation(path)
+    def get_transformation(name: str, root_path: Path) -> Transformation:
+        return Transformation(root_path / f"{name}.xsl")

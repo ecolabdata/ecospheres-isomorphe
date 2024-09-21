@@ -31,6 +31,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
+app.config["TRANSFORMATIONS_PATH"] = Path(app.root_path, "transformations")
 
 
 @app.route("/")
@@ -74,17 +75,16 @@ def select():
     return render_template(
         "select.html.j2",
         url=session.get("url", ""),
-        transformations=Migrator.list_transformations(Path(app.root_path, "transformations")),
+        transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
     )
 
 
 @app.route("/select_transformation")
 def select_transformation():
-    # FIXME: do not pass the full path, here and from select to transform
-    transformation_path = request.args.get("transformation")
-    if not transformation_path:
+    transformation = request.args.get("transformation")
+    if not transformation:
         abort(400, "Missing `transformation` parameter")
-    transformation = Migrator.get_transformation(Path(transformation_path))
+    transformation = Migrator.get_transformation(transformation, app.config["TRANSFORMATIONS_PATH"])
     return render_template("fragments/select_transformation.html.j2", transformation=transformation)
 
 
@@ -112,8 +112,7 @@ def transform():
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
-    # FIXME: no full path
-    transformation = Migrator.get_transformation(Path(transformation))
+    transformation = Migrator.get_transformation(transformation, app.config["TRANSFORMATIONS_PATH"])
     transformation_params = {}
     for param in transformation.params:
         form_param_name = f"param-{param.name}"

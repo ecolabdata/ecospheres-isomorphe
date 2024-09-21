@@ -17,8 +17,7 @@ from ecospheres_migrator.migrator import Migrator, SkipReason, Transformation, T
 
 
 def get_transformation(name: str) -> Transformation:
-    transformations = Migrator.list_transformations(Path("ecospheres_migrator/transformations"))
-    transformation = next((t for t in transformations if t.name == name), None)
+    transformation = Migrator.get_transformation(name, Path("ecospheres_migrator/transformations"))
     if not transformation:
         raise ValueError(f"No transformation found with name {name}")
     return transformation
@@ -42,6 +41,7 @@ def test_transform_noop(migrator: Migrator):
     assert len(results.skipped()) == len(selection)
     assert len(results.successes()) == 0
     assert len(results.failures()) == 0
+    assert results.transformation == "noop"
 
 
 def test_transform_error(migrator: Migrator):
@@ -50,6 +50,7 @@ def test_transform_error(migrator: Migrator):
     assert len(results.skipped()) == 0
     assert len(results.successes()) == 0
     assert len(results.failures()) == len(selection)
+    assert results.transformation == "error"
 
 
 def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[Fixture]):
@@ -58,6 +59,7 @@ def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[F
     assert len(results.skipped()) == 0
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
+    assert results.transformation == "change-language"
 
 
 def test_transform_working_copy(migrator: Migrator):

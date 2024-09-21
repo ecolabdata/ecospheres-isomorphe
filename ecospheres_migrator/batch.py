@@ -48,8 +48,9 @@ class SkippedTransformBatchRecord(TransformBatchRecord):
 
 
 class TransformBatch:
-    def __init__(self):
+    def __init__(self, transformation: str):
         self.records: list[TransformBatchRecord] = []
+        self.transformation = transformation
 
     def add(self, batch: TransformBatchRecord):
         self.records.append(batch)
