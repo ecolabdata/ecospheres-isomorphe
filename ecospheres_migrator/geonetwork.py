@@ -99,7 +99,7 @@ class GeonetworkClient:
             "_content_type": "json",
             "buildSummary": "false",
             "fast": "index",  # needed to get info such as title
-            "sortBy": "title",  # FIXME: or changeDate?
+            "sortBy": "changeDate",
             "sortOrder": "reverse",
         }
         if query:

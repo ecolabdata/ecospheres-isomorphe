@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
-from lxml import etree
-
 from ecospheres_migrator.geonetwork import MefArchive, MetadataType, WorkflowState
 
 
@@ -54,15 +52,8 @@ class TransformBatch:
     def add(self, batch: TransformBatchRecord):
         self.records.append(batch)
 
-    def successes(self, order_by_change_date: bool = False) -> list[SuccessTransformBatchRecord]:
-        def get_change_date_from_info(r: SuccessTransformBatchRecord) -> str:
-            root = etree.fromstring(r.info, parser=None)
-            return root.xpath("//changeDate/text()")[0]
-
-        results = [r for r in self.records if isinstance(r, SuccessTransformBatchRecord)]
-        if order_by_change_date:
-            results.sort(key=get_change_date_from_info)
-        return results
+    def successes(self) -> list[SuccessTransformBatchRecord]:
+        return [r for r in self.records if isinstance(r, SuccessTransformBatchRecord)]
 
     def failures(self) -> list[FailureTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, FailureTransformBatchRecord)]
