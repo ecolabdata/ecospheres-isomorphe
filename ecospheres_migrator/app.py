@@ -117,7 +117,7 @@ def transform():
     for param in transformation.params:
         form_param_name = f"param-{param.name}"
         if form_param_name not in request.form:
-            abort(400, f"Missing `{param.name}` parameter for transformmation")
+            abort(400, f"Missing `{param.name}` parameter for transformation")
         transformation_params[param.name] = request.form.get(form_param_name)
     migrator = Migrator(url=url, username=username, password=password)
     selection = migrator.select(query=query)
