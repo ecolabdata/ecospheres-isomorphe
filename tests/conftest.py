@@ -71,7 +71,7 @@ def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixtu
 
     # create records from fixtures directory
     for fixture in fixtures_files:
-        uuid = fixture.stem.split("_")[1]
+        uuid = fixture.stem.split("--")[1]
         try:
             gn_client.get_record(uuid)
         except requests.exceptions.HTTPError:
