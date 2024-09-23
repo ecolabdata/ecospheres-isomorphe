@@ -93,11 +93,12 @@ class GeonetworkClient:
             raise GeonetworkConnectionError(
                 f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
             )
-        # don't abort on error here, it's expected
         xsrf_token = r.cookies.get("XSRF-TOKEN")
         if xsrf_token:
             self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
-        log.debug(f"XSRF token: {xsrf_token}")
+            log.debug(f"XSRF token: {xsrf_token}")
+        else:
+            raise GeonetworkConnectionError("Impossible de récupérer le token XSRF")
 
     def _get_md_type(self, md: dict) -> MetadataType:
         return MetadataType(md.get("isTemplate", MetadataType.METADATA))
