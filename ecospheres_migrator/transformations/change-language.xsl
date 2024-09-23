@@ -6,8 +6,16 @@
                 exclude-result-prefixes="#all">
   <xsl:strip-space elements="*"/>
 
+  <xsl:param name="language" select="'eng'"/>
+
+  <!-- Match and replace text in gco:CharacterString -->
   <xsl:template match="/gmd:MD_Metadata/gmd:language/gco:CharacterString/text()">
-    <xsl:text>eng</xsl:text>
+      <xsl:value-of select="$language"/>
+  </xsl:template>
+
+  <!-- Match and replace gmd:LanguageCode -->
+  <xsl:template match="/gmd:MD_Metadata/gmd:language/gmd:LanguageCode">
+      <gmd:LanguageCode codeList="http://www.loc.gov/standards/iso639-2/" codeListValue="{$language}"/>
   </xsl:template>
 
   <xsl:template match="@*|node()">
@@ -15,5 +23,4 @@
       <xsl:apply-templates select="@*|node()"/>
     </xsl:copy>
   </xsl:template>
-
 </xsl:stylesheet>

@@ -9,13 +9,13 @@ class TransformBatchRecord:
     uuid: str
     md_type: MetadataType
     state: WorkflowState | None
-    original: str
+    original: bytes
     url: str
 
 
 @dataclass(kw_only=True)
 class SuccessTransformBatchRecord(TransformBatchRecord):
-    result: str
+    result: bytes
     info: str
 
 
@@ -48,8 +48,9 @@ class SkippedTransformBatchRecord(TransformBatchRecord):
 
 
 class TransformBatch:
-    def __init__(self):
+    def __init__(self, transformation: str):
         self.records: list[TransformBatchRecord] = []
+        self.transformation = transformation
 
     def add(self, batch: TransformBatchRecord):
         self.records.append(batch)
@@ -78,8 +79,8 @@ class TransformBatch:
 @dataclass(kw_only=True)
 class MigrateBatchRecord:
     source_uuid: str
-    source_content: str
-    target_content: str
+    source_content: bytes
+    target_content: bytes
     md_type: MetadataType
     url: str
 

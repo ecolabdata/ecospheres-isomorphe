@@ -31,6 +31,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
+app.config["TRANSFORMATIONS_PATH"] = Path(app.root_path, "transformations")
 
 
 @app.route("/")
@@ -74,8 +75,17 @@ def select():
     return render_template(
         "select.html.j2",
         url=session.get("url", ""),
-        transformations=Migrator.list_transformations(Path(app.root_path, "transformations")),
+        transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
     )
+
+
+@app.route("/select_transformation")
+def select_transformation():
+    transformation = request.args.get("transformation")
+    if not transformation:
+        abort(400, "Missing `transformation` parameter")
+    transformation = Migrator.get_transformation(transformation, app.config["TRANSFORMATIONS_PATH"])
+    return render_template("fragments/select_transformation.html.j2", transformation=transformation)
 
 
 @app.route("/select/preview", methods=["POST"])
@@ -102,10 +112,21 @@ def transform():
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
+    transformation = Migrator.get_transformation(transformation, app.config["TRANSFORMATIONS_PATH"])
+    transformation_params = {}
+    for param in transformation.params:
+        form_param_name = f"param-{param.name}"
+        if form_param_name not in request.form:
+            abort(400, f"Missing `{param.name}` parameter for transformation")
+        transformation_params[param.name] = request.form.get(form_param_name)
     migrator = Migrator(url=url, username=username, password=password)
     selection = migrator.select(query=query)
     job = get_queue().enqueue(
-        migrator.transform, transformation, selection, result_ttl=app.config["TRANSFORM_TTL"]
+        migrator.transform,
+        transformation,
+        selection,
+        transformation_params=transformation_params,
+        result_ttl=app.config["TRANSFORM_TTL"],
     )
     return redirect(url_for("transform_success", job_id=job.id))
 
@@ -140,7 +161,7 @@ def transform_original(job_id: str, uuid: str):
     if not job or not job.result:
         abort(404)
     result: TransformBatchRecord | None = next(
-        (j for j in job.result.successes() if j.uuid == uuid), None
+        (j for j in job.result.records if j.uuid == uuid), None
     )
     if not result or not result.original:
         abort(404)

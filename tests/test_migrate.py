@@ -101,7 +101,7 @@ def test_migrate_error_duplicate(
 
 
 def test_migrate_transform_job_id(migrator: Migrator):
-    migrate_batch = migrator.migrate(TransformBatch(), transform_job_id="xxx")
+    migrate_batch = migrator.migrate(TransformBatch(transformation="noop"), transform_job_id="xxx")
     assert migrate_batch.transform_job_id == "xxx"
 
 

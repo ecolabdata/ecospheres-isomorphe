@@ -21,7 +21,7 @@ GN_TEST_PASSWORD: Final = "admin"
 class Fixture:
     uuid: str
     name: str
-    content: str
+    content: bytes
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -71,14 +71,14 @@ def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixtu
 
     # create records from fixtures directory
     for fixture in fixtures_files:
-        uuid = fixture.stem.split("_")[1]
+        uuid = fixture.stem.split("--")[1]
         try:
             gn_client.get_record(uuid)
         except requests.exceptions.HTTPError:
             pass
         else:
             gn_client.delete_record(uuid)
-        with fixture.open() as ff:
+        with fixture.open("rb") as ff:
             log.debug(f"Creating new record {uuid}...")
             content = ff.read()
             gn_client.put_record(

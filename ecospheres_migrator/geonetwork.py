@@ -197,7 +197,7 @@ class GeonetworkClient:
     def put_record(
         self,
         uuid: str,
-        metadata: str,
+        metadata: bytes,
         md_type: MetadataType,
         group: int | None,
         uuid_processing: str = "GENERATEUUID",
@@ -219,7 +219,7 @@ class GeonetworkClient:
         return data
 
     def update_record(
-        self, uuid: str, metadata: str, md_type: MetadataType, state: WorkflowState | None = None
+        self, uuid: str, metadata: bytes, md_type: MetadataType, state: WorkflowState | None = None
     ):
         # PUT /records doesn't work as expected: it delete/recreates the record instead
         # of updating in place, hence losing Geonetwork-specific record metadata like
@@ -331,7 +331,7 @@ class MefArchive:
         self.zipb = io.BytesIO()
         self.zipf = zipfile.ZipFile(self.zipb, "w", compression=compression)
 
-    def add(self, uuid: str, record: str, info: str):
+    def add(self, uuid: str, record: bytes, info: str):
         """
         Add a record to the MEF archive.
 
