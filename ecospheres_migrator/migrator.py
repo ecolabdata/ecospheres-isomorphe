@@ -91,9 +91,10 @@ class Migrator:
                 continue
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.add(
-                    FailureTransformBatchRecord(
+                    SkippedTransformBatchRecord(
                         **batch_record.__dict__,
-                        error="Record has a working copy",
+                        reason=SkipReason.HAS_WORKING_COPY,
+                        info="",
                     )
                 )
                 continue

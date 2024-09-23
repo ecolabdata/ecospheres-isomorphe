@@ -32,11 +32,13 @@ class SkipReasonMessage(StrEnum):
 
     NO_CHANGES = "Pas de modification lors de la transformation."
     UNSUPPORTED_METADATA_TYPE = "Type d'enregistrement non supporté."
+    HAS_WORKING_COPY = "L'enregistrement a une copie de travail (working copy)."
 
 
 class SkipReason(IntEnum):
     NO_CHANGES = 1
     UNSUPPORTED_METADATA_TYPE = 2
+    HAS_WORKING_COPY = 3
 
 
 @dataclass(kw_only=True)
