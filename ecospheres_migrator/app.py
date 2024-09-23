@@ -161,7 +161,7 @@ def transform_original(job_id: str, uuid: str):
     if not job or not job.result:
         abort(404)
     result: TransformBatchRecord | None = next(
-        (j for j in job.result.successes() if j.uuid == uuid), None
+        (j for j in job.result.records if j.uuid == uuid), None
     )
     if not result or not result.original:
         abort(404)
