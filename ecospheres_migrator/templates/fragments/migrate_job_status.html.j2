@@ -8,6 +8,11 @@
   <p>Mode de migration : {% if job.result.mode == modes.CREATE %}création de nouvelles fiches{% else %}mise à jour des fiches existantes{% endif %}.</p>
   {% set successes = job.result.successes() %}
   {% set failures = job.result.failures() %}
+  {% if successes|length or failures|length %}
+  <p>Les enregistrements sont listés dans l'ordre de traitement, du plus ancien au plus récent.</p>
+  {% else %}
+  <p>Aucune migration n'a été effectuée.</p>
+  {% endif %}
   <div class="fr-accordions-group fr-mb-4w">
     {% if failures %}
     <section class="fr-accordion">
