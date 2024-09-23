@@ -51,8 +51,7 @@ class Transformation:
         xslt = etree.parse(self.path, parser=None)
         root = xslt.getroot()
         params = []
-        ns = {"xsl": "http://www.w3.org/1999/XSL/Transform"}
-        for param in root.xpath("//xsl:param", namespaces=ns):
+        for param in root.xpath("//xsl:param", namespaces=root.nsmap):
             param_info = TransformationParam(
                 name=param.attrib["name"],
                 # remove string literal single quotes, they'll be added back by etree.XSLT.strparam()
