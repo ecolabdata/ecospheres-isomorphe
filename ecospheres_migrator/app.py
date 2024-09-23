@@ -25,7 +25,7 @@ from ecospheres_migrator.batch import (
     TransformBatchRecord,
 )
 from ecospheres_migrator.migrator import Migrator
-from ecospheres_migrator.queue import get_job, get_queue
+from ecospheres_migrator.rqueue import get_job, get_queue
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
