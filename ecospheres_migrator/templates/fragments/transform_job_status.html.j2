@@ -9,6 +9,11 @@
   {% set successes = job.result.successes() %}
   {% set failures = job.result.failures() %}
   {% set skipped = job.result.skipped() %}
+  {% if successes|length or failures|length or skipped|length %}
+  <p>Les enregistrements sont listés dans l'ordre de traitement, du plus ancien au plus récent.</p>
+  {% else %}
+  <p>Aucune transformation n'a été effectuée.</p>
+  {% endif %}
   <div class="fr-accordions-group fr-mb-4w">
     {% if failures %}
     <section class="fr-accordion">
