@@ -24,7 +24,10 @@ def get_transformation(name: str) -> Transformation:
 
 
 def get_transform_results(
-    transformation_name: str, migrator: Migrator, selection: list[Record] = [], transformation_params: dict = {}
+    transformation_name: str,
+    migrator: Migrator,
+    selection: list[Record] = [],
+    transformation_params: dict = {},
 ) -> tuple[TransformBatch, list[Record]]:
     if not selection:
         selection = migrator.select(query="type=dataset")
@@ -119,11 +122,21 @@ def test_transform_metadata_type(
 
 
 def test_load_transformation_params():
-    transformation = get_transformation("change-language")
+    transformation = get_transformation("noop-params")
     assert transformation.params == [
         TransformationParam(
-            name="language",
+            name="language-optional",
             default_value="eng",
             required=False,
+        ),
+        TransformationParam(
+            name="language-required",
+            default_value="eng",
+            required=True,
+        ),
+        TransformationParam(
+            name="language-no-default",
+            default_value="",
+            required=True,
         ),
     ]
