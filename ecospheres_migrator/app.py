@@ -24,6 +24,7 @@ from ecospheres_migrator.batch import (
     SuccessTransformBatchRecord,
     TransformBatchRecord,
 )
+from ecospheres_migrator.geonetwork import GeonetworkConnectionError
 from ecospheres_migrator.migrator import Migrator
 from ecospheres_migrator.queue import get_job, get_queue
 
@@ -54,7 +55,7 @@ def login():
     try:
         migrator = Migrator(url=url, username=username, password=password)
         gn_info = migrator.gn.info()
-    except requests.exceptions.RequestException as e:
+    except (requests.exceptions.RequestException, GeonetworkConnectionError) as e:
         flash(f"Problème d'authentification ({e})", "error")
         return redirect(url_for("login_form"))
     else:

@@ -68,6 +68,10 @@ class Record:
     state: WorkflowState | None
 
 
+class GeonetworkConnectionError(Exception):
+    pass
+
+
 class GeonetworkClient:
     def __init__(self, url, username: str | None = None, password: str | None = None):
         self.url = url
@@ -84,7 +88,11 @@ class GeonetworkClient:
         return r.json()
 
     def authenticate(self):
-        r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
+        r = self.session.post(f"{self.api}/info?_content_type=json&type=me", allow_redirects=False)
+        if r.is_redirect:
+            raise GeonetworkConnectionError(
+                f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
+            )
         # don't abort on error here, it's expected
         xsrf_token = r.cookies.get("XSRF-TOKEN")
         if xsrf_token:
