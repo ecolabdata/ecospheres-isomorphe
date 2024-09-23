@@ -68,6 +68,10 @@ class Record:
     state: WorkflowState | None
 
 
+class GeonetworkConnectionError(Exception):
+    pass
+
+
 class GeonetworkClient:
     def __init__(self, url, username: str | None = None, password: str | None = None):
         self.url = url
@@ -84,12 +88,17 @@ class GeonetworkClient:
         return r.json()
 
     def authenticate(self):
-        r = self.session.post(f"{self.api}/info?_content_type=json&type=me")
-        # don't abort on error here, it's expected
+        r = self.session.post(f"{self.api}/info?_content_type=json&type=me", allow_redirects=False)
+        if r.is_redirect:
+            raise GeonetworkConnectionError(
+                f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
+            )
         xsrf_token = r.cookies.get("XSRF-TOKEN")
         if xsrf_token:
             self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
-        log.debug(f"XSRF token: {xsrf_token}")
+            log.debug(f"XSRF token: {xsrf_token}")
+        else:
+            raise GeonetworkConnectionError("Impossible de récupérer le token XSRF")
 
     def _get_md_type(self, md: dict) -> MetadataType:
         return MetadataType(md.get("isTemplate", MetadataType.METADATA))
