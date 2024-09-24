@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from isomorphe.geonetwork import GeonetworkClient, MetadataType
-from isomorphe.isomorphe import Isomorphe
+from isomorphe.migrator import Migrator
 
 log = logging.getLogger(__name__)
 
@@ -122,5 +122,5 @@ def clean_md_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[F
 
 
 @pytest.fixture
-def isomorphe() -> Isomorphe:
-    return Isomorphe(url=GN_TEST_URL, username=GN_TEST_USER, password=GN_TEST_PASSWORD)
+def migrator() -> Migrator:
+    return Migrator(url=GN_TEST_URL, username=GN_TEST_USER, password=GN_TEST_PASSWORD)

@@ -13,11 +13,11 @@ from isomorphe.geonetwork import (
     WorkflowState,
     WorkflowStatus,
 )
-from isomorphe.isomorphe import Isomorphe, SkipReason, Transformation, TransformationParam
+from isomorphe.migrator import Migrator, SkipReason, Transformation, TransformationParam
 
 
 def get_transformation(name: str) -> Transformation:
-    transformation = Isomorphe.get_transformation(name, Path("isomorphe/transformations"))
+    transformation = Migrator.get_transformation(name, Path("isomorphe/transformations"))
     if not transformation:
         raise ValueError(f"No transformation found with name {name}")
     return transformation
@@ -25,7 +25,7 @@ def get_transformation(name: str) -> Transformation:
 
 def get_transform_results(
     transformation_name: str,
-    isomorphe: Isomorphe,
+    isomorphe: Migrator,
     selection: list[Record] = [],
     transformation_params: dict = {},
 ) -> tuple[TransformBatch, list[Record]]:
@@ -38,40 +38,40 @@ def get_transform_results(
     ), selection
 
 
-def test_transform_noop(isomorphe: Isomorphe):
+def test_transform_noop(migrator: Migrator):
     """`noop` transform is always skipped"""
-    results, selection = get_transform_results("noop", isomorphe)
+    results, selection = get_transform_results("noop", migrator)
     assert len(results.skipped()) == len(selection)
     assert len(results.successes()) == 0
     assert len(results.failures()) == 0
     assert results.transformation == "noop"
 
 
-def test_transform_error(isomorphe: Isomorphe):
+def test_transform_error(migrator: Migrator):
     """`error` transform is never successful"""
-    results, selection = get_transform_results("error", isomorphe)
+    results, selection = get_transform_results("error", migrator)
     assert len(results.skipped()) == 0
     assert len(results.successes()) == 0
     assert len(results.failures()) == len(selection)
     assert results.transformation == "error"
 
 
-def test_transform_change_language(isomorphe: Isomorphe, clean_md_fixtures: list[Fixture]):
+def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[Fixture]):
     """`change-language` transform is always successful"""
-    results, selection = get_transform_results("change-language", isomorphe)
+    results, selection = get_transform_results("change-language", migrator)
     assert len(results.skipped()) == 0
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     assert results.transformation == "change-language"
 
 
-def test_transform_working_copy(isomorphe: Isomorphe):
+def test_transform_working_copy(migrator: Migrator):
     """`change-language` transform is always skipped when record has working copy"""
-    selection = isomorphe.select(query="type=dataset")
+    selection = migrator.select(query="type=dataset")
     assert len(selection) > 0
     for record in selection:
         record.state = WorkflowState(stage=WorkflowStage.WORKING_COPY, status=WorkflowStatus.DRAFT)
-    results, _ = get_transform_results("change-language", isomorphe, selection=selection)
+    results, _ = get_transform_results("change-language", migrator, selection=selection)
     assert len(results.skipped()) == len(selection)
     assert len(results.successes()) == 0
     assert len(results.failures()) == 0
@@ -79,10 +79,10 @@ def test_transform_working_copy(isomorphe: Isomorphe):
         assert result.reason == SkipReason.HAS_WORKING_COPY
 
 
-def test_transform_change_language_params(isomorphe: Isomorphe, clean_md_fixtures: list[Fixture]):
+def test_transform_change_language_params(migrator: Migrator, clean_md_fixtures: list[Fixture]):
     lang = "very-specific-language"
     results, selection = get_transform_results(
-        "change-language", isomorphe, transformation_params={"language": lang}
+        "change-language", migrator, transformation_params={"language": lang}
     )
     assert len(selection) > 0
     assert len(results.skipped()) == 0
@@ -103,7 +103,7 @@ def test_transform_change_language_params(isomorphe: Isomorphe, clean_md_fixture
     ],
 )
 def test_transform_metadata_type(
-    isomorphe: Isomorphe,
+    migrator: Migrator,
     md_type: tuple[MetadataType, str],
 ):
     def patched_get_md_type(self, md):
@@ -111,7 +111,7 @@ def test_transform_metadata_type(
         return md_type[0]
 
     with patch.object(GeonetworkClient, "_get_md_type", patched_get_md_type):
-        results, selection = get_transform_results("change-language", isomorphe)
+        results, selection = get_transform_results("change-language", migrator)
 
     assert len(selection) > 0
 

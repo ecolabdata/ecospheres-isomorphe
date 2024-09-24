@@ -68,7 +68,7 @@ class Transformation:
         return transform
 
 
-class Isomorphe:
+class Migrator:
     def __init__(
         self, *, url: str, username: str | None = None, password: str | None = None
     ) -> None:

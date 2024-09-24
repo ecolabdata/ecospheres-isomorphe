@@ -25,7 +25,7 @@ from isomorphe.batch import (
     TransformBatchRecord,
 )
 from isomorphe.geonetwork import GeonetworkConnectionError
-from isomorphe.isomorphe import Isomorphe
+from isomorphe.migrator import Migrator
 from isomorphe.rqueue import get_job, get_queue
 
 app = Flask(__name__)
@@ -54,8 +54,8 @@ def login():
         abort(400, "Missing login parameter(s)")
 
     try:
-        isomorphe = Isomorphe(url=url, username=username, password=password)
-        gn_info = isomorphe.gn.info()
+        migrator = Migrator(url=url, username=username, password=password)
+        gn_info = migrator.gn.info()
     except (requests.exceptions.RequestException, GeonetworkConnectionError) as e:
         flash(f"Problème d'authentification ({e})", "error")
         return redirect(url_for("login_form"))
@@ -76,7 +76,7 @@ def select():
     return render_template(
         "select.html.j2",
         url=session.get("url", ""),
-        transformations=Isomorphe.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
+        transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
     )
 
 
@@ -85,9 +85,7 @@ def select_transformation():
     transformation = request.args.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
-    transformation = Isomorphe.get_transformation(
-        transformation, app.config["TRANSFORMATIONS_PATH"]
-    )
+    transformation = Migrator.get_transformation(transformation, app.config["TRANSFORMATIONS_PATH"])
     return render_template("fragments/select_transformation.html.j2", transformation=transformation)
 
 
@@ -100,8 +98,8 @@ def select_preview():
     query = request.form.get("query")
     if not query:
         return "<em>Veuillez entrer une requête de recherche.</em>"
-    isomorphe = Isomorphe(url=url, username=username, password=password)
-    results = isomorphe.select(query=query)
+    migrator = Migrator(url=url, username=username, password=password)
+    results = migrator.select(query=query)
     return render_template("fragments/select_preview.html.j2", results=results)
 
 
@@ -115,19 +113,17 @@ def transform():
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
-    transformation = Isomorphe.get_transformation(
-        transformation, app.config["TRANSFORMATIONS_PATH"]
-    )
+    transformation = Migrator.get_transformation(transformation, app.config["TRANSFORMATIONS_PATH"])
     transformation_params = {}
     for param in transformation.params:
         form_param_name = f"param-{param.name}"
         if form_param_name not in request.form:
             abort(400, f"Missing `{param.name}` parameter for transformation")
         transformation_params[param.name] = request.form.get(form_param_name)
-    isomorphe = Isomorphe(url=url, username=username, password=password)
-    selection = isomorphe.select(query=query)
+    migrator = Migrator(url=url, username=username, password=password)
+    selection = migrator.select(query=query)
     job = get_queue().enqueue(
-        isomorphe.transform,
+        migrator.transform,
         transformation,
         selection,
         transformation_params=transformation_params,
@@ -212,9 +208,9 @@ def migrate(job_id: str):
     overwrite = mode == MigrateMode.OVERWRITE
     if not overwrite and not group:
         abort(400, "Missing `group` parameter")
-    isomorphe = Isomorphe(url=url, username=username, password=password)
+    migrator = Migrator(url=url, username=username, password=password)
     migrate_job = get_queue().enqueue(
-        isomorphe.migrate,
+        migrator.migrate,
         transform_job.result,
         overwrite=overwrite,
         group=group,
@@ -253,8 +249,8 @@ def migrate_update_mode():
     groups = []
     if is_create_mode := (mode == MigrateMode.CREATE):
         url, username, password = connection_infos()
-        isomorphe = Isomorphe(url=url, username=username, password=password)
-        groups = isomorphe.gn.get_groups()
+        migrator = Migrator(url=url, username=username, password=password)
+        groups = migrator.gn.get_groups()
     return render_template(
         "fragments/migrate_update_mode.html.j2",
         is_create_mode=is_create_mode,
