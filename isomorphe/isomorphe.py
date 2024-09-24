@@ -5,7 +5,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from ecospheres_migrator.batch import (
+from isomorphe.batch import (
     FailureMigrateBatchRecord,
     FailureTransformBatchRecord,
     MigrateBatch,
@@ -18,14 +18,14 @@ from ecospheres_migrator.batch import (
     TransformBatch,
     TransformBatchRecord,
 )
-from ecospheres_migrator.geonetwork import (
+from isomorphe.geonetwork import (
     GeonetworkClient,
     MetadataType,
     Record,
     WorkflowStage,
     extract_record_info,
 )
-from ecospheres_migrator.util import xml_to_string
+from isomorphe.util import xml_to_string
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class Transformation:
         return transform
 
 
-class Migrator:
+class Isomorphe:
     def __init__(
         self, *, url: str, username: str | None = None, password: str | None = None
     ) -> None:
