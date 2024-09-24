@@ -4,9 +4,9 @@ from conftest import GN_TEST_URL, Fixture
 from lxml import etree
 from test_transform import get_transform_results
 
-from ecospheres_migrator.batch import MigrateMode, TransformBatch
-from ecospheres_migrator.geonetwork import MetadataType
-from ecospheres_migrator.migrator import Migrator
+from isomorphe.batch import MigrateMode, TransformBatch
+from isomorphe.geonetwork import MetadataType
+from isomorphe.migrator import Migrator
 
 
 def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, str]:
@@ -123,7 +123,7 @@ def test_migrate_batch_records_success(
 
 def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fixture]):
     batch, _ = get_transform_results("change-language", migrator)
-    with patch("ecospheres_migrator.geonetwork.GeonetworkClient.update_record") as mocked_method:
+    with patch("isomorphe.geonetwork.GeonetworkClient.update_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked update_record error")
         migrate_batch = migrator.migrate(batch, overwrite=False, group=None)
     assert len(migrate_batch.failures()) == len(migrate_batch.records)
@@ -139,7 +139,7 @@ def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fix
 
 def test_migrate_overwrite_gn_error(migrator: Migrator, md_fixtures: list[Fixture]):
     batch, _ = get_transform_results("change-language", migrator)
-    with patch("ecospheres_migrator.geonetwork.GeonetworkClient.update_record") as mocked_method:
+    with patch("isomorphe.geonetwork.GeonetworkClient.update_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked update_record error")
         migrate_batch = migrator.migrate(batch, overwrite=True, group=None)
     assert migrate_batch.mode == MigrateMode.OVERWRITE
@@ -150,7 +150,7 @@ def test_migrate_overwrite_gn_error(migrator: Migrator, md_fixtures: list[Fixtur
 
 def test_migrate_duplicate_gn_error(migrator: Migrator, md_fixtures: list[Fixture]):
     batch, _ = get_transform_results("change-language", migrator)
-    with patch("ecospheres_migrator.geonetwork.GeonetworkClient.put_record") as mocked_method:
+    with patch("isomorphe.geonetwork.GeonetworkClient.put_record") as mocked_method:
         mocked_method.side_effect = Exception("Mocked put_record error")
         migrate_batch = migrator.migrate(batch, overwrite=False, group=1)
     assert migrate_batch.mode == MigrateMode.CREATE

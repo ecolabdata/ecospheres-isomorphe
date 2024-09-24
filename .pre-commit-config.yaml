@@ -4,11 +4,11 @@ repos:
     rev: v4.6.0
     hooks:
       - id: check-yaml
-        exclude: ^ecospheres_migrator/static/dsfr/
+        exclude: ^isomorphe/static/dsfr/
       - id: end-of-file-fixer
-        exclude: ^ecospheres_migrator/static/dsfr/
+        exclude: ^isomorphe/static/dsfr/
       - id: trailing-whitespace
-        exclude: ^ecospheres_migrator/static/dsfr/
+        exclude: ^isomorphe/static/dsfr/
       - id: check-added-large-files
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

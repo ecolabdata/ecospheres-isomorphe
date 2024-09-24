@@ -1,6 +1,6 @@
 from conftest import Fixture
 
-from ecospheres_migrator.geonetwork import (
+from isomorphe.geonetwork import (
     GeonetworkClient,
     MetadataType,
     Record,

@@ -1,4 +1,4 @@
-# ecospheres-migrator
+# ecospheres-isomorphe
 
 Une application pour appliquer des transformations XML aux catalogues Geonetwork du MTECT.
 
@@ -24,7 +24,7 @@ L'application [Flask](https://flask.palletsprojects.com/en/3.0.x/) intègre :
 Les variables d'environnement suivantes sont nécessaires :
 
 ```shell
-export FLASK_APP=ecospheres_migrator.app
+export FLASK_APP=isomorphe.app
 export FLASK_DEBUG=1
 export FLASK_SECRET_KEY=s3cr3t
 export REDIS_URL=redis://localhost:6379

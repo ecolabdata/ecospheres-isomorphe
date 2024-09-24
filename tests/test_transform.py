@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 from conftest import Fixture
 
-from ecospheres_migrator.batch import TransformBatch
-from ecospheres_migrator.geonetwork import (
+from isomorphe.batch import TransformBatch
+from isomorphe.geonetwork import (
     GeonetworkClient,
     MetadataType,
     Record,
@@ -13,11 +13,11 @@ from ecospheres_migrator.geonetwork import (
     WorkflowState,
     WorkflowStatus,
 )
-from ecospheres_migrator.migrator import Migrator, SkipReason, Transformation, TransformationParam
+from isomorphe.migrator import Migrator, SkipReason, Transformation, TransformationParam
 
 
 def get_transformation(name: str) -> Transformation:
-    transformation = Migrator.get_transformation(name, Path("ecospheres_migrator/transformations"))
+    transformation = Migrator.get_transformation(name, Path("isomorphe/transformations"))
     if not transformation:
         raise ValueError(f"No transformation found with name {name}")
     return transformation
@@ -25,15 +25,15 @@ def get_transformation(name: str) -> Transformation:
 
 def get_transform_results(
     transformation_name: str,
-    migrator: Migrator,
+    isomorphe: Migrator,
     selection: list[Record] = [],
     transformation_params: dict = {},
 ) -> tuple[TransformBatch, list[Record]]:
     if not selection:
-        selection = migrator.select(query="type=dataset")
+        selection = isomorphe.select(query="type=dataset")
     transformation = get_transformation(transformation_name)
     assert len(selection) > 0
-    return migrator.transform(
+    return isomorphe.transform(
         transformation, selection, transformation_params=transformation_params
     ), selection
 

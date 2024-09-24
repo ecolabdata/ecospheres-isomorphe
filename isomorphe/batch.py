@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
-from ecospheres_migrator.geonetwork import MefArchive, MetadataType, WorkflowState
+from isomorphe.geonetwork import MefArchive, MetadataType, WorkflowState
 
 
 @dataclass(kw_only=True)

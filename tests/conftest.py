@@ -7,8 +7,8 @@ from typing import Final
 import pytest
 import requests
 
-from ecospheres_migrator.geonetwork import GeonetworkClient, MetadataType
-from ecospheres_migrator.migrator import Migrator
+from isomorphe.geonetwork import GeonetworkClient, MetadataType
+from isomorphe.migrator import Migrator
 
 log = logging.getLogger(__name__)
 

@@ -17,16 +17,16 @@ from flask import (
     url_for,
 )
 
-from ecospheres_migrator.auth import authenticated, connection_infos
-from ecospheres_migrator.batch import (
+from isomorphe.auth import authenticated, connection_infos
+from isomorphe.batch import (
     MigrateMode,
     SkipReasonMessage,
     SuccessTransformBatchRecord,
     TransformBatchRecord,
 )
-from ecospheres_migrator.geonetwork import GeonetworkConnectionError
-from ecospheres_migrator.migrator import Migrator
-from ecospheres_migrator.rqueue import get_job, get_queue
+from isomorphe.geonetwork import GeonetworkConnectionError
+from isomorphe.migrator import Migrator
+from isomorphe.rqueue import get_job, get_queue
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")

@@ -282,7 +282,7 @@ class GeonetworkClient:
                 f"{self.api}/records/{uuid}/status",
                 headers={"Content-Type": "application/json"},
                 json={
-                    "changeMessage": "Approved by Migrator",
+                    "changeMessage": "Approved by ISOmorphe",
                     "status": WorkflowStatus.APPROVED,
                 },
             )
