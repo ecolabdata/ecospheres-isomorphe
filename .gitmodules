@@ -1,0 +1,3 @@
+[submodule "isomorphe/transformations/ecospheres-xslt"]
+	path = isomorphe/transformations/ecospheres-xslt
+	url = https://github.com/ecolabdata/ecospheres-xslt
