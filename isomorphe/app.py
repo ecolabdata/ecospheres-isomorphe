@@ -32,7 +32,11 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
-app.config["TRANSFORMATIONS_PATH"] = Path(app.root_path, "transformations")
+app.config["TRANSFORMATIONS_PATH"] = (
+    Path(os.getenv("TRANSFORMATIONS_PATH", ""))
+    if os.getenv("TRANSFORMATIONS_PATH")
+    else Path(app.root_path, "transformations/default")
+)
 
 
 @app.route("/")
