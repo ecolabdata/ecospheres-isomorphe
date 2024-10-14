@@ -17,7 +17,7 @@ from isomorphe.migrator import Migrator, SkipReason, Transformation, Transformat
 
 
 def get_transformation(name: str) -> Transformation:
-    transformation = Migrator.get_transformation(name, Path("isomorphe/transformations"))
+    transformation = Migrator.get_transformation(name, Path("isomorphe/transformations/default"))
     if not transformation:
         raise ValueError(f"No transformation found with name {name}")
     return transformation
