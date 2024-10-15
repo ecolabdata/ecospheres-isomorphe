@@ -11,6 +11,8 @@
                 <th scope="col">Type</th>
                 <th scope="col">Statut</th>
                 <th scope="col">Titre</th>
+                <th scope="col">Fiche web</th>
+                <th scope="col">Fiche XML</th>
               </tr>
             </thead>
             <tbody>
@@ -20,6 +22,16 @@
                 <td>{{ "Template" if result.template else "Record" }}</td>
                 <td>{{ "Draft" if (result.state and result.state.stage == "working_copy") else "-" }}</td>
                 <td>{{ result.title }}</td>
+                <td>
+                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ result.uuid }}"
+                    target="_blank"
+                    rel="noopener">{{ result.uuid }}</a>
+                </td>
+                <td>
+                  <a href="{{ url }}/api/records/{{ result.uuid }}/formatters/xml?approved=true"
+                    target="_blank"
+                    rel="noopener">Voir le XML</a>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
