@@ -69,7 +69,7 @@ def login():
             flash("Problème d'authentification (retour api geonetwork)", "error")
             return redirect(url_for("login_form"))
 
-    session["url"] = url
+    session["url"] = url.rstrip("/")
     session["username"] = username
     session["password"] = password
     return redirect(url_for("select"))
@@ -104,7 +104,7 @@ def select_preview():
         return "<em>Veuillez entrer une requête de recherche.</em>"
     migrator = Migrator(url=url, username=username, password=password)
     results = migrator.select(query=query)
-    return render_template("fragments/select_preview.html.j2", results=results)
+    return render_template("fragments/select_preview.html.j2", results=results, url=url)
 
 
 @app.route("/transform", methods=["POST"])
