@@ -66,7 +66,7 @@ class TransformBatchRecord:
 class SuccessTransformBatchRecord(TransformBatchRecord):
     result: bytes
     info: str
-    error_log: TransformErrorLog | None
+    error_log: TransformErrorLog | None = None
 
 
 @dataclass(kw_only=True)
@@ -95,7 +95,7 @@ class SkipReason(IntEnum):
 class SkippedTransformBatchRecord(TransformBatchRecord):
     reason: SkipReason
     info: str
-    error_log: TransformErrorLog | None
+    error_log: TransformErrorLog | None = None
 
 
 class TransformBatch:
