@@ -8,7 +8,7 @@ from isomorphe.geonetwork import MefArchive, MetadataType, WorkflowState
 
 
 @dataclass(kw_only=True)
-class TransformError:
+class TransformLogItem:
     message: str
     line: int
     column: int
@@ -21,14 +21,14 @@ class TransformError:
     filename: str
 
 
-class TransformErrorLog:
-    """An iterator over a list of TransformError, defined from a lxml.etree._ListErrorLog."""
+class TransformLog:
+    """An iterator over a list of TransformLogItem, defined from a lxml.etree._ListErrorLog."""
 
-    errors: list[TransformError]
+    errors: list[TransformLogItem]
 
     def __init__(self, error_log: ETListErrorLog):
         self.errors = [
-            TransformError(
+            TransformLogItem(
                 message=e.message,
                 line=e.line,
                 column=e.column,
@@ -43,10 +43,10 @@ class TransformErrorLog:
             for e in error_log.filter_from_warnings()
         ]
 
-    def __iter__(self) -> Iterator[TransformError]:
+    def __iter__(self) -> Iterator[TransformLogItem]:
         return iter(self.errors)
 
-    def __getitem__(self, index: int) -> TransformError:
+    def __getitem__(self, index: int) -> TransformLogItem:
         return self.errors[index]
 
     def __len__(self) -> int:
@@ -66,7 +66,7 @@ class TransformBatchRecord:
 class SuccessTransformBatchRecord(TransformBatchRecord):
     result: bytes
     info: str
-    error_log: TransformErrorLog | None = None
+    log: TransformLog | None = None
 
 
 @dataclass(kw_only=True)
@@ -95,7 +95,7 @@ class SkipReason(IntEnum):
 class SkippedTransformBatchRecord(TransformBatchRecord):
     reason: SkipReason
     info: str
-    error_log: TransformErrorLog | None = None
+    log: TransformLog | None = None
 
 
 class TransformBatch:

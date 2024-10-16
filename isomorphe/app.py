@@ -272,9 +272,9 @@ def documentation():
 def record_error_log(record: TransformBatchRecord):
     if not isinstance(record, (SkippedTransformBatchRecord, SuccessTransformBatchRecord)):
         return "-"
-    if not record.error_log:
+    if not record.log:
         return "-"
-    return "<br>".join([e.message for e in record.error_log])
+    return "<br>".join([e.message for e in record.log])
 
 
 if __name__ == "__main__":
