@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+import markdown
 import requests
 from flask import (
     Flask,
@@ -264,7 +265,24 @@ def migrate_update_mode():
 
 @app.route("/docs")
 def documentation():
-    return render_template("documentation.html.j2")
+    index_page = Path(app.root_path, "doc/index.md")
+    with open(index_page, "r") as f:
+        index_content = f.read()
+    tdocs_toc = ""
+    for tdoc in app.config["TRANSFORMATIONS_PATH"].glob("*.md"):
+        tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
+    index_content = index_content.replace("<!-- insert:tranformations_docs -->", tdocs_toc)
+    return render_template("documentation.html.j2", content=markdown.markdown(index_content))
+
+
+@app.route("/docs/transformations/<transformation>")
+def documentation_transformation(transformation: str):
+    doc_page = app.config["TRANSFORMATIONS_PATH"] / f"{transformation}.md"
+    if not doc_page.exists():
+        abort(404)
+    with open(doc_page, "r") as f:
+        md_content = f.read()
+    return render_template("documentation.html.j2", content=markdown.markdown(md_content))
 
 
 if __name__ == "__main__":
