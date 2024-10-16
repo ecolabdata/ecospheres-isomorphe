@@ -10,4 +10,4 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
 
 ## Documentation des transformations
 
-<!-- insert:tranformations_docs -->
+<!-- insert:transformations_docs -->

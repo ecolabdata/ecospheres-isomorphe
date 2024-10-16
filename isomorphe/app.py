@@ -270,7 +270,7 @@ def documentation():
     tdocs_toc = ""
     for tdoc in app.config["TRANSFORMATIONS_PATH"].glob("*.md"):
         tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
-    index_content = index_content.replace("<!-- insert:tranformations_docs -->", tdocs_toc)
+    index_content = index_content.replace("<!-- insert:transformations_docs -->", tdocs_toc)
     return render_template("documentation.html.j2", content=markdown.markdown(index_content))
 
 
