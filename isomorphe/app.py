@@ -268,8 +268,8 @@ def documentation():
     return render_template("documentation.html.j2")
 
 
-@app.template_filter("record_error_log")
-def record_error_log(record: TransformBatchRecord):
+@app.template_filter("record_transform_log")
+def record_transform_log(record: TransformBatchRecord):
     if not isinstance(record, (SkippedTransformBatchRecord, SuccessTransformBatchRecord)):
         return "-"
     if not record.log:

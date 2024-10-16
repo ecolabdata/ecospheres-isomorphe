@@ -104,7 +104,7 @@
                           {{ reasons[record.reason.name].value }}
                         </td>
                         <td>
-                          {{ record | record_error_log }}
+                          {{ record | record_transform_log }}
                         </td>
                       </tr>
                     {% endfor %}
@@ -160,7 +160,7 @@
                             rel="noopener">Voir le XML</a>
                         </td>
                         <td>
-                          {{ record | record_error_log }}
+                          {{ record | record_transform_log }}
                         </td>
                       </tr>
                     {% endfor %}
