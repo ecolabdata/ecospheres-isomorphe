@@ -20,6 +20,7 @@ from flask import (
 from isomorphe.auth import authenticated, connection_infos
 from isomorphe.batch import (
     MigrateMode,
+    SkippedTransformBatchRecord,
     SkipReasonMessage,
     SuccessTransformBatchRecord,
     TransformBatchRecord,
@@ -265,6 +266,15 @@ def migrate_update_mode():
 @app.route("/docs")
 def documentation():
     return render_template("documentation.html.j2")
+
+
+@app.template_filter("record_error_log")
+def record_error_log(record: TransformBatchRecord):
+    if not isinstance(record, (SkippedTransformBatchRecord, SuccessTransformBatchRecord)):
+        return "-"
+    if not record.error_log:
+        return "-"
+    return "<br>".join([e.message for e in record.error_log])
 
 
 if __name__ == "__main__":
