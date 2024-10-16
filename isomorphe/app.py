@@ -266,8 +266,7 @@ def migrate_update_mode():
 @app.route("/docs")
 def documentation():
     index_page = Path(app.root_path, "doc/index.md")
-    with index_page.open() as f:
-        index_content = f.read()
+    index_content = index_page.read_text()
     tdocs_toc = ""
     for tdoc in app.config["TRANSFORMATIONS_PATH"].glob("*.md"):
         tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
@@ -280,8 +279,7 @@ def documentation_transformation(transformation: str):
     doc_page = app.config["TRANSFORMATIONS_PATH"] / f"{transformation}.md"
     if not doc_page.exists():
         abort(404)
-    with doc_page.open() as f:
-        md_content = f.read()
+    md_content = doc_page.read_text()
     return render_template("documentation.html.j2", content=markdown.markdown(md_content))
 
 
