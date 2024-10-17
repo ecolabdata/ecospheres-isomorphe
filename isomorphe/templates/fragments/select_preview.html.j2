@@ -8,20 +8,15 @@
             <thead>
               <tr>
                 <th scope="col">Identifiant</th>
+                <th scope="col">Fiche XML</th>
                 <th scope="col">Type</th>
                 <th scope="col">Statut</th>
                 <th scope="col">Titre</th>
-                <th scope="col">Fiche web</th>
-                <th scope="col">Fiche XML</th>
               </tr>
             </thead>
             <tbody>
               {% for result in results %}
               <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
-                <td>{{ result.uuid }}</td>
-                <td>{{ "Template" if result.template else "Record" }}</td>
-                <td>{{ "Draft" if (result.state and result.state.stage == "working_copy") else "-" }}</td>
-                <td>{{ result.title }}</td>
                 <td>
                   <a href="{{ url }}/fre/catalog.search#/metadata/{{ result.uuid }}"
                     target="_blank"
@@ -32,6 +27,9 @@
                     target="_blank"
                     rel="noopener">Voir le XML</a>
                 </td>
+                <td>{{ "Template" if result.template else "Record" }}</td>
+                <td>{{ "Draft" if (result.state and result.state.stage == "working_copy") else "-" }}</td>
+                <td>{{ result.title }}</td>
               </tr>
               {% endfor %}
             </tbody>
