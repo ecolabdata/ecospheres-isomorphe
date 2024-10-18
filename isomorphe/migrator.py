@@ -17,6 +17,7 @@ from isomorphe.batch import (
     SuccessTransformBatchRecord,
     TransformBatch,
     TransformBatchRecord,
+    TransformLog,
 )
 from isomorphe.geonetwork import (
     GeonetworkClient,
@@ -141,7 +142,9 @@ class Migrator:
                     k: etree.XSLT.strparam(v)  # type: ignore (stub is wrong for strparam)
                     for k, v in transformation_params.items()
                 }
-                result = transformation.transform(original, **transformation_params_quoted)
+                transformer = transformation.transform
+                result = transformer(original, **transformation_params_quoted)
+                transform_log = TransformLog(transformer.error_log)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
                 if result_str != original_str:
@@ -150,6 +153,7 @@ class Migrator:
                             **batch_record.__dict__,
                             result=result_str,
                             info=xml_to_string(info),
+                            log=transform_log,
                         )
                     )
                 else:
@@ -158,6 +162,7 @@ class Migrator:
                             **batch_record.__dict__,
                             info=xml_to_string(info),
                             reason=SkipReason.NO_CHANGES,
+                            log=transform_log,
                         )
                     )
             except Exception as e:

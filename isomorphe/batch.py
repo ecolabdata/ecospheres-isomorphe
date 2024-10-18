@@ -1,7 +1,56 @@
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
+from typing import Iterator
+
+from lxml.etree import _ListErrorLog as ETListErrorLog
 
 from isomorphe.geonetwork import MefArchive, MetadataType, WorkflowState
+
+
+@dataclass(kw_only=True)
+class TransformLogItem:
+    message: str
+    line: int
+    column: int
+    domain_name: str
+    domain: int
+    type_name: str
+    type: int
+    level_name: str
+    level: int
+    filename: str
+
+
+class TransformLog:
+    """An iterator over a list of TransformLogItem, defined from a lxml.etree._ListErrorLog."""
+
+    errors: list[TransformLogItem]
+
+    def __init__(self, error_log: ETListErrorLog):
+        self.errors = [
+            TransformLogItem(
+                message=e.message,
+                line=e.line,
+                column=e.column,
+                domain_name=e.domain_name,
+                domain=e.domain,
+                type_name=e.type_name,
+                type=e.type,
+                level_name=e.level_name,
+                level=e.level,
+                filename=e.filename,
+            )
+            for e in error_log.filter_from_warnings()
+        ]
+
+    def __iter__(self) -> Iterator[TransformLogItem]:
+        return iter(self.errors)
+
+    def __getitem__(self, index: int) -> TransformLogItem:
+        return self.errors[index]
+
+    def __len__(self) -> int:
+        return len(self.errors)
 
 
 @dataclass(kw_only=True)
@@ -17,6 +66,7 @@ class TransformBatchRecord:
 class SuccessTransformBatchRecord(TransformBatchRecord):
     result: bytes
     info: str
+    log: TransformLog | None = None
 
 
 @dataclass(kw_only=True)
@@ -45,6 +95,7 @@ class SkipReason(IntEnum):
 class SkippedTransformBatchRecord(TransformBatchRecord):
     reason: SkipReason
     info: str
+    log: TransformLog | None = None
 
 
 class TransformBatch:

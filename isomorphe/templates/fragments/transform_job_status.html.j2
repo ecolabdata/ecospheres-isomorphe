@@ -82,6 +82,7 @@
                       <th scope="col">Fiche originale</th>
                       <th scope="col">XML original</th>
                       <th scope="col">Raison</th>
+                      <th scope="col">Avertissements</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -101,6 +102,9 @@
                         </td>
                         <td>
                           {{ reasons[record.reason.name].value }}
+                        </td>
+                        <td>
+                          {{ record | record_transform_log }}
                         </td>
                       </tr>
                     {% endfor %}
@@ -132,6 +136,7 @@
                       <th scope="col">Fiche originale</th>
                       <th scope="col">XML original</th>
                       <th scope="col">XML transformé</th>
+                      <th scope="col">Avertissements</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -153,6 +158,9 @@
                           <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}"
                             target="_blank"
                             rel="noopener">Voir le XML</a>
+                        </td>
+                        <td>
+                          {{ record | record_transform_log }}
                         </td>
                       </tr>
                     {% endfor %}
