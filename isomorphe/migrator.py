@@ -107,6 +107,9 @@ class Migrator:
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
+            # FIXME: extract_record_info() mutates `original`
+            # In the mean time, this must happen before we store `original` in the BatchRecord
+            info = extract_record_info(original, sources)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
@@ -133,8 +136,6 @@ class Migrator:
                 )
                 continue
             try:
-                # FIXME: extract_record_info() mutates original
-                info = extract_record_info(original, sources)
                 log.debug(
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
                 )
