@@ -28,7 +28,7 @@ from isomorphe.geonetwork import (
 )
 from isomorphe.util import xml_to_string
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
@@ -80,7 +80,7 @@ class Migrator:
         """
         Select data to migrate based on given params
         """
-        log.debug(f"Selecting with {kwargs}")
+        log.info(f"Selecting with {kwargs}")
 
         query = {"_isHarvested": "n"}
         q = kwargs.get("query", "")
@@ -88,7 +88,7 @@ class Migrator:
 
         selection = self.gn.get_records(query=query)
 
-        log.debug(f"Selection contains {len(selection)} items")
+        log.info(f"Selection contains {len(selection)} items")
         return selection
 
     def transform(
@@ -100,7 +100,7 @@ class Migrator:
         """
         Transform data from a selection
         """
-        log.debug(f"Transforming {selection} via {transformation}")
+        log.info(f"Transforming {selection} via {transformation}")
         sources = self.gn.get_sources()
 
         batch = TransformBatch(transformation=transformation.name)
@@ -173,7 +173,7 @@ class Migrator:
                     )
                 )
 
-        log.debug("Transformation done.")
+        log.info("Transformation done.")
         return batch
 
     def migrate(
@@ -183,7 +183,7 @@ class Migrator:
         group: int | None = None,
         transform_job_id: str | None = None,
     ) -> MigrateBatch:
-        log.debug(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
+        log.info(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
         migrate_batch = MigrateBatch(
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
@@ -224,7 +224,7 @@ class Migrator:
                         error=str(e),
                     )
                 )
-        log.debug("Migration done.")
+        log.info("Migration done.")
         return migrate_batch
 
     @staticmethod
