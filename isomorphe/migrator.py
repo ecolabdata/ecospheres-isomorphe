@@ -28,7 +28,6 @@ from isomorphe.geonetwork import (
 )
 from isomorphe.util import xml_to_string
 
-logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 

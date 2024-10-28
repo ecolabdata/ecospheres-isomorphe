@@ -10,7 +10,6 @@ import requests
 from lxml import etree
 from lxml.builder import E
 
-logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
