@@ -265,7 +265,9 @@ def migrate_update_mode():
 
 @app.route("/docs")
 def documentation():
-    index_page = Path(app.root_path, "doc/index.md")
+    index_page = Path("doc/index.md")
+    if not index_page.exists():
+        abort(404)
     index_content = index_page.read_text()
     tdocs_toc = ""
     for tdoc in app.config["TRANSFORMATIONS_PATH"].glob("*.md"):
