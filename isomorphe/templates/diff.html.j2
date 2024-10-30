@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Écosphères ISOmorphe">
+    <meta name="keywords" content="ecospheres, geonetwork, iso-19139">
+    <title>ISOmorphe diff</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+  </head>
+  <body>
+    <main role="main" id="content">
+      <div id="diff-content"></div>
+    </main>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
+    <script type="text/javascript">
+    const targetElement = document.getElementById('diff-content');
+    const configuration = {
+      drawFileList: false,
+      matching: 'lines',
+      inputFormat: 'diff',
+      outputFormat: 'side-by-side',
+      synchronisedScroll: true,
+      fileContentToggle: false,
+    };
+    const diff2htmlUi = new Diff2HtmlUI(targetElement, `{{ diff }}`, configuration);
+    diff2htmlUi.draw();
+    </script>
+  </body>
+</html>
