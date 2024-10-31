@@ -34,7 +34,9 @@ from isomorphe.rqueue import get_job, get_queue
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
+app.config["TRANSFORM_TIMEOUT"] = -1  # no timeout
 app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
+app.config["MIGRATE_TIMEOUT"] = -1  # no timeout
 app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 app.config["TRANSFORMATIONS_PATH"] = (
     Path(os.getenv("TRANSFORMATIONS_PATH", ""))
@@ -137,6 +139,7 @@ def transform():
         transformation,
         selection,
         transformation_params=transformation_params,
+        job_timeout=app.config["TRANSFORM_TIMEOUT"],
         result_ttl=app.config["TRANSFORM_TTL"],
     )
     return redirect(url_for("transform_success", job_id=job.id))
@@ -244,6 +247,7 @@ def migrate(job_id: str):
         transform_job.result,
         overwrite=overwrite,
         group=group,
+        job_timeout=app.config["MIGRATE_TIMEOUT"],
         result_ttl=app.config["MIGRATE_TTL"],
         transform_job_id=job_id,
     )
