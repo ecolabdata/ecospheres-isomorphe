@@ -136,6 +136,7 @@
                       <th scope="col">Fiche originale</th>
                       <th scope="col">XML original</th>
                       <th scope="col">XML transformé</th>
+                      <th scope="col">Différences</th>
                       <th scope="col">Avertissements</th>
                     </tr>
                   </thead>
@@ -158,6 +159,11 @@
                           <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}"
                             target="_blank"
                             rel="noopener">Voir le XML</a>
+                        </td>
+                        <td>
+                          <a href="{{ url_for('transform_diff', job_id=job.id, uuid=record.uuid) }}"
+                            target="_blank"
+                            rel="noopener">Voir le diff</a>
                         </td>
                         <td>
                           {{ record | record_transform_log }}
