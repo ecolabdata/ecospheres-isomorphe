@@ -6,3 +6,4 @@ rq
 pre-commit
 ruff
 pytest
+markdown
