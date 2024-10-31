@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,8 @@ app.config["TRANSFORMATIONS_PATH"] = (
     if os.getenv("TRANSFORMATIONS_PATH")
     else Path(app.root_path, "transformations/default")
 )
+
+logging.basicConfig(level=logging.DEBUG if app.debug else logging.INFO)
 
 
 @app.route("/")

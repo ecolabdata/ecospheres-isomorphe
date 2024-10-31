@@ -10,7 +10,6 @@ import requests
 from lxml import etree
 from lxml.builder import E
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
@@ -79,7 +78,7 @@ class GeonetworkClient:
         self.session = requests.Session()
         if username and password:
             self.session.auth = (username, password)
-            log.debug(f"Authenticating as: {username}")
+            log.info(f"Authenticating as: {username}")
         self.authenticate()
 
     def info(self):
@@ -161,7 +160,7 @@ class GeonetworkClient:
         return records
 
     def get_record(self, uuid: str) -> etree._ElementTree:
-        # log.debug(f"Processing record: {record}")
+        log.debug(f"Processing record: {uuid}")
         r = self.session.get(
             f"{self.api}/records/{uuid}/formatters/xml",
             headers={"Accept": "application/xml"},
@@ -305,7 +304,7 @@ class GeonetworkClient:
         r.raise_for_status()
 
     def add_group(self, name: str, description: str = ""):
-        log.debug(f"Adding group: {name}")
+        log.info(f"Adding group: {name}")
         r = self.session.put(
             f"{self.api}/groups",
             headers={"Accept": "application/json"},
