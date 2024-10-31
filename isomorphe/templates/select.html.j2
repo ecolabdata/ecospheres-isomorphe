@@ -2,12 +2,12 @@
 {% block content %}
   <div class="fr-stepper fr-mt-4v">
     <h2 class="fr-stepper__title">
-      Sélection des données à transformer
+      Sélection des fiches à adapter
       <span class="fr-stepper__state">Étape 2 sur 4</span>
     </h2>
     <div class="fr-stepper__steps" data-fr-current-step="2" data-fr-steps="4"></div>
     <p class="fr-stepper__details">
-      <span class="fr-text--bold">Étape suivante :</span> Transformation des données
+      <span class="fr-text--bold">Étape suivante :</span> Transformation des fiches
     </p>
   </div>
   <form hx-validate="true" method="post" action="{{ url_for("transform") }}">
@@ -27,7 +27,7 @@
       </div>
     </div>
     <div class="fr-select-group">
-      <label class="fr-label" for="transformation">Transformation(s) à appliquer *</label>
+      <label class="fr-label" for="transformation">Transformation à appliquer *</label>
       <select hx-get="{{ url_for("select_transformation") }}"
               hx-target="#select-form-transformation-params"
               hx-trigger="change"

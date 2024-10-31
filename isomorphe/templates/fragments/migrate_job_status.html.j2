@@ -5,13 +5,13 @@
        hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
 {% elif status == "finished" %}
   <p>Job terminé.</p>
-  <p>Mode de migration : {% if job.result.mode == modes.CREATE %}création de nouvelles fiches{% else %}mise à jour des fiches existantes{% endif %}.</p>
+  <p>Mode de mise à jour du catalogue : {% if job.result.mode == modes.CREATE %}création de nouvelles fiches{% else %}mise à jour des fiches existantes{% endif %}.</p>
   {% set successes = job.result.successes() %}
   {% set failures = job.result.failures() %}
   {% if successes|length or failures|length %}
   <p>Les enregistrements sont listés dans l'ordre de traitement, du plus ancien au plus récent.</p>
   {% else %}
-  <p>Aucune migration n'a été effectuée.</p>
+  <p>Aucune mise à jour n'a été effectuée.</p>
   {% endif %}
   <div class="fr-accordions-group fr-mb-4w">
     {% if failures %}
@@ -19,7 +19,7 @@
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
                 aria-expanded="true"
-                aria-controls="accordion-failures">Migrations en échec ({{ failures|length }})</button>
+                aria-controls="accordion-failures">Mises à jour en échec ({{ failures|length }})</button>
       </h3>
       <div class="fr-collapse" id="accordion-failures">
         <div class="fr-table fr-mb-1w" id="table-md-component">
@@ -60,7 +60,7 @@
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="accordion-successes">Migrations réussies ({{ successes|length }})</button>
+                aria-controls="accordion-successes">Mises à jour réussies ({{ successes|length }})</button>
       </h3>
       <div class="fr-collapse" id="accordion-successes">
         <div class="fr-table fr-mb-1w" id="table-md-component">
@@ -74,7 +74,7 @@
                       {% if job.result.mode == modes.CREATE %}
                       <th scope="col">Fiche originale</th>
                       {% endif %}
-                      <th scope="col">Fiche migrée</th>
+                      <th scope="col">Fiche transformée</th>
                     </tr>
                   </thead>
                   <tbody>

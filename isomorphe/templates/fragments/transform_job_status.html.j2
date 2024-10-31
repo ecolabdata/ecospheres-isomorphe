@@ -175,12 +175,8 @@
     {% endif %}
   </div>
   <p>
-    Vous pouvez <a href="{{ url_for('transform_download_result', job_id=job.id) }}">télécharger le résultat</a>
-    et appliquer vous-mêmes les modifications sur votre catalogue en important le fichier.
-  </p>
-  <p>
-    Vous pouvez également utiliser le formulaire ci-dessous pour appliquer les modifications automatiquement
-    sur le catalogue {{ url }}.
+    Vous pouvez désormais mettre à jour le catalogue {{ url }}.
+    Seules les transformations réussies seront appliquées.
   </p>
   <form action="{{ url_for('migrate', job_id=job.id) }}"
         method="post"
