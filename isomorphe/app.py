@@ -34,9 +34,9 @@ from isomorphe.rqueue import get_job, get_queue
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
-app.config["TRANSFORM_TIMEOUT"] = -1  # no timeout
+app.config["TRANSFORM_TIMEOUT"] = 3*60*60  # 3 hours 
 app.config["TRANSFORM_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
-app.config["MIGRATE_TIMEOUT"] = -1  # no timeout
+app.config["MIGRATE_TIMEOUT"] = 3*60*60  # 3 hours 
 app.config["MIGRATE_TTL"] = 60 * 60 * 24 * 7 * 30 * 2  # 2 months
 app.config["TRANSFORMATIONS_PATH"] = (
     Path(os.getenv("TRANSFORMATIONS_PATH", ""))
