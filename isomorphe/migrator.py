@@ -229,7 +229,7 @@ class Migrator:
 
     @staticmethod
     def list_transformations(root_path: Path) -> list[Transformation]:
-        return [Transformation(p) for p in root_path.glob("*.xsl")]
+        return [Transformation(p) for p in sorted(root_path.glob("*.xsl"))]
 
     @staticmethod
     def get_transformation(name: str, root_path: Path) -> Transformation:
