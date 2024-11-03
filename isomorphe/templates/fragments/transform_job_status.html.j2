@@ -101,7 +101,7 @@
                             rel="noopener">Voir le XML</a>
                         </td>
                         <td>
-                          {{ reasons[record.reason.name].value }}
+                          {{ SkipReasonMessage[record.reason.name].value }}
                         </td>
                         <td>
                           {{ record | record_transform_log }}
@@ -191,8 +191,8 @@
       <label class="fr-label" for="mode">Mode de mise à jour *</label>
       <select hx-get="{{ url_for('migrate_update_mode') }}" hx-target="#migrate-form-group-field" hx-trigger="change" required class="fr-select" id="mode" name="mode">
         <option value="" selected disabled hidden>Sélectionner un mode</option>
-        <option value="{{ modes.CREATE.value }}">Création de nouvelles fiches (GENERATEUUID)</option>
-        <option value="{{ modes.OVERWRITE.value }}">Mise à jour des fiches existantes (OVERWRITE)</option>
+        <option value="{{ MigrateMode.CREATE.value }}">Création de nouvelles fiches (GENERATEUUID)</option>
+        <option value="{{ MigrateMode.OVERWRITE.value }}">Mise à jour des fiches existantes (OVERWRITE)</option>
       </select>
     </div>
     <div id="migrate-form-group-field"></div>
