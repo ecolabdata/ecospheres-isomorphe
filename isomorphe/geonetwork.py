@@ -227,7 +227,12 @@ class GeonetworkClient:
         return data
 
     def update_record(
-        self, uuid: str, metadata: bytes, md_type: MetadataType, state: WorkflowState | None = None
+        self,
+        uuid: str,
+        metadata: bytes,
+        md_type: MetadataType,
+        update_date_stamp: bool,
+        state: WorkflowState | None = None,
     ):
         # PUT /records doesn't work as expected: it delete/recreates the record instead
         # of updating in place, hence losing Geonetwork-specific record metadata like
@@ -250,6 +255,7 @@ class GeonetworkClient:
         # API expects x-www-form-urlencoded here
         data: dict[str, Any] = {
             "tab": "xml",
+            "minor": "false" if update_date_stamp else "true",
             "withAttributes": "false",
             "withValidationErrors": "false",
             "commit": "true",

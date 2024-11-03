@@ -1,4 +1,4 @@
-{% if is_create_mode %}
+{% if migrate_mode == MigrateMode.CREATE %}
 <div class="fr-select-group fr-mb-2w">
   <label class="fr-label" for="mode">Groupe de rattachement des fiches créées *</label>
   <select required class="fr-select" id="group" name="group">
@@ -7,5 +7,11 @@
     <option value="{{ group.id }}">{{ group.name }}</option>
     {% endfor %}
   </select>
+</div>
+{% elif migrate_mode == MigrateMode.OVERWRITE %}
+<div class="fr-checkbox-group fr-mb-2w">
+  <input checked name="update_date_stamp" id="update_date_stamp" type="checkbox" aria-describedby="checkbox-messages">
+  <label class="fr-label" for="update_date_stamp">Actualiser la date de mise à jour de la fiche</label>
+  <div class="fr-messages-group" id="checkbox-messages" aria-live="assertive"></div>
 </div>
 {% endif %}
