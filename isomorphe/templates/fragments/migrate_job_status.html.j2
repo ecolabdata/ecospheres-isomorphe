@@ -5,7 +5,7 @@
        hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
 {% elif status == "finished" %}
   <p>Job terminé.</p>
-  <p>Mode de mise à jour du catalogue : {% if job.result.mode == modes.CREATE %}création de nouvelles fiches{% else %}mise à jour des fiches existantes{% endif %}.</p>
+  <p>Mode de mise à jour du catalogue : {% if job.result.mode == MigrateMode.CREATE %}création de nouvelles fiches{% else %}mise à jour des fiches existantes{% endif %}.</p>
   {% set successes = job.result.successes() %}
   {% set failures = job.result.failures() %}
   {% if successes|length or failures|length %}
@@ -30,7 +30,7 @@
                   <thead>
                     <tr>
                       <th scope="col">Statut</th>
-                      {% if job.result.mode == modes.CREATE %}
+                      {% if job.result.mode == MigrateMode.CREATE %}
                       <th scope="col">Fiche originale</th>
                       {% endif %}
                       <th scope="col">Erreur</th>
@@ -40,7 +40,7 @@
                     {% for record in failures %}
                     <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                       <td>❌</td>
-                      {% if job.result.mode == modes.CREATE %}
+                      {% if job.result.mode == MigrateMode.CREATE %}
                       <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.source_uuid }}" target="_blank" rel="noopener">{{ record.source_uuid }}</a></td>
                       {% endif %}
                       <td>{{ record.error }}</td>
@@ -71,7 +71,7 @@
                   <thead>
                     <tr>
                       <th scope="col">Statut</th>
-                      {% if job.result.mode == modes.CREATE %}
+                      {% if job.result.mode == MigrateMode.CREATE %}
                       <th scope="col">Fiche originale</th>
                       {% endif %}
                       <th scope="col">Fiche transformée</th>
@@ -81,7 +81,7 @@
                     {% for record in successes %}
                     <tr id="table-md-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                       <td>✅</td>
-                      {% if job.result.mode == modes.CREATE %}
+                      {% if job.result.mode == MigrateMode.CREATE %}
                       <td><a href="{{ url }}/fre/catalog.search#/metadata/{{ record.source_uuid }}" target="_blank" rel="noopener">{{ record.source_uuid }}</a></td>
                       {% endif %}
                       <td>

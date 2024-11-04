@@ -210,8 +210,8 @@ def transform_job_status(job_id: str):
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
         url=url,
-        modes=MigrateMode,
-        reasons=SkipReasonMessage,
+        MigrateMode=MigrateMode,
+        SkipReasonMessage=SkipReasonMessage,
     )
 
 
@@ -273,7 +273,7 @@ def migrate_job_status(job_id: str):
         job=get_job(job_id),
         now=datetime.now().isoformat(timespec="seconds"),
         url=url,
-        modes=MigrateMode,
+        MigrateMode=MigrateMode,
     )
 
 
