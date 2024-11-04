@@ -241,12 +241,14 @@ def migrate(job_id: str):
     overwrite = mode == MigrateMode.OVERWRITE
     if not overwrite and not group:
         abort(400, "Missing `group` parameter")
+    update_date_stamp = request.form.get("update_date_stamp") is not None
     migrator = Migrator(url=url, username=username, password=password)
     migrate_job = get_queue().enqueue(
         migrator.migrate,
         transform_job.result,
         overwrite=overwrite,
         group=group,
+        update_date_stamp=update_date_stamp,
         job_timeout=app.config["MIGRATE_TIMEOUT"],
         result_ttl=app.config["MIGRATE_TTL"],
         transform_job_id=job_id,
@@ -281,14 +283,15 @@ def migrate_update_mode():
     mode = request.args.get("mode")
     mode = MigrateMode(mode)
     groups = []
-    if is_create_mode := (mode == MigrateMode.CREATE):
+    if mode == MigrateMode.CREATE:
         url, username, password = connection_infos()
         migrator = Migrator(url=url, username=username, password=password)
         groups = migrator.gn.get_groups()
     return render_template(
         "fragments/migrate_update_mode.html.j2",
-        is_create_mode=is_create_mode,
+        migrate_mode=mode,
         groups=groups,
+        MigrateMode=MigrateMode,
     )
 
 

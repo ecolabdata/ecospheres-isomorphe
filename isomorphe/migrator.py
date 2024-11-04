@@ -181,6 +181,7 @@ class Migrator:
         batch: TransformBatch,
         overwrite: bool = False,
         group: int | None = None,
+        update_date_stamp: bool = True,
         transform_job_id: str | None = None,
     ) -> MigrateBatch:
         log.info(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
@@ -198,7 +199,9 @@ class Migrator:
             )
             try:
                 if overwrite:
-                    self.gn.update_record(r.uuid, r.result, md_type=r.md_type)
+                    self.gn.update_record(
+                        r.uuid, r.result, md_type=r.md_type, update_date_stamp=update_date_stamp
+                    )
                     migrate_batch.add(
                         SuccessMigrateBatchRecord(
                             **batch_record.__dict__,
