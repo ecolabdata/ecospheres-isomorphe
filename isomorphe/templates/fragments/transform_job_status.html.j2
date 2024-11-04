@@ -161,9 +161,13 @@
                             rel="noopener">Voir le XML</a>
                         </td>
                         <td>
-                          <a href="{{ url_for('transform_diff', job_id=job.id, uuid=record.uuid) }}"
-                            target="_blank"
-                            rel="noopener">Voir le diff</a>
+                          {% if record.has_diff %}
+                            <a href="{{ url_for('transform_diff', job_id=job.id, uuid=record.uuid) }}"
+                              target="_blank"
+                              rel="noopener">Voir le diff</a>
+                          {% else %}
+                            -
+                          {% endif %}
                         </td>
                         <td>
                           {{ record | record_transform_log }}

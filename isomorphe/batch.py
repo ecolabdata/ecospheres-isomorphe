@@ -67,6 +67,7 @@ class SuccessTransformBatchRecord(TransformBatchRecord):
     result: bytes
     info: str
     log: TransformLog | None = None
+    has_diff: bool = True
 
 
 @dataclass(kw_only=True)

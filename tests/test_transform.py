@@ -56,6 +56,16 @@ def test_transform_error(migrator: Migrator):
     assert results.transformation == "error"
 
 
+def test_transform_noop_always(migrator: Migrator):
+    """`noop~always` transform is always successful"""
+    results, selection = get_transform_results("noop~always", migrator)
+    assert len(results.skipped()) == 0
+    assert len(results.successes()) == len(selection)
+    assert len(results.failures()) == 0
+    assert results.transformation == "noop~always"
+    assert all([not r.has_diff for r in results.successes()])
+
+
 def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[Fixture]):
     """`change-language` transform is always successful"""
     results, selection = get_transform_results("change-language", migrator)
@@ -63,6 +73,7 @@ def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[F
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     assert results.transformation == "change-language"
+    assert all([r.has_diff for r in results.successes()])
 
 
 def test_transform_working_copy(migrator: Migrator):
