@@ -43,6 +43,10 @@ class Transformation:
     path: Path
 
     @property
+    def force_update(self) -> bool:
+        return self.name == "util-prepare-catalog"
+
+    @property
     def name(self) -> str:
         return self.path.stem
 
@@ -147,7 +151,7 @@ class Migrator:
                 transform_log = TransformLog(transformer.error_log)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
-                if result_str != original_str:
+                if result_str != original_str or transformation.force_update:
                     batch.add(
                         SuccessTransformBatchRecord(
                             **batch_record.__dict__,
