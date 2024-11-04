@@ -1,16 +1,12 @@
 {% set params = transformation.params %}
 {% if params %}
-<div>
-Paramètres
-<ul>
+<fieldset>
+<legend><strong>Paramètres</strong></legend>
 {% for param in params %}
-<li>
-  <div class="fr-input-group">
-    <label class="fr-label" for="query">{{ param.name }} : {% if param.required %} *{% endif %}</label>
-    <input {% if param.required %}required{% endif %} class="fr-input" type="text" id="param-{{ param.name }}" name="param-{{ param.name }}" value="{{ param.default_value }}" />
-  </div>
-</li>
-{% endfor %}
-</ul>
+<div class="fr-input-group">
+  <label class="fr-label" for="query">{{ param.name }} : {% if param.required %} *{% endif %}</label>
+  <input {% if param.required %}required{% endif %} class="fr-input" type="text" id="param-{{ param.name }}" name="param-{{ param.name }}" value="{{ param.default_value }}" />
 </div>
+{% endfor %}
+</fieldset>
 {% endif %}
