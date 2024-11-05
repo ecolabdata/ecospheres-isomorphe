@@ -11,3 +11,9 @@ fieldset {
 .markdown ul + h6 {
   margin-top: 0.7em;
 }
+
+table th,
+table td {
+  padding: 0.5em 0.7em;
+  word-break: keep-all;
+}
