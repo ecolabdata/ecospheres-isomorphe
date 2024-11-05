@@ -301,9 +301,10 @@ def documentation():
     if not index_page.exists():
         abort(404)
     index_content = index_page.read_text()
-    tdocs_toc = ""
+    tdocs_toc = "<ul>"
     for tdoc in app.config["TRANSFORMATIONS_PATH"].glob("*.md"):
         tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
+    tdocs_toc += "</ul>"
     index_content = index_content.replace("<!-- insert:transformations_docs -->", tdocs_toc)
     return render_template("documentation.html.j2", content=markdown.markdown(index_content))
 
