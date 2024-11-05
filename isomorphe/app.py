@@ -6,8 +6,6 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
-from cmarkgfm import github_flavored_markdown_to_html
-from cmarkgfm.cmark import Options as md_options
 from flask import (
     Flask,
     Response,
@@ -32,6 +30,7 @@ from isomorphe.batch import (
 from isomorphe.geonetwork import GeonetworkConnectionError
 from isomorphe.migrator import Migrator
 from isomorphe.rqueue import get_job, get_queue
+from isomorphe.util import render_markdown
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
@@ -309,9 +308,7 @@ def documentation():
     index_content = index_content.replace("<!-- insert:transformations_docs -->", tdocs_toc)
     return render_template(
         "documentation.html.j2",
-        content=github_flavored_markdown_to_html(
-            index_content, options=md_options.CMARK_OPT_UNSAFE
-        ),
+        content=render_markdown(index_content),
     )
 
 
@@ -323,7 +320,7 @@ def documentation_transformation(transformation: str):
     md_content = doc_page.read_text()
     return render_template(
         "documentation.html.j2",
-        content=github_flavored_markdown_to_html(md_content, options=md_options.CMARK_OPT_UNSAFE),
+        content=render_markdown(md_content),
     )
 
 
