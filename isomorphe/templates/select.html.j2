@@ -27,7 +27,10 @@
       </div>
     </div>
     <div class="fr-select-group">
-      <label class="fr-label" for="transformation">Transformation à appliquer *</label>
+      <label class="fr-label" for="transformation">
+        Transformation à appliquer *
+        <span class="fr-hint-text"><a href="/docs#transformations">Voir la documentation des transformations disponibles</a>.</span>
+      </label>
       <select hx-get="{{ url_for("select_transformation") }}"
               hx-target="#select-form-transformation-params"
               hx-trigger="change"

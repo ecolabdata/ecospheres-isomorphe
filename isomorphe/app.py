@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import markdown
 import requests
 from flask import (
     Flask,
@@ -31,6 +30,7 @@ from isomorphe.batch import (
 from isomorphe.geonetwork import GeonetworkConnectionError
 from isomorphe.migrator import Migrator
 from isomorphe.rqueue import get_job, get_queue
+from isomorphe.util import render_markdown
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
@@ -301,11 +301,15 @@ def documentation():
     if not index_page.exists():
         abort(404)
     index_content = index_page.read_text()
-    tdocs_toc = ""
+    tdocs_toc = "<ul>"
     for tdoc in sorted(app.config["TRANSFORMATIONS_PATH"].glob("*.md")):
         tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
+    tdocs_toc += "</ul>"
     index_content = index_content.replace("<!-- insert:transformations_docs -->", tdocs_toc)
-    return render_template("documentation.html.j2", content=markdown.markdown(index_content))
+    return render_template(
+        "documentation.html.j2",
+        content=render_markdown(index_content),
+    )
 
 
 @app.route("/docs/transformations/<transformation>")
@@ -314,7 +318,10 @@ def documentation_transformation(transformation: str):
     if not doc_page.exists():
         abort(404)
     md_content = doc_page.read_text()
-    return render_template("documentation.html.j2", content=markdown.markdown(md_content))
+    return render_template(
+        "documentation.html.j2",
+        content=render_markdown(md_content),
+    )
 
 
 @app.template_filter("record_transform_log")
