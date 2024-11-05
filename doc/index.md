@@ -76,6 +76,8 @@ Attention, si les fiches dans votre catalogue de test ont les mêmes identifiant
 Ça n'est pas problématique en soi sur **demo**.data.gouv.fr, mais cela peut compliquer la comparaison.
 
 Si vous faites vos évaluations en créant de nouvelles fiches transformées, vous pouvez ajouter un point de moissonnage à votre catalogue dédié à votre groupe Geonetwork de test, et configurer le moissonneur **demo**.data.gouv.fr pour cibler uniquement ce point de moissonnage.
+Nous recommandons fortement de créer une nouvelle organisation sur **demo**.data.gouv.fr pour ces tests.
+Cela facilitera la gestion des fiches de test et les isolera du reste du catalogue moissonné par ailleurs.
 Dans ce mode de fonctionnement, les nouvelles fiches transformées auront des identifiants différents des fiches d'origine, donc il n'y aura pas de conflit entre votre moissonneur existant et votre nouveau moissonneur de test.
 
 
