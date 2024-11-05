@@ -5,8 +5,9 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import markdown
 import requests
+from cmarkgfm import github_flavored_markdown_to_html
+from cmarkgfm.cmark import Options as md_options
 from flask import (
     Flask,
     Response,
@@ -306,7 +307,12 @@ def documentation():
         tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
     tdocs_toc += "</ul>"
     index_content = index_content.replace("<!-- insert:transformations_docs -->", tdocs_toc)
-    return render_template("documentation.html.j2", content=markdown.markdown(index_content))
+    return render_template(
+        "documentation.html.j2",
+        content=github_flavored_markdown_to_html(
+            index_content, options=md_options.CMARK_OPT_UNSAFE
+        ),
+    )
 
 
 @app.route("/docs/transformations/<transformation>")
@@ -315,7 +321,10 @@ def documentation_transformation(transformation: str):
     if not doc_page.exists():
         abort(404)
     md_content = doc_page.read_text()
-    return render_template("documentation.html.j2", content=markdown.markdown(md_content))
+    return render_template(
+        "documentation.html.j2",
+        content=github_flavored_markdown_to_html(md_content, options=md_options.CMARK_OPT_UNSAFE),
+    )
 
 
 @app.template_filter("record_transform_log")
