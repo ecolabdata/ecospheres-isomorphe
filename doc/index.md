@@ -5,14 +5,9 @@
 - [Comment fonctionne ISOmorphe ?](#comment)
 - [Comment utiliser ISOmorphe ?](#tutoriel)
 
-<br/>
-
-
 ## <a name="transformations"></a>Transformations disponibles
 
 <!-- insert:transformations_docs -->
-
-<br/>
 
 ## <a name="pourquoi"></a>Pourquoi ISOmorphe ?
 
@@ -30,7 +25,6 @@ Si cette chaîne de conversion permet de prendre en charge efficacement les cata
 ISOmorphe se focalise sur les points 1 et 2 pour adapter les fiches des catalogues d'origine afin de maximiser les chances de succès des étapes suivantes.
 
 Les transformations proposées par cet outil correspondent aux [recommandations ISO/DCAT](https://ecospheres.gitbook.io/recommandations-iso-dcat) formulées par Écosphères.
-
 
 ## <a name="comment"></a>Comment fonctionne ISOmorphe ?
 

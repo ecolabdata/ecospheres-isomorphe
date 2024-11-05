@@ -2,3 +2,12 @@ fieldset {
   border-style: solid;
   border-width: 1px;
 }
+
+.markdown ul + h1,
+.markdown ul + h2,
+.markdown ul + h3,
+.markdown ul + h4,
+.markdown ul + h5,
+.markdown ul + h6 {
+  margin-top: 0.7em;
+}
