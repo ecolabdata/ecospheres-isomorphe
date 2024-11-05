@@ -40,7 +40,7 @@
               name="transformation">
         <option value="" selected disabled hidden>Sélectionner une transformation</option>
         {% for transformation in transformations %}
-          <option value="{{ transformation.name }}">{{ transformation.name }}</option>
+          <option value="{{ transformation.name }}">{{ transformation.display_name }}</option>
         {% endfor %}
       </select>
     </div>

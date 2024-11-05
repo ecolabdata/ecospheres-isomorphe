@@ -67,6 +67,8 @@ class SuccessTransformBatchRecord(TransformBatchRecord):
     result: bytes
     info: str
     log: TransformLog | None = None
+    # has_diff == False can happen when Transformation.always_apply
+    has_diff: bool = True
 
 
 @dataclass(kw_only=True)

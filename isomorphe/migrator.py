@@ -40,11 +40,17 @@ class TransformationParam:
 
 @dataclass
 class Transformation:
+    ALWAYS_APPLY_SUFFIX = "~always"
+
     path: Path
 
     @property
     def name(self) -> str:
         return self.path.stem
+
+    @property
+    def display_name(self) -> str:
+        return self.path.stem.removesuffix(Transformation.ALWAYS_APPLY_SUFFIX)
 
     @cached_property
     def params(self) -> list[TransformationParam]:
@@ -60,6 +66,14 @@ class Transformation:
             )
             params.append(param_info)
         return params
+
+    @property
+    def always_apply(self) -> bool:
+        """
+        When true, Transformation expects never to be skipped, so only its only
+        states can be Success or Failure.
+        """
+        return self.path.stem.endswith(Transformation.ALWAYS_APPLY_SUFFIX)
 
     @property
     def transform(self) -> etree.XSLT:
@@ -147,13 +161,15 @@ class Migrator:
                 transform_log = TransformLog(transformer.error_log)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
-                if result_str != original_str:
+                has_diff = result_str != original_str
+                if has_diff or transformation.always_apply:
                     batch.add(
                         SuccessTransformBatchRecord(
                             **batch_record.__dict__,
                             result=result_str,
                             info=xml_to_string(info),
                             log=transform_log,
+                            has_diff=has_diff,
                         )
                     )
                 else:
