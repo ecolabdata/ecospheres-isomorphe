@@ -69,6 +69,10 @@ class Transformation:
 
     @property
     def always_apply(self) -> bool:
+        """
+        When true, Transformation expects never to be skipped, so only its only
+        states can be Success or Failure.
+        """
         return self.path.stem.endswith(Transformation.ALWAYS_APPLY_SUFFIX)
 
     @property
