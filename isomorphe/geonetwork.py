@@ -92,7 +92,7 @@ class GeonetworkClient:
             raise GeonetworkConnectionError(
                 f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
             )
-        # if the POST above failed, we need the XSFR-TOKEN to procede further
+        # if the POST above failed, we need the XSFR-TOKEN to proceed further
         # if it did not, (username, password) basic auth should be enough
         if not r.ok:
             xsrf_token = r.cookies.get("XSRF-TOKEN")
