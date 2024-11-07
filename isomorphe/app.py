@@ -70,6 +70,10 @@ def login():
         gn_info = migrator.gn.info()
     except (requests.exceptions.RequestException, GeonetworkConnectionError) as e:
         flash(f"Problème d'authentification ({e})", "error")
+        # still record the login info for the next try
+        session["url"] = url.rstrip("/")
+        session["username"] = username
+        session["password"] = password
         return redirect(url_for("login_form"))
     else:
         authenticated = gn_info.get("me", {}).get("@authenticated", "false") == "true"
