@@ -1,0 +1,441 @@
+{
+  "@from": "1",
+  "@to": "3",
+  "@selected": "0",
+  "@maxPageSize": "100",
+  "metadata":   [
+        {
+      "lineage": "La DREAL Auvergne-Rhône-Alpes a missionné le Cerema pour réaliser un état des lieux des réseaux de chaleur et de froid en région et étudier leur potentiel de développement, à partir de sources renouvelable (bois, géothermie, solaire...) et de récupération (incinération des déchets, chaleur industrielle, biogaz...), cartographié sur le territoire. L’état des lieux des réseaux de chaleur et de froid en Auvergne-Rhône-Alpes (AURA) est fait à partir d’une enquête auprès des collectivités, des syndicats, des exploitants et de croisement de différentes sources de données (enquête nationale,\ndonnées énergie-climat publiées, annuaire ViaSèva, sites dédiés de réseaux…), en 2016-2017. Les données récoltées pour chaque réseau recensés en AURA, soit 252 réseaux de chaleur, 3 réseaux de froid et 6 réseaux en projet, sont publiées sous forme de tableau, avec leurs sources.\n\n- URL de la métadonnée de la ressource copiée : https://catalogue.datara.gouv.fr/geonetwork/srv/fre/catalog.search#/metadata/fd93ea00-70a4-4cbc-bc19-a5217516c728\n- URI de la ressource : fd93ea00-70a4-4cbc-bc19-a5217516c728\n- Date de la copie : 20/10/2021",
+      "responsibleParty":       [
+        "Auteur|resource|CEREMA||adl.dterce@cerema.fr|Cerema Centre-Est (ADL)|||||1|",
+        "Point de contact|metadata|Direction Régionale de l’Environnement de l’Aménagement et du Logement d'Auvergne-Rhône-Alpes (DREAL Auvergne-Rhône-Alpes)|http://piece-jointe-carto.developpement-durable.gouv.fr/REG083B/AUTRES/LogoMin.jpg|sig.dreal-ara@developpement-durable.gouv.fr|Administrateur de Données|Administrateur de Données|5 place Jules Ferry, LYON, 69006, France|||1|"
+      ],
+      "type": "dataset",
+      "legalConstraints":       [
+        "https://www.etalab.gouv.fr/licence-ouverte-open-licence",
+        "Données ouvertes"
+      ],
+      "isHarvested": "y",
+      "displayOrder": "0",
+      "docLocale": "fre",
+      "popularity": "200",
+      "keyword":       [
+        "Sources d'énergie",
+        "Réseau de chaleur",
+        "Réseau de froid",
+        "Site production énergie",
+        "Grand public",
+        "DREAL Auvergne-Rhône-Alpes",
+        "Société"
+      ],
+      "publishedForGroup": "1",
+      "identifier": "https://catalogue.datara.gouv.fr/geonetwork/srv/c7c80737-d021-4057-b279-07efa81bfe18",
+      "image": "thumbnail|https://catalogue.cdata.cerema.fr/thumbnails/fd93ea00-70a4-4cbc-bc19-a5217516c728.png|Aperçu",
+      "mdLanguage": "fre",
+      "crsDetails":       {
+        "code": "RGF93 / Lambert-93 (EPSG:2154)",
+        "codeSpace": "EPSG",
+        "name": "",
+        "url": ""
+      },
+      "format": "ZIP",
+      "spatialRepresentationType_text": "Vecteur",
+      "denominator": "5000",
+      "root": "gmd:MD_Metadata",
+      "isTemplate": "n",
+      "valid": "-1",
+      "feedbackCount": "0",
+      "rating": "0",
+      "source": "03cc0df5-2902-490b-b658-f29ebe22f7c5",
+      "geoBox": "2.045|44.127|7.16|46.807",
+      "owner": "1",
+      "recordOwner": "admin admin",
+      "revisionDate": "2021-10-20T17:38:01",
+      "defaultAbstract": "Un réseau de chaleur - également appelé chauffage urbain - est une installation distribuant à plusieurs utilisateurs de la chaleur produite par une ou plusieurs chaufferie(s), via un ensemble de canalisations de transport de chaleur (des tuyaux d'eau chaude) et des échangeurs (aussi appelés sous-stations). La chaleur ainsi distribuée est principalement utilisée pour le chauffage et l'eau chaude sanitaire des bâtiments ; certains réseaux fournissent également de la chaleur à usage industriel. Le principe est le même pour un réseau de froid, qui fonctionne comme un réseau de chaleur inversé (au lieu de fournir de la chaleur aux bâtiments, le réseau de froid en prélève). Ces systèmes sont fortement mobilisateur d'énergies renouvelables et de récupération (plus de la moitié de leur mix énergétique), et sont donc en plein développement, pour atteindre notamment l'objectif de multiplier par 5 la quantité de chaleur renouvelable livrée par les réseaux d'ici 2030 prévu par la loi de transition énergétique. L'état des lieux des réseaux existants, croisé avec la demande de chaleur/froid des bâtiments, permet de projeter au mieux leur développement à l'horizon 2030.\n\nL’état des lieux des réseaux de chaleur et de froid en Auvergne-Rhône-Alpes (AURA) est fait à partir d’une enquête auprès des collectivités, des syndicats, des exploitants et de croisement de différentes sources de données (enquête nationale,\ndonnées énergie-climat publiées, annuaire ViaSèva, sites dédiés de réseaux…), en 2016-2017. Les données récoltées pour chaque réseau recensés en AURA, soit 252 réseaux de chaleur, 3 réseaux de froid et 6 réseaux en projet, sont publiées sous forme de tableau, avec leurs sources.\n\nLe Cerema a également récolté et numérisé les tracés de 96 réseaux, publiés et diffusés sous format SIG.",
+      "link":       [
+        "Accès au téléchargement des données||https://catalogue.datara.gouv.fr/geosource/panierDownloadFrontalParametrage?LAYERIDTS=54182880|WWW:DOWNLOAD-1.0-http--download|WWW:DOWNLOAD-1.0-http--download|1",
+        "Accès à la visualisation des données||https://catalogue.datara.gouv.fr/geosource/consultationWMS?IDT=54182880|WWW:LINK-1.0-http--link|text/html|1"
+      ],
+      "defaultTitle": "[DREAL ARA] Réseau de chaleur et de froid : infrastructure de distribution en 2017 pour Auvergne-Rhône-Alpes",
+      "datasetLang": "fre",
+      "userinfo": "admin|admin|admin|Administrator",
+      "topicCat": "society",
+      "publicationDate": "2018-02-07T10:10:00",
+      "creationDate": "2018-01-08T18:00:00",
+      "standardName": "ISO 19115:2003/19139",
+      "crs": "RGF93 / Lambert-93 (EPSG:2154)::EPSG",
+      "logo": "/images/logos/03cc0df5-2902-490b-b658-f29ebe22f7c5.png",
+      "abstract": "Un réseau de chaleur - également appelé chauffage urbain - est une installation distribuant à plusieurs utilisateurs de la chaleur produite par une ou plusieurs chaufferie(s), via un ensemble de canalisations de transport de chaleur (des tuyaux d'eau chaude) et des échangeurs (aussi appelés sous-stations). La chaleur ainsi distribuée est principalement utilisée pour le chauffage et l'eau chaude sanitaire des bâtiments ; certains réseaux fournissent également de la chaleur à usage industriel. Le principe est le même pour un réseau de froid, qui fonctionne comme un réseau de chaleur inversé (au lieu de fournir de la chaleur aux bâtiments, le réseau de froid en prélève). Ces systèmes sont fortement mobilisateur d'énergies renouvelables et de récupération (plus de la moitié de leur mix énergétique), et sont donc en plein développement, pour atteindre notamment l'objectif de multiplier par 5 la quantité de chaleur renouvelable livrée par les réseaux d'ici 2030 prévu par la loi de transition énergétique. L'état des lieux des réseaux existants, croisé avec la demande de chaleur/froid des bâtiments, permet de projeter au mieux leur développement à l'horizon 2030.\n\nL’état des lieux des réseaux de chaleur et de froid en Auvergne-Rhône-Alpes (AURA) est fait à partir d’une enquête auprès des collectivités, des syndicats, des exploitants et de croisement de différentes sources de données (enquête nationale,\ndonnées énergie-climat publiées, annuaire ViaSèva, sites dédiés de réseaux…), en 2016-2017. Les données récoltées pour chaque réseau recensés en AURA, soit 252 réseaux de chaleur, 3 réseaux de froid et 6 réseaux en projet, sont publiées sous forme de tableau, avec leurs sources.\n\nLe Cerema a également récolté et numérisé les tracés de 96 réseaux, publiés et diffusés sous format SIG.",
+      "draft": "n",
+      "geoDesc": "AUVERGNE-RHONE-ALPES",
+      "keywordGroup":       {
+        "GEMET - INSPIRE themes, version 1.0": [        {
+          "value": "Sources d'énergie",
+          "link": ""
+        }],
+        "Domaines":         [
+                    {
+            "value": "Site production énergie",
+            "link": ""
+          },
+                    {
+            "value": "Grand public",
+            "link": ""
+          },
+                    {
+            "value": "DREAL Auvergne-Rhône-Alpes",
+            "link": ""
+          }
+        ],
+        "otherKeywords":         [
+                    {
+            "value": "Réseau de chaleur",
+            "link": ""
+          },
+                    {
+            "value": "Réseau de froid",
+            "link": ""
+          }
+        ]
+      },
+      "groupOwner": "116",
+      "_locale": "fre",
+      "geonet:info":       {
+        "@xmlns:geonet": "http://www.fao.org/geonetwork",
+        "id": "5206",
+        "uuid": "c7c80737-d021-4057-b279-07efa81bfe18",
+        "schema": "iso19139",
+        "createDate": "2021-10-20T17:30:09",
+        "changeDate": "2021-10-20T17:40:52",
+        "source": "03cc0df5-2902-490b-b658-f29ebe22f7c5",
+        "isPublishedToAll": "true",
+        "view": "true",
+        "notify": "false",
+        "download": "true",
+        "dynamic": "true",
+        "featured": "false",
+        "selected": "false"
+      }
+    },
+        {
+      "lineage": "Cette série de données est le résultat de la jointure entre la série de données géographiques des établissements des industries agroalimentaires de Rhône-Alpes (produite par la Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes)) et la série de données tabulaires des abattoirs agrées CE (produite par le MAAF).",
+      "responsibleParty":       [
+        "|resource|Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes)||infostat.draaf-auvergne-rhone-alpes@agriculture.gouv.fr||||||1|",
+        "|metadata|Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes)||infostat.draaf-auvergne-rhone-alpes@agriculture.gouv.fr||||||1|"
+      ],
+      "type": "dataset",
+      "legalConstraints":       [
+        "Mention de la source : Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes) (d'après MAAF et Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes)) et de la date d'actualité des données",
+        "Certaines localisations peuvent être imprécises."
+      ],
+      "isHarvested": "y",
+      "displayOrder": "0",
+      "docLocale": "fre",
+      "popularity": "519",
+      "keyword":       [
+        "AUVERGNE",
+        "RHONE-ALPES",
+        "Industries agroalimentaires",
+        "données ouvertes",
+        "Agro-alimentaire",
+        "DRAAF Auvergne-Rhône-Alpes",
+        "Grand public",
+        "Agro-alimentaire",
+        "DRAAF Auvergne-Rhône-Alpes",
+        "Grand public",
+        "Economie"
+      ],
+      "publishedForGroup": "1",
+      "identifier": "https://catalogue.datara.gouv.fr/geonetwork/srv/e1984fd5-a1e1-49a9-8b42-5b8f65c8f437",
+      "image": "thumbnail|https://catalogue.datara.gouv.fr/thumbnails/e1984fd5-a1e1-49a9-8b42-5b8f65c8f437.png|Aperçu",
+      "tempExtentBegin": "2024-10-31t22:59:59.000z",
+      "mdLanguage": "fre",
+      "crsDetails":       {
+        "code": "RGF93 / Lambert-93 (EPSG:2154)",
+        "codeSpace": "EPSG",
+        "name": "",
+        "url": ""
+      },
+      "format": "ZIP",
+      "spatialRepresentationType_text": "Vecteur",
+      "denominator": "5000",
+      "root": "gmd:MD_Metadata",
+      "isTemplate": "n",
+      "valid": "-1",
+      "feedbackCount": "0",
+      "tempExtentEnd": "2024-10-31t22:59:59.000z",
+      "rating": "0",
+      "source": "03cc0df5-2902-490b-b658-f29ebe22f7c5",
+      "geoBox":       [
+        "3.718|44.127|7.16|46.512",
+        "2.045|44.644|4.457|46.807"
+      ],
+      "owner": "1",
+      "recordOwner": "admin admin",
+      "revisionDate": "2019-04-29T10:03:10",
+      "classification_text": "Non classifié",
+      "defaultAbstract": "Localisation des établissements des abattoirs d'ongulés domestiques (viande de boucherie) en Auvergne-Rhône-Alpes",
+      "link":       [
+        "Accès au lien ATOM de téléchargement||https://catalogue.datara.gouv.fr/rss/atomfeed/atomdataset/e1984fd5-a1e1-49a9-8b42-5b8f65c8f437|WWW:LINK-1.0-http--link|text/html|1",
+        "l_abattoir_viande_boucherie_p_r84||https://carto.datara.gouv.fr/cgi-bin/mapserv?|OGC:WMS-1.1.1-http-get-map|application/vnd.ogc.wms_xml|1",
+        "l_abattoir_viande_boucherie_p_r84||https://carto.datara.gouv.fr/cgi-bin/mapservwfs?|OGC:WFS-1.0.0-http-get-capabilities|OGC:WFS-1.0.0-http-get-capabilities|1",
+        "Accès au téléchargement des données||https://catalogue.datara.gouv.fr/geosource/panierDownloadFrontalParametrage?LAYERIDTS=51929093|WWW:DOWNLOAD-1.0-http--download|WWW:DOWNLOAD-1.0-http--download|1",
+        "Accès à la visualisation des données||https://catalogue.datara.gouv.fr/geosource/consultationWMS?IDT=51929093|WWW:LINK-1.0-http--link|text/html|1"
+      ],
+      "defaultTitle": "Abattoirs agréés CE d'ongulés domestiques - Auvergne-Rhône-Alpes",
+      "datasetLang": "fre",
+      "userinfo": "admin|admin|admin|Administrator",
+      "topicCat": "economy",
+      "publicationDate": "2015-01-23T18:00:00",
+      "standardName": "ISO 19115:2003/19139",
+      "crs": "RGF93 / Lambert-93 (EPSG:2154)::EPSG",
+      "logo": "/images/logos/03cc0df5-2902-490b-b658-f29ebe22f7c5.png",
+      "abstract": "Localisation des établissements des abattoirs d'ongulés domestiques (viande de boucherie) en Auvergne-Rhône-Alpes",
+      "draft": "n",
+      "geoDesc":       [
+        "RHONE-ALPES",
+        "AUVERGNE"
+      ],
+      "keywordGroup":       {
+        "Régions de France":         [
+                    {
+            "value": "AUVERGNE",
+            "link": ""
+          },
+                    {
+            "value": "RHONE-ALPES",
+            "link": ""
+          }
+        ],
+        "theme.EnvironnementFR.rdf": [        {
+          "value": "Industries agroalimentaires",
+          "link": ""
+        }],
+        "OPENDATA": [        {
+          "value": "données ouvertes",
+          "link": ""
+        }],
+        "theme.prodige.rdf":         [
+                    {
+            "value": "Agro-alimentaire",
+            "link": ""
+          },
+                    {
+            "value": "DRAAF Auvergne-Rhône-Alpes",
+            "link": ""
+          },
+                    {
+            "value": "Grand public",
+            "link": ""
+          }
+        ],
+        "Domaines":         [
+                    {
+            "value": "Agro-alimentaire",
+            "link": ""
+          },
+                    {
+            "value": "DRAAF Auvergne-Rhône-Alpes",
+            "link": ""
+          },
+                    {
+            "value": "Grand public",
+            "link": ""
+          }
+        ]
+      },
+      "groupOwner": "116",
+      "_locale": "fre",
+      "geonet:info":       {
+        "@xmlns:geonet": "http://www.fao.org/geonetwork",
+        "id": "5919",
+        "uuid": "e1984fd5-a1e1-49a9-8b42-5b8f65c8f437",
+        "schema": "iso19139",
+        "createDate": "2019-04-29T09:41:17",
+        "changeDate": "2022-01-31T09:38:01",
+        "source": "03cc0df5-2902-490b-b658-f29ebe22f7c5",
+        "isPublishedToAll": "true",
+        "view": "true",
+        "notify": "false",
+        "download": "true",
+        "dynamic": "true",
+        "featured": "false",
+        "selected": "false"
+      }
+    },
+        {
+      "lineage": "Jointure entre la liste des établissements agréés publiés par le Minitère de l'agriculture et la série de données géographiques de établissements des industries agro-alimentaires",
+      "responsibleParty":       [
+        "Fournisseur|resource|Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes)||infostat.draaf-auvergne-rhone-alpes@agriculture.gouv.fr||||||1|",
+        "Auteur|metadata|Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes)||infostat.draaf-auvergne-rhone-alpes@agriculture.gouv.fr||||||1|"
+      ],
+      "type": "dataset",
+      "legalConstraints":       [
+        "Pas de restriction d’accès public selon INSPIRE",
+        "Utilisation libre sous réserve de la mention de la source Direction Régionale de l'Alimentation de l'Agriculture et de la Forêt d'Auvergne-Rhône-Alpes (DRAAF Auvergne-Rhône-Alpes) et de la date d'actualité de la donnée.",
+        "Utilisation libre sous réserve de mentionner la source (a minima le nom du producteur) et la date de sa dernière mise à jour"
+      ],
+      "isHarvested": "y",
+      "displayOrder": "0",
+      "docLocale": "fre",
+      "popularity": "393",
+      "keyword":       [
+        "RHONE ALPES",
+        "AUVERGNE",
+        "RHONE-ALPES",
+        "AUVERGNE",
+        "Industries agroalimentaires",
+        "Lieux de production et sites industriels",
+        "Bâtiments",
+        "Installations de suivi environnemental",
+        "données ouvertes",
+        "Grand public",
+        "Agro-alimentaire",
+        "DRAAF Auvergne-Rhône-Alpes",
+        "Grand public",
+        "Agro-alimentaire",
+        "DRAAF Auvergne-Rhône-Alpes",
+        "Structure"
+      ],
+      "publishedForGroup": "1",
+      "image": "thumbnail|https://catalogue.datara.gouv.fr/thumbnails/cba130ae-c739-490d-9c97-28add24ea9fa.png|Aperçu",
+      "mdLanguage": "fre",
+      "crsDetails":       {
+        "code": "RGF93 / Lambert-93 (EPSG:2154)",
+        "codeSpace": "EPSG",
+        "name": "",
+        "url": ""
+      },
+      "format": "ZIP",
+      "spatialRepresentationType_text": "Vecteur",
+      "denominator": "5000",
+      "root": "gmd:MD_Metadata",
+      "isTemplate": "n",
+      "valid": "-1",
+      "feedbackCount": "0",
+      "rating": "0",
+      "source": "03cc0df5-2902-490b-b658-f29ebe22f7c5",
+      "geoBox":       [
+        "2.045|44.644|4.457|46.807",
+        "3.718|44.127|7.16|46.512",
+        "2.045|44.644|4.457|46.807"
+      ],
+      "owner": "1",
+      "recordOwner": "admin admin",
+      "classification_text": "Non classifié",
+      "defaultAbstract": "Localisation des établissements des abattoirs d'ongulés domestiques (viande de boucherie) en Auvergne-Rhône-Alpes",
+      "link":       [
+        "l_abattoir_volailles_p_r84||https://carto.datara.gouv.fr/cgi-bin/mapserv?|OGC:WMS-1.1.1-http-get-map|application/vnd.ogc.wms_xml|1",
+        "l_abattoir_volailles_p_r84||https://carto.datara.gouv.fr/cgi-bin/mapservwfs?|OGC:WFS-1.0.0-http-get-capabilities|OGC:WFS-1.0.0-http-get-capabilities|1",
+        "Accès au lien ATOM de téléchargement||https://catalogue.datara.gouv.fr/rss/atomfeed/atomdataset/cba130ae-c739-490d-9c97-28add24ea9fa|WWW:LINK-1.0-http--link|text/html|1",
+        "Accès au téléchargement des données||https://catalogue.datara.gouv.fr/geosource/panierDownloadFrontalParametrage?LAYERIDTS=51937675|WWW:DOWNLOAD-1.0-http--download|WWW:DOWNLOAD-1.0-http--download|1",
+        "Accès à la visualisation des données||https://catalogue.datara.gouv.fr/geosource/consultationWMS?IDT=51937675|WWW:LINK-1.0-http--link|text/html|1"
+      ],
+      "defaultTitle": "Abattoirs agréés CE de volailles et lapins - Auvergne-Rhône-Alpes",
+      "datasetLang": "fre",
+      "userinfo": "admin|admin|admin|Administrator",
+      "topicCat": "structure",
+      "creationDate": "2016-01-14T18:15:00",
+      "standardName": "ISO 19115:2003/19139",
+      "crs": "RGF93 / Lambert-93 (EPSG:2154)::EPSG",
+      "logo": "/images/logos/03cc0df5-2902-490b-b658-f29ebe22f7c5.png",
+      "abstract": "Localisation des établissements des abattoirs d'ongulés domestiques (viande de boucherie) en Auvergne-Rhône-Alpes",
+      "draft": "n",
+      "geoDesc":       [
+        "AUVERGNE",
+        "RHONE-ALPES",
+        "AUVERGNE"
+      ],
+      "keywordGroup":       {
+        "Régions de France":         [
+                    {
+            "value": "RHONE-ALPES",
+            "link": ""
+          },
+                    {
+            "value": "AUVERGNE",
+            "link": ""
+          }
+        ],
+        "theme.EnvironnementFR.rdf": [        {
+          "value": "Industries agroalimentaires",
+          "link": ""
+        }],
+        "GEMET - INSPIRE themes, version 1.0":         [
+                    {
+            "value": "Lieux de production et sites industriels",
+            "link": ""
+          },
+                    {
+            "value": "Bâtiments",
+            "link": ""
+          },
+                    {
+            "value": "Installations de suivi environnemental",
+            "link": ""
+          }
+        ],
+        "OPENDATA": [        {
+          "value": "données ouvertes",
+          "link": ""
+        }],
+        "theme.prodige.rdf":         [
+                    {
+            "value": "Grand public",
+            "link": ""
+          },
+                    {
+            "value": "Agro-alimentaire",
+            "link": ""
+          },
+                    {
+            "value": "DRAAF Auvergne-Rhône-Alpes",
+            "link": ""
+          }
+        ],
+        "Domaines":         [
+                    {
+            "value": "Grand public",
+            "link": ""
+          },
+                    {
+            "value": "Agro-alimentaire",
+            "link": ""
+          },
+                    {
+            "value": "DRAAF Auvergne-Rhône-Alpes",
+            "link": ""
+          }
+        ],
+        "otherKeywords":         [
+                    {
+            "value": "RHONE ALPES",
+            "link": ""
+          },
+                    {
+            "value": "AUVERGNE",
+            "link": ""
+          }
+        ]
+      },
+      "groupOwner": "116",
+      "_locale": "fre",
+      "geonet:info":       {
+        "@xmlns:geonet": "http://www.fao.org/geonetwork",
+        "id": "5332",
+        "uuid": "cba130ae-c739-490d-9c97-28add24ea9fa",
+        "schema": "iso19139",
+        "createDate": "2019-04-29T10:41:35",
+        "changeDate": "2022-01-31T09:35:42",
+        "source": "03cc0df5-2902-490b-b658-f29ebe22f7c5",
+        "isPublishedToAll": "true",
+        "view": "true",
+        "notify": "false",
+        "download": "true",
+        "dynamic": "true",
+        "featured": "false",
+        "selected": "false"
+      }
+    }
+  ]
+}

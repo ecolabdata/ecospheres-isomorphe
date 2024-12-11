@@ -14,8 +14,16 @@
     {# TODO: add info about current connected catalog #}
     <div class="fr-input-group">
       <label class="fr-label" for="query">
-        Requête de recherche *
-        <span class="fr-hint-text">Ex : _source=&lt;SOURCE_ID&gt;,type=dataset</span>
+        Requête de recherche (geonetwork {{version}}.x) *
+        <span class="fr-hint-text">
+        {% if version == 3 %}
+        Exemple : type=dataset,_isTemplate=n,_source=&lt;SOURCE_ID&gt;
+        {% elif version == 4 %}
+        Exemple : resourceType=dataset,isTemplate=n,sourceCatalogue=&lt;SOURCE_ID&gt;
+        {% endif %}
+        <br/>
+        <a href="/docs#filtrage-fiches">Voir la documentation des filtres</a>.
+        </span>
       </label>
       <input required class="fr-input" type="text" id="query" name="query" />
       <div class="fr-mt-2w fr-grid-row">

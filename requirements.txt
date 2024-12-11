@@ -2,6 +2,7 @@ flask
 gunicorn
 lxml
 requests
+requests-mock
 rq
 pre-commit
 ruff

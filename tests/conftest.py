@@ -50,7 +50,7 @@ def wait_for_gn():
 
 @pytest.fixture(scope="session")
 def gn_client(wait_for_gn) -> GeonetworkClient:
-    return GeonetworkClient(f"{GN_TEST_URL}", GN_TEST_USER, GN_TEST_PASSWORD)
+    return GeonetworkClient.connect(f"{GN_TEST_URL}", GN_TEST_USER, GN_TEST_PASSWORD)
 
 
 def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixture]:

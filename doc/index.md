@@ -5,6 +5,7 @@
 - [Comment fonctionne ISOmorphe ?](#comment)
 - [Comment utiliser ISOmorphe ?](#utilisation)
     - [Procédure recommandée](#utilisation-procedure)
+    - [Filtrage des fiches à transformer](#filtrage-fiches)
     - [Tutoriel](#utilisation-tutoriel)
 
 
@@ -86,6 +87,79 @@ Dans ce mode de fonctionnement, les nouvelles fiches transformées auront des id
 Une fois la transformation validée en environnement de test, il vous suffit de la relancer sur votre catalogue de production, en sélectionnant nécessairement le mode "OVERWRITE" à l'étape de mise à jour du catalogue.
 
 Assurez-vous également d'appliquer la transformation à vos modèles (template) de fiche, afin que les fiches créés ultérieurement soient directement au bon format.
+
+
+### <a name="filtrage-fiches"></a>Filtrage des fiches à transformer
+
+ISOmorphe permet de filtrer les fiches à transformer à partir de filtres Geonetwork.
+
+La syntaxe d'un filtre ISOmorphe est la suivante : `filtre1=valeur1,filtre2=valeur2,...`
+
+<div class="fr-table" id="table-md-component">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table id="table-md">
+          <thead>
+            <tr scope="col">
+              <th>Filtre</th>
+              <th colspan="2">Geonetwork 3.x</th>
+              <th colspan="2">Geonetwork 4.x</th>
+            </tr>
+            <tr scope="col">
+              <th></th>
+              <th>nom</th><th>valeurs</th>
+              <th>nom</th><th>valeurs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Identifiant de fiche</td>
+              <td><code>_uuid</code></td><td><em>id (string)</em></td>
+              <td><code>uuid</code></td><td><em>idem 3.x</em></td>
+            </tr>
+            <tr>
+              <td>Type de ressource</td>
+              <td><code>type</code></td><td><code>dataset</code>, ... (<em>valeurs ISO-19139</em>)</td>
+              <td><code>resourceType</code></td><td><em>idem 3.x</em></td>
+            </tr>
+            <tr>
+              <td>Type de fiche Geonetwork</td>
+              <td><code>_isTemplate</code></td><td><code>n</code>, <code>y</code>, <code>s</code>, <code>t</code></td>
+              <td><code>isTemplate</code></td><td><em>idem 3.x</em></td>
+            </tr>
+            <tr>
+              <td>Groupe propriétaire</td>
+              <td><code>_groupOwner</code></td><td><em>id geonetwork (int)</em></td>
+              <td><code>groupOwner</code></td><td><em>idem 3.x</em></td>
+            </tr>
+            <tr>
+              <td>Fiche moissonnée</td>
+              <td><code>_isHarvested</code></td><td><code>n</code>, <code>y</code></td>
+              <td><code>isHarvested</code></td><td><code>false</code>, <code>true</code></td>
+            </tr>
+            <tr>
+              <td>Catalogue source</td>
+              <td><code>_source</code></td><td><em>uuid</em></td>
+              <td><code>sourceCatalogue</code></td><td><em>idem 3.x</em></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+Notes:
+- Seuls les champs figurant dans la table ci-dessus ont été testés.
+  Certains autres champs peuvent ne pas fonctionner du fait de leur type ou structure.
+- Les fiches moissonnées sont par défaut exclues des résultats.
+  Nous ne recommandons pas d'appliquer ISOmorphe sur ces fiches, mais en cas de besoin elles peuvent être explicitement sélectionnées avec `_isHarvested=y` (3.x) ou `isHarvested=true` (4.x).
+
+Liste complète des champs Geonetwork filtrables :
+- [Geonetwork 3.10.4](https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L107).
+- [Geonetwork 4.4.5](https://github.com/geonetwork/core-geonetwork/blob/4.4.5/web/src/main/webResources/WEB-INF/data/config/index/records.json#L1568).
+
 
 
 ### <a name="utilisation-tutoriel"></a>Tutoriel

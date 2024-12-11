@@ -128,11 +128,11 @@ def test_transform_metadata_type(
     migrator: Migrator,
     md_type: tuple[MetadataType, str],
 ):
-    def patched_get_md_type(self, md):
+    def patched_get_metadata_type(self, md):
         """Force the metadata type in GN record to be the one in the test"""
         return md_type[0]
 
-    with patch.object(GeonetworkClient, "_get_md_type", patched_get_md_type):
+    with patch.object(GeonetworkClient, "_get_metadata_type", patched_get_metadata_type):
         results, selection = get_transform_results("change-language", migrator)
 
     assert len(selection) > 0

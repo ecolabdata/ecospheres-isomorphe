@@ -87,7 +87,11 @@ class Migrator:
         self, *, url: str, username: str | None = None, password: str | None = None
     ) -> None:
         self.url = url
-        self.gn = GeonetworkClient(url, username, password)
+        self.gn = GeonetworkClient.connect(url, username, password)
+
+    @property
+    def geonetwork_version(self):
+        return self.gn.version
 
     def select(self, **kwargs) -> list[Record]:
         """
@@ -95,7 +99,8 @@ class Migrator:
         """
         log.info(f"Selecting with {kwargs}")
 
-        query = {"_isHarvested": "n"}
+        # TODO: make this more generic
+        query = {"_isHarvested": "n"} if self.gn.version == 3 else {"isHarvested": "false"}
         q = kwargs.get("query", "")
         query |= dict(p.split("=") for p in q.split(","))
 
