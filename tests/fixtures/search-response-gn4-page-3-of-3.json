@@ -1,0 +1,91 @@
+{
+  "took": 3,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1920,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "gn-records",
+        "_id": "3cc7b776-3b8d-4330-9196-2c1d12267650",
+        "_score": null,
+        "_source": {
+          "resourceType": [
+            "featureCatalog"
+          ],
+          "resourceTitleObject": {
+            "default": "3cc7b776-3b8d-4330-9196-2c1d12267650"
+          },
+          "uuid": "3cc7b776-3b8d-4330-9196-2c1d12267650",
+          "draft": "n",
+          "id": "2213",
+          "owner": "1",
+          "groupOwner": "101",
+          "op0": "1",
+          "op1": "1",
+          "documentStandard": "iso19110",
+          "op5": "1",
+          "isTemplate": "n"
+        },
+        "sort": [
+          1316442357000
+        ],
+        "edit": false,
+        "canReview": false,
+        "owner": false,
+        "isPublishedToAll": true,
+        "view": true,
+        "notify": false,
+        "download": true,
+        "dynamic": true,
+        "featured": false,
+        "selected": false
+      },
+      {
+        "_index": "gn-records",
+        "_id": "de740a65-2246-46ce-bc69-e3e649280cc2",
+        "_score": null,
+        "_source": {
+          "resourceType": [
+            "featureCatalog"
+          ],
+          "resourceTitleObject": {
+            "default": "de740a65-2246-46ce-bc69-e3e649280cc2"
+          },
+          "uuid": "de740a65-2246-46ce-bc69-e3e649280cc2",
+          "draft": "n",
+          "id": "2247",
+          "owner": "1",
+          "groupOwner": "101",
+          "op0": "1",
+          "op1": "1",
+          "documentStandard": "iso19110",
+          "op5": "1",
+          "isTemplate": "n"
+        },
+        "sort": [
+          1316530395000
+        ],
+        "edit": false,
+        "canReview": false,
+        "owner": false,
+        "isPublishedToAll": true,
+        "view": true,
+        "notify": false,
+        "download": true,
+        "dynamic": true,
+        "featured": false,
+        "selected": false
+      }
+    ]
+  }
+}

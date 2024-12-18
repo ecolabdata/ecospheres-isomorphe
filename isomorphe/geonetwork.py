@@ -1,3 +1,4 @@
+import abc
 import io
 import logging
 import re
@@ -72,22 +73,27 @@ class GeonetworkConnectionError(Exception):
 
 
 class GeonetworkClient:
-    def __init__(self, url, username: str | None = None, password: str | None = None):
-        self.url = url
-        self.api = f"{self.url}/api"
-        self.session = requests.Session()
+    @staticmethod
+    def connect(url: str, username: str | None = None, password: str | None = None):
+        session = requests.Session()
+        GeonetworkClient._authenticate_session(url, session, username, password)
+        version = GeonetworkClient._server_version(url, session)
+        if version == 3:
+            return GeonetworkClientV3(url, session)
+        elif version == 4:
+            return GeonetworkClientV4(url, session)
+        else:
+            raise GeonetworkConnectionError(f"Version Geonetwork non prise en charge: {version}")
+
+    @staticmethod
+    def _authenticate_session(
+        url: str, session: requests.Session, username: str | None, password: str | None
+    ):
         if username and password:
-            self.session.auth = (username, password)
+            session.auth = (username, password)
             log.info(f"Authenticating as: {username}")
-        self.authenticate()
 
-    def info(self):
-        r = self.session.get(f"{self.api}/info?_content_type=json&type=me")
-        r.raise_for_status()
-        return r.json()
-
-    def authenticate(self):
-        r = self.session.post(f"{self.api}/info?_content_type=json&type=me", allow_redirects=False)
+        r = session.post(f"{url}/api/info?_content_type=json&type=me", allow_redirects=False)
         if r.is_redirect:
             raise GeonetworkConnectionError(
                 f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
@@ -97,70 +103,88 @@ class GeonetworkClient:
         if not r.ok:
             xsrf_token = r.cookies.get("XSRF-TOKEN")
             if xsrf_token:
-                self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
+                session.headers.update({"X-XSRF-TOKEN": xsrf_token})
                 log.debug("XSRF token found")
             else:
                 raise GeonetworkConnectionError("Impossible de récupérer le token XSRF")
 
-    def _get_md_type(self, md: dict) -> MetadataType:
-        return MetadataType(md.get("isTemplate", MetadataType.METADATA))
+    @staticmethod
+    def _server_version(url: str, session: requests.Session):
+        r = session.get(f"{url}/api/site", headers={"Accept": "application/json"})
+        r.raise_for_status()
+        try:
+            version = int(r.json()["system/platform/version"].split(".")[0])
+        except KeyError:
+            raise GeonetworkConnectionError("Version Geonetwork manquante")
+        log.info(f"Geonetwork version: {version}")
+        return version
 
-    def get_records(self, query=None) -> list[Record]:
-        params = {
-            "_content_type": "json",
-            "buildSummary": "false",
-            "fast": "index",  # needed to get info such as title
-            "sortBy": "changeDate",
-            "sortOrder": "reverse",
-        }
-        if query:
-            params |= query
+    def __init__(self, url: str, session: requests.Session | None = None):
+        self.url = url
+        self.api = f"{url}/api"
+        self.session = session if session else requests.Session()
 
+    def info(self):
+        r = self.session.get(f"{self.api}/info?_content_type=json&type=me")
+        r.raise_for_status()
+        return r.json()
+
+    def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
+        params = self._search_params(query)
         records = []
         to = 0
         while True:
-            r = self.session.get(
-                f"{self.api}/q",
-                headers={"Accept": "application/json"},
-                params=params | {"from": to + 1},
-            )
-            r.raise_for_status()
-            rsp = r.json()
-            mds = rsp.get("metadata")
-            if not mds:
+            hits = self._search_hits(params, from_pos=to + 1)
+            if not hits:
                 break
-            if "geonet:info" in mds:
-                # When returning a single record, metadata isn't a list :/
-                mds = [mds]
             recs = []
-            for md in mds:
-                uuid = md["geonet:info"]["uuid"]
-                title = md.get("defaultTitle")
-                md_type = self._get_md_type(md)
-                state = None
-                if "mdStatus" in md:  # workflow enabled
-                    if not md.get("draft") == "e":
-                        status = WorkflowStatus(int(md["mdStatus"]))
-                        stage = (
-                            WorkflowStage.APPROVED
-                            if status == WorkflowStatus.APPROVED
-                            else WorkflowStage.NEVER_APPROVED
-                        )
-                    else:
-                        # Not supported in migration().
-                        # We don't bother setting the status (requires an API call), but
-                        # still include it in `records` so we can report on it.
-                        stage = WorkflowStage.WORKING_COPY
-                        status = WorkflowStatus.UNKNOWN
-                    state = WorkflowState(stage=stage, status=status)
-                    log.debug(f"Workflow state: {state}")
-                rec = Record(uuid=uuid, title=title, md_type=md_type, state=state)
-                log.debug(f"Record: {rec}")
-                recs.append(rec)
+            for hit in hits:
+                rec = self._as_record(hit)
+                if rec:
+                    log.debug(f"Record: {rec}")
+                    recs.append(rec)
+                else:
+                    log.debug(f"Skipping empty record: {hit}")
             records += recs
-            to = int(rsp.get("@to"))
-
+            to += len(hits)
         return records
+
+    @abc.abstractmethod
+    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
+        pass
+
+    @abc.abstractmethod
+    def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
+        pass
+
+    @abc.abstractmethod
+    def _as_record(self, hit: dict[str, Any]) -> Record | None:
+        pass
+
+    @staticmethod
+    def _get_metadata_type(md: dict) -> MetadataType:
+        return MetadataType(md.get("isTemplate", MetadataType.METADATA))
+
+    @staticmethod
+    def _get_workflow_state(md: dict) -> WorkflowState | None:
+        if "mdStatus" not in md:  # workflow disabled
+            return None
+
+        if not md.get("draft") == "e":
+            status = WorkflowStatus(int(md["mdStatus"]))
+            stage = (
+                WorkflowStage.APPROVED
+                if status == WorkflowStatus.APPROVED
+                else WorkflowStage.NEVER_APPROVED
+            )
+        else:
+            # Not supported in migration().
+            # We don't bother setting the status (requires an API call), but
+            # still include it in `records` so we can report on it.
+            stage = WorkflowStage.WORKING_COPY
+            status = WorkflowStatus.UNKNOWN
+
+        return WorkflowState(stage=stage, status=status)
 
     def get_record(self, uuid: str) -> etree._ElementTree:
         log.debug(f"Processing record: {uuid}")
@@ -341,6 +365,94 @@ class GeonetworkClient:
         )
         r.raise_for_status()
         return r.json()
+
+
+class GeonetworkClientV3(GeonetworkClient):
+    version = 3
+
+    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
+        params = {
+            "_content_type": "json",
+            "buildSummary": "false",
+            "fast": "index",  # needed to get info such as title
+            "sortBy": "changeDate",
+            "sortOrder": "reverse",
+        }
+        if query:
+            params |= query
+        return params
+
+    def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
+        r = self.session.get(
+            f"{self.api}/q",
+            headers={"Accept": "application/json"},
+            params=params | {"from": from_pos},
+        )
+        r.raise_for_status()
+        rsp = r.json()
+        hits = rsp.get("metadata")
+        if hits and "geonet:info" in hits:
+            # When returning a single record, metadata isn't a list :/
+            hits = [hits]
+        return hits
+
+    def _as_record(self, hit: dict[str, Any]) -> Record | None:
+        try:
+            uuid = hit["geonet:info"]["uuid"]
+        except KeyError:
+            return None
+        return Record(
+            uuid=uuid,
+            title=hit.get("defaultTitle", ""),
+            md_type=self._get_metadata_type(hit),
+            state=self._get_workflow_state(hit),
+        )
+
+
+class GeonetworkClientV4(GeonetworkClient):
+    version = 4
+
+    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
+        data = {
+            "size": 20,
+            "sort": [{"changeDate": "asc"}],
+            "_source": [
+                "uuid",
+                "resourceTitleObject.default",
+                "resourceType",
+                "draft",
+                "isTemplate",
+                "mdStatus",
+            ],
+        }
+        if query:
+            q = " ".join(f"+{k}:{v}" for k, v in query.items())
+            data |= {"query": {"bool": {"filter": [{"query_string": {"query": q}}]}}}
+        return data
+
+    def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
+        r = self.session.post(
+            f"{self.api}/search/records/_search",
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            params={"bucket": "metadata"},
+            json=params | {"from": from_pos},
+        )
+        r.raise_for_status()
+        hits = r.json().get("hits") or {}
+        return hits.get("hits") or []  # nested "hits"
+
+    def _as_record(self, hit: dict[str, Any]) -> Record | None:
+        try:
+            md = hit["_source"]
+            uuid = md["uuid"]
+        except KeyError:
+            return None
+        return Record(
+            uuid=uuid,
+            title=(md.get("resourceTitleObject") or {}).get("default", ""),
+            md_type=self._get_metadata_type(md),
+            state=self._get_workflow_state(md),
+        )
 
 
 class MefArchive:

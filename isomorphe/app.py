@@ -88,10 +88,14 @@ def login():
 
 
 @app.route("/select")
+@authenticated()
 def select():
+    url, username, password = connection_infos()
+    migrator = Migrator(url=url, username=username, password=password)
     return render_template(
         "select.html.j2",
         url=session.get("url", ""),
+        version=migrator.geonetwork_version,
         transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
     )
 
