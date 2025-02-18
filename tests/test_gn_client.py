@@ -154,7 +154,7 @@ def test_get_records_v4(requests_mock: requests_mock.Mocker):
             "isTemplate",
             "mdStatus",
         ],
-        "from": 1,
+        "from": 0,
     }
 
 
