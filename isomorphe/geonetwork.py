@@ -132,9 +132,9 @@ class GeonetworkClient:
     def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
         params = self._search_params(query)
         records = []
-        to = 0
+        from_pos = 0
         while True:
-            hits = self._search_hits(params, from_pos=to + 1)
+            hits = self._search_hits(params, from_pos=from_pos)
             if not hits:
                 break
             recs = []
@@ -146,7 +146,7 @@ class GeonetworkClient:
                 else:
                     log.debug(f"Skipping empty record: {hit}")
             records += recs
-            to += len(hits)
+            from_pos += len(hits)
         return records
 
     @abc.abstractmethod
@@ -386,7 +386,7 @@ class GeonetworkClientV3(GeonetworkClient):
         r = self.session.get(
             f"{self.api}/q",
             headers={"Accept": "application/json"},
-            params=params | {"from": from_pos},
+            params=params | {"from": from_pos + 1},  # v3 'from' param starts at 1
         )
         r.raise_for_status()
         rsp = r.json()
