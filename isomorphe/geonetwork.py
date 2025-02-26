@@ -139,7 +139,10 @@ class GeonetworkClient:
                 break
             recs = []
             for hit in hits:
-                rec = self._as_record(hit)
+                try:
+                    rec = self._as_record(hit)
+                except Exception as e:
+                    raise RuntimeError(f"Failed to process record: {hit}") from e
                 if rec:
                     log.debug(f"Record: {rec}")
                     recs.append(rec)
@@ -447,9 +450,12 @@ class GeonetworkClientV4(GeonetworkClient):
             uuid = md["uuid"]
         except KeyError:
             return None
+        title = md.get("resourceTitleObject") or {}
+        if isinstance(title, list):  # seen in the wild...
+            title = title[0]
         return Record(
             uuid=uuid,
-            title=(md.get("resourceTitleObject") or {}).get("default", ""),
+            title=title.get("default", ""),
             md_type=self._get_metadata_type(md),
             state=self._get_workflow_state(md),
         )
