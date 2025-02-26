@@ -1,4 +1,6 @@
 line-length = 100
 
+extend-exclude = ["isomorphe/transformations/ecospheres-xslt"]
+
 [lint]
 extend-select = ["I"] # also sort imports with an isort rule
