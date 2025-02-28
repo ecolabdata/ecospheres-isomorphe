@@ -101,8 +101,8 @@ class Migrator:
 
         # TODO: make this more generic
         query = {"_isHarvested": "n"} if self.gn.version == 3 else {"isHarvested": "false"}
-        q = kwargs.get("query", "")
-        query |= dict(p.split("=") for p in q.split(","))
+        if q := kwargs.get("query"):
+            query |= dict(p.split("=") for p in q.split(","))
 
         selection = self.gn.get_records(query=query)
 

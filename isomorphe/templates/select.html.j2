@@ -14,7 +14,7 @@
     {# TODO: add info about current connected catalog #}
     <div class="fr-input-group">
       <label class="fr-label" for="query">
-        Requête de recherche (geonetwork {{version}}.x) *
+        Requête de recherche (geonetwork {{version}}.x)
         <span class="fr-hint-text">
         {% if version == 3 %}
         Exemple : type=dataset,_isTemplate=n,_source=&lt;SOURCE_ID&gt;
@@ -25,7 +25,7 @@
         <a href="/docs#filtrage-fiches">Voir la documentation des filtres</a>.
         </span>
       </label>
-      <input required class="fr-input" type="text" id="query" name="query" />
+      <input class="fr-input" type="text" id="query" name="query" />
       <div class="fr-mt-2w fr-grid-row">
         <button type="submit"
                 hx-post="{{ url_for("select_preview") }}"

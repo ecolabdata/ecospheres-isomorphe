@@ -116,8 +116,6 @@ def select_preview():
     if not url:
         return "<em>Veuillez entrer une URL de catalogue.</em>"
     query = request.form.get("query")
-    if not query:
-        return "<em>Veuillez entrer une requête de recherche.</em>"
     migrator = Migrator(url=url, username=username, password=password)
     results = migrator.select(query=query)
     return render_template("fragments/select_preview.html.j2", results=results, url=url)
