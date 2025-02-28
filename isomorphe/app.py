@@ -92,11 +92,17 @@ def login():
 def select():
     url, username, password = connection_infos()
     migrator = Migrator(url=url, username=username, password=password)
+    sources = sorted(
+        [{"id": k, "name": v} for k, v in migrator.gn.get_sources().items()],
+        key=lambda x: x["name"].casefold(),
+    )
     return render_template(
         "select.html.j2",
         url=session.get("url", ""),
         version=migrator.geonetwork_version,
         transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
+        sources=sources,
+        groups=migrator.gn.get_groups(),
     )
 
 
@@ -109,17 +115,23 @@ def select_transformation():
     return render_template("fragments/select_transformation.html.j2", transformation=transformation)
 
 
+def _get_filters(form):
+    return {
+        field.removeprefix("filter-"): value
+        for field, value in form.items()
+        if field.startswith("filter-") and value not in (None, "")
+    }
+
+
 @app.route("/select/preview", methods=["POST"])
 @authenticated(redirect=False)
 def select_preview():
     url, username, password = connection_infos()
     if not url:
         return "<em>Veuillez entrer une URL de catalogue.</em>"
-    query = request.form.get("query")
-    if not query:
-        return "<em>Veuillez entrer une requête de recherche.</em>"
+    filters = _get_filters(request.form)
     migrator = Migrator(url=url, username=username, password=password)
-    results = migrator.select(query=query)
+    results = migrator.select(filters=filters)
     return render_template("fragments/select_preview.html.j2", results=results, url=url)
 
 
@@ -127,9 +139,7 @@ def select_preview():
 @authenticated()
 def transform():
     url, username, password = connection_infos()
-    query = request.form.get("query")
-    if not query:
-        abort(400, "Missing `query` parameter")
+    filters = _get_filters(request.form)
     transformation = request.form.get("transformation")
     if not transformation:
         abort(400, "Missing `transformation` parameter")
@@ -141,7 +151,7 @@ def transform():
             abort(400, f"Missing `{param.name}` parameter for transformation")
         transformation_params[param.name] = request.form.get(form_param_name)
     migrator = Migrator(url=url, username=username, password=password)
-    selection = migrator.select(query=query)
+    selection = migrator.select(filters=filters)
     job = get_queue().enqueue(
         migrator.transform,
         transformation,

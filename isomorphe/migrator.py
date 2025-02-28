@@ -99,10 +99,8 @@ class Migrator:
         """
         log.info(f"Selecting with {kwargs}")
 
-        # TODO: make this more generic
-        query = {"_isHarvested": "n"} if self.gn.version == 3 else {"isHarvested": "false"}
-        q = kwargs.get("query", "")
-        query |= dict(p.split("=") for p in q.split(","))
+        # order matters, so we can override via __extra__
+        query = {"harvested": False} | kwargs.get("filters")
 
         selection = self.gn.get_records(query=query)
 
