@@ -129,10 +129,10 @@ class GeonetworkClient:
         r.raise_for_status()
         return r.json()
 
-    def get_records(self, filters: dict[str, Any] | None = None) -> list[Record]:
-        if extra := filters.pop("__extra__", None):
-            filters |= dict(p.split("=") for p in extra.split(","))
-        params = self._search_params(filters)
+    def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
+        if query and (extra := query.pop("__extra__", None)):
+            query |= dict(p.split("=") for p in extra.split(","))
+        params = self._search_params(query)
         log.debug(f"Search params: {params}")
         records = []
         from_pos = 0
@@ -153,7 +153,7 @@ class GeonetworkClient:
         return records
 
     @abc.abstractmethod
-    def _search_params(self, filters: dict[str, Any] | None) -> dict[str, Any]:
+    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
         pass
 
     @abc.abstractmethod
@@ -373,18 +373,16 @@ class GeonetworkClient:
 class GeonetworkClientV3(GeonetworkClient):
     version = 3
 
-    FILTER_MAPPINGS: Callable[Any, tuple[str, Any]] = {
+    QUERY_MAPPINGS: Callable[Any, tuple[str, Any]] = {
         "group": lambda v: ("_groupOwner", v),
         "harvested": lambda v: ("_isHarvested", "y" if v else "n"),
-        "scope": lambda v: (
-            "_isTemplate",
-            "y" if v == "template" else "n",
-        ),  # FIXME: can't do "all" in a single request
         "source": lambda v: ("_source", v),
+        # FIXME: can't do template+metadata in a single request
+        "template": lambda v: ("_isTemplate", v),
         "uuid": lambda v: ("_uuid", v),
     }
 
-    def _search_params(self, filters: dict[str, Any] | None) -> dict[str, Any]:
+    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
         params = {
             "_content_type": "json",
             "buildSummary": "false",
@@ -392,9 +390,9 @@ class GeonetworkClientV3(GeonetworkClient):
             "sortBy": "changeDate",
             "sortOrder": "reverse",
         }
-        if filters:
+        if query:
             params |= dict(
-                fm(v) if (fm := self.FILTER_MAPPINGS.get(k)) else (k, v) for k, v in filters.items()
+                m(v) if (m := self.QUERY_MAPPINGS.get(k)) else (k, v) for k, v in query.items()
             )
         return params
 
@@ -428,15 +426,15 @@ class GeonetworkClientV3(GeonetworkClient):
 class GeonetworkClientV4(GeonetworkClient):
     version = 4
 
-    FILTER_MAPPINGS: Callable[Any, tuple[str, Any]] = {
+    QUERY_MAPPINGS: Callable[Any, tuple[str, Any]] = {
         "group": lambda v: ("groupOwner", v),
         "harvested": lambda v: ("isHarvested", str(v).lower()),
-        "scope": lambda v: ("isTemplate", "y" if v == "template" else "n"),
         "source": lambda v: ("sourceCatalogue", v),
+        "template": lambda v: ("isTemplate", v),
         "type": lambda v: ("resourceType", v),
     }
 
-    def _search_params(self, filters: dict[str, Any] | None) -> dict[str, Any]:
+    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
         params = {
             "size": 20,
             "sort": [{"changeDate": "asc"}],
@@ -449,9 +447,9 @@ class GeonetworkClientV4(GeonetworkClient):
                 "mdStatus",
             ],
         }
-        if filters:
-            mapped_filters = dict(
-                fm(v) if (fm := self.FILTER_MAPPINGS.get(k)) else (k, v) for k, v in filters.items()
+        if query:
+            mapped_query = dict(
+                m(v) if (m := self.QUERY_MAPPINGS.get(k)) else (k, v) for k, v in query.items()
             )
             params |= {
                 "query": {
@@ -459,9 +457,7 @@ class GeonetworkClientV4(GeonetworkClient):
                         "filter": [
                             {
                                 "query_string": {
-                                    "query": " ".join(
-                                        f"+{k}:{v}" for k, v in mapped_filters.items()
-                                    )
+                                    "query": " ".join(f"+{k}:{v}" for k, v in mapped_query.items())
                                 }
                             }
                         ]

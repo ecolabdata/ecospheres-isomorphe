@@ -102,7 +102,7 @@ class Migrator:
         # order matters, so we can override via __extra__
         filters = {"harvested": False} | kwargs.get("filters")
 
-        selection = self.gn.get_records(filters=filters)
+        selection = self.gn.get_records(query=filters)
 
         log.info(f"Selection contains {len(selection)} items")
         return selection

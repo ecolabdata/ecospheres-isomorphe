@@ -30,7 +30,7 @@ def get_transform_results(
     transformation_params: dict = {},
 ) -> tuple[TransformBatch, list[Record]]:
     if not selection:
-        selection = isomorphe.select(query="type=dataset")
+        selection = isomorphe.select(filters={"type": "dataset"})
     transformation = get_transformation(transformation_name)
     assert len(selection) > 0
     return isomorphe.transform(
@@ -78,7 +78,7 @@ def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[F
 
 def test_transform_working_copy(migrator: Migrator):
     """`change-language` transform is always skipped when record has working copy"""
-    selection = migrator.select(query="type=dataset")
+    selection = migrator.select(filters={"type": "dataset"})
     assert len(selection) > 0
     for record in selection:
         record.state = WorkflowState(stage=WorkflowStage.WORKING_COPY, status=WorkflowStatus.DRAFT)

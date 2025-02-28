@@ -103,7 +103,7 @@ def test_get_records_v3(requests_mock: requests_mock.Mocker):
     }
 
 
-def test_get_records_with_query_v3(requests_mock: requests_mock.Mocker):
+def test_get_records_with_native_filters_v3(requests_mock: requests_mock.Mocker):
     client = GeonetworkClientV3("http://example.com/geonetwork/srv")
     requests_mock.get(f"{client.api}/q", json={})
 
@@ -113,6 +113,24 @@ def test_get_records_with_query_v3(requests_mock: requests_mock.Mocker):
             "type": "dataset",
             "_isHarvested": "y",
             "_isTemplate": "n",
+        }
+    )
+    qs = requests_mock.request_history[0].qs
+    assert qs["type"] == ["dataset"]
+    assert qs["_isharvested"] == ["y"]
+    assert qs["_istemplate"] == ["n"]
+
+
+def test_get_records_with_abstract_filters_v3(requests_mock: requests_mock.Mocker):
+    client = GeonetworkClientV3("http://example.com/geonetwork/srv")
+    requests_mock.get(f"{client.api}/q", json={})
+
+    requests_mock.reset_mock()
+    client.get_records(
+        query={
+            "type": "dataset",
+            "harvested": True,
+            "template": "n",
         }
     )
     qs = requests_mock.request_history[0].qs
@@ -158,7 +176,7 @@ def test_get_records_v4(requests_mock: requests_mock.Mocker):
     }
 
 
-def test_get_records_with_query_v4(requests_mock: requests_mock.Mocker):
+def test_get_records_with_native_filters_v4(requests_mock: requests_mock.Mocker):
     client = GeonetworkClientV4("http://example.com/geonetwork/srv")
     requests_mock.post(f"{client.api}/search/records/_search", json={})
 
@@ -167,6 +185,22 @@ def test_get_records_with_query_v4(requests_mock: requests_mock.Mocker):
             "resourceType": "dataset",
             "isHarvested": "true",
             "isTemplate": "n",
+        }
+    )
+    data = requests_mock.request_history[0].json()
+    query = data["query"]["bool"]["filter"][0]["query_string"]["query"]
+    assert query == "+resourceType:dataset +isHarvested:true +isTemplate:n"
+
+
+def test_get_records_with_abstract_filters_v4(requests_mock: requests_mock.Mocker):
+    client = GeonetworkClientV4("http://example.com/geonetwork/srv")
+    requests_mock.post(f"{client.api}/search/records/_search", json={})
+
+    client.get_records(
+        query={
+            "type": "dataset",
+            "harvested": True,
+            "template": "n",
         }
     )
     data = requests_mock.request_history[0].json()
