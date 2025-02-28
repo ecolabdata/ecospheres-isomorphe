@@ -5,7 +5,7 @@ import re
 import zipfile
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
-from typing import Any
+from typing import Any, Callable
 
 import requests
 from lxml import etree
@@ -129,8 +129,11 @@ class GeonetworkClient:
         r.raise_for_status()
         return r.json()
 
-    def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
-        params = self._search_params(query)
+    def get_records(self, filters: dict[str, Any] | None = None) -> list[Record]:
+        if extra := filters.pop("__extra__", None):
+            filters |= dict(p.split("=") for p in extra.split(","))
+        params = self._search_params(filters)
+        log.debug(f"Search params: {params}")
         records = []
         from_pos = 0
         while True:
@@ -150,7 +153,7 @@ class GeonetworkClient:
         return records
 
     @abc.abstractmethod
-    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
+    def _search_params(self, filters: dict[str, Any] | None) -> dict[str, Any]:
         pass
 
     @abc.abstractmethod
@@ -370,7 +373,18 @@ class GeonetworkClient:
 class GeonetworkClientV3(GeonetworkClient):
     version = 3
 
-    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
+    FILTER_MAPPINGS: Callable[Any, tuple[str, Any]] = {
+        "group": lambda v: ("_groupOwner", v),
+        "harvested": lambda v: ("_isHarvested", "y" if v else "n"),
+        "scope": lambda v: (
+            "_isTemplate",
+            "y" if v == "template" else "n",
+        ),  # FIXME: can't do "all" in a single request
+        "source": lambda v: ("_source", v),
+        "uuid": lambda v: ("_uuid", v),
+    }
+
+    def _search_params(self, filters: dict[str, Any] | None) -> dict[str, Any]:
         params = {
             "_content_type": "json",
             "buildSummary": "false",
@@ -378,8 +392,10 @@ class GeonetworkClientV3(GeonetworkClient):
             "sortBy": "changeDate",
             "sortOrder": "reverse",
         }
-        if query:
-            params |= query
+        if filters:
+            params |= dict(
+                fm(v) if (fm := self.FILTER_MAPPINGS.get(k)) else (k, v) for k, v in filters.items()
+            )
         return params
 
     def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
@@ -412,8 +428,16 @@ class GeonetworkClientV3(GeonetworkClient):
 class GeonetworkClientV4(GeonetworkClient):
     version = 4
 
-    def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
-        data = {
+    FILTER_MAPPINGS: Callable[Any, tuple[str, Any]] = {
+        "group": lambda v: ("groupOwner", v),
+        "harvested": lambda v: ("isHarvested", str(v).lower()),
+        "scope": lambda v: ("isTemplate", "y" if v == "template" else "n"),
+        "source": lambda v: ("sourceCatalogue", v),
+        "type": lambda v: ("resourceType", v),
+    }
+
+    def _search_params(self, filters: dict[str, Any] | None) -> dict[str, Any]:
+        params = {
             "size": 20,
             "sort": [{"changeDate": "asc"}],
             "_source": [
@@ -425,10 +449,26 @@ class GeonetworkClientV4(GeonetworkClient):
                 "mdStatus",
             ],
         }
-        if query:
-            q = " ".join(f"+{k}:{v}" for k, v in query.items())
-            data |= {"query": {"bool": {"filter": [{"query_string": {"query": q}}]}}}
-        return data
+        if filters:
+            mapped_filters = dict(
+                fm(v) if (fm := self.FILTER_MAPPINGS.get(k)) else (k, v) for k, v in filters.items()
+            )
+            params |= {
+                "query": {
+                    "bool": {
+                        "filter": [
+                            {
+                                "query_string": {
+                                    "query": " ".join(
+                                        f"+{k}:{v}" for k, v in mapped_filters.items()
+                                    )
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        return params
 
     def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
         r = self.session.post(

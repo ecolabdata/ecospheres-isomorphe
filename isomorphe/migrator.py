@@ -99,12 +99,10 @@ class Migrator:
         """
         log.info(f"Selecting with {kwargs}")
 
-        # TODO: make this more generic
-        query = {"_isHarvested": "n"} if self.gn.version == 3 else {"isHarvested": "false"}
-        if q := kwargs.get("query"):
-            query |= dict(p.split("=") for p in q.split(","))
+        # order matters, so we can override via __extra__
+        filters = {"harvested": False} | kwargs.get("filters")
 
-        selection = self.gn.get_records(query=query)
+        selection = self.gn.get_records(filters=filters)
 
         log.info(f"Selection contains {len(selection)} items")
         return selection
