@@ -79,7 +79,7 @@ def test_get_records_v3(requests_mock: requests_mock.Mocker):
     client = GeonetworkClientV3("http://example.com/geonetwork/srv")
 
     results_pages = [
-        json.load(Path(f"tests/fixtures/search-response-gn3-page-{i+1}-of-3.json").open())
+        json.load(Path(f"tests/fixtures/search-response-gn3-page-{i + 1}-of-3.json").open())
         for i in range(4)
     ]
     results_uuids = [x["geonet:info"]["uuid"] for p in results_pages for x in p.get("metadata", [])]
@@ -125,7 +125,7 @@ def test_get_records_v4(requests_mock: requests_mock.Mocker):
     client = GeonetworkClientV4("http://example.com/geonetwork/srv")
 
     results_pages = [
-        json.load(Path(f"tests/fixtures/search-response-gn4-page-{i+1}-of-3.json").open())
+        json.load(Path(f"tests/fixtures/search-response-gn4-page-{i + 1}-of-3.json").open())
         for i in range(4)
     ]
     results_uuids = [x["_source"]["uuid"] for p in results_pages for x in p["hits"]["hits"]]
