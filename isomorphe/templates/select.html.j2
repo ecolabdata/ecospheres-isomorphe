@@ -118,16 +118,15 @@
           <label class="fr-label" for="filter-__extra__">
             Filtres supplémentaires
             <span class="fr-hint-text">
-              Liste de filtres <code>&lt;key>=&lt;value></code> séparés par des virgules.
               {% if version == 3 %}
-                <a href="https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L107">Voir la liste des filtres Geonetwork disponibles</a>.
-                <br/>
-                Exemple : <code>type=dataset,_isTemplate=n</code>.
+                {% set filter_def = "https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L107" %}
+                {% set filter_example = "type=dataset,=..." %}
               {% elif version == 4 %}
-                <a href="https://github.com/geonetwork/core-geonetwork/blob/4.4.5/web/src/main/webResources/WEB-INF/data/config/index/records.json#L1568">Voir la liste des filtres Geonetwork disponibles</a>.
-                <br/>
-                Exemple : <code>resourceType=dataset,isTemplate=n</code>.
+                {% set filter_def = "https://github.com/geonetwork/core-geonetwork/blob/4.4.5/web/src/main/webResources/WEB-INF/data/config/index/records.json#L1568" %}
+                {% set filter_example = 'tag.default="Gestion de crise",OrgForResourceObject.default="IGN"' %}
               {% endif %}
+              Liste de <a href={{ filter_def }}>filtres Geonetwork</a> sous forme <code>&lt;champ>=&lt;val></code>, séparés par des virgules.
+              Exemple : <code>{{ filter_example }}</code>
             </span>
           </label>
           <input class="fr-input" type="text" id="filter-__extra__" name="filter-__extra__" />
