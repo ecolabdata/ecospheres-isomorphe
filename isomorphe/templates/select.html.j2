@@ -26,25 +26,58 @@
         </span>
       </div>
       <div class="fr-fieldset__element">
-        <div class="fr-input-group">
-          <label class="fr-label" for="filter-uuid">
-            UUID
-          </label>
-          <input class="fr-input" type="text" id="filter-uuid" name="filter-uuid" />
-        </div>
+        <fieldset class="fr-fieldset fr-mb-0" aria-labelledby="radio-inline-legend radio-inline-messages">
+          <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
+            Type de fiche
+          </legend>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input checked type="radio" id="filter-template-metadata" name="filter-template" value="n">
+              <label class="fr-label" for="filter-template-metadata">
+                Métadonnées
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-template-templates" name="filter-template" value="y">
+              <label class="fr-label" for="filter-template-templates">
+                Modèles
+              </label>
+            </div>
+          </div>
+        </fieldset>
       </div>
       <div class="fr-fieldset__element">
-        <div class="fr-select-group">
-          <label class="fr-label" for="filter-template">
-            Appliquer aux
-          </label>
-          <select class="fr-select" id="filter-template" name="filter-template">
-            <option value="n" selected>métadonnées</option>
-            <option value="y">modèles</option>
-            <!-- TODO  -->
-            <!-- <option value="all">modèles et métadonnées</option> -->
-          </select>
-        </div>
+        <fieldset class="fr-fieldset fr-mb-0" aria-labelledby="radio-inline-legend radio-inline-messages">
+          <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
+            Type de ressource
+          </legend>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-type-all" name="filter-type" value="">
+              <label class="fr-label" for="filter-type-all">
+                Tous les types
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input checked type="radio" id="filter-type-dataset" name="filter-type" value="dataset">
+              <label class="fr-label" for="filter-type-dataset">
+                Jeux de données
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-type-service" name="filter-type" value="service">
+              <label class="fr-label" for="filter-type-service">
+                Services
+              </label>
+            </div>
+          </div>
+        </fieldset>
       </div>
       <div class="fr-fieldset__element">
         <div class="fr-select-group">
@@ -56,18 +89,6 @@
             {% for source in sources %}
               <option value="{{ source.id }}">{{ source.name }}</option>
             {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="fr-fieldset__element">
-        <div class="fr-select-group">
-          <label class="fr-label" for="filter-type">
-            Type de ressource
-          </label>
-          <select class="fr-select" id="filter-type" name="filter-type">
-            <option value="" selected>Tous les types</option>
-            <option value="dataset">Jeux de données</option>
-            <option value="series">Séries de données</option>
           </select>
         </div>
       </div>
@@ -86,21 +107,29 @@
       </div>
       <div class="fr-fieldset__element">
         <div class="fr-input-group">
+          <label class="fr-label" for="filter-uuid">
+            UUID
+          </label>
+          <input class="fr-input" type="text" id="filter-uuid" name="filter-uuid" />
+        </div>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-input-group">
           <label class="fr-label" for="filter-__extra__">
             Filtres supplémentaires
+            <span class="fr-hint-text">
+              Liste de filtres <code>&lt;key>=&lt;value></code> séparés par des virgules.
+              {% if version == 3 %}
+                <a href="https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L107">Voir la liste des filtres Geonetwork disponibles</a>.
+                <br/>
+                Exemple : <code>type=dataset,_isTemplate=n</code>.
+              {% elif version == 4 %}
+                <a href="https://github.com/geonetwork/core-geonetwork/blob/4.4.5/web/src/main/webResources/WEB-INF/data/config/index/records.json#L1568">Voir la liste des filtres Geonetwork disponibles</a>.
+                <br/>
+                Exemple : <code>resourceType=dataset,isTemplate=n</code>.
+              {% endif %}
+            </span>
           </label>
-          <span class="fr-hint-text">
-            Liste de filtres <code>&lt;key>=&lt;value></code> séparés par des virgules.
-            {% if version == 3 %}
-              <a href="https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L107">Voir la liste des filtres Geonetwork disponibles</a>.
-              <br/>
-              Exemple : <code>type=dataset,_isTemplate=n</code>.
-            {% elif version == 4 %}
-              <a href="https://github.com/geonetwork/core-geonetwork/blob/4.4.5/web/src/main/webResources/WEB-INF/data/config/index/records.json#L1568">Voir la liste des filtres Geonetwork disponibles</a>.
-              <br/>
-              Exemple : <code>resourceType=dataset,isTemplate=n</code>.
-            {% endif %}
-          </span>
           <input class="fr-input" type="text" id="filter-__extra__" name="filter-__extra__" />
         </div>
       </div>
@@ -140,12 +169,10 @@
         </div>
         <div id="select-form-transformation-params"></div>
       </div>
-      <div class="fr-fieldset__element">
-        <div class="fr-mt-2w fr-grid-row">
-          <button type="submit" class="fr-btn">Suivant</button>
-        </div>
-      </div>
     </fieldset>
+    <div class="fr-mt-2w fr-grid-row">
+      <button type="submit" class="fr-btn">Suivant</button>
+    </div>
   </form>
   <div id="select_preview" class="fr-mt-4w"></div>
 {% endblock content %}
