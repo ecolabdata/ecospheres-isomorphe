@@ -131,7 +131,7 @@ class GeonetworkClient:
 
     def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
         if query and (extra := query.pop("__extra__", None)):
-            query |= dict(p.split("=") for p in extra.split(","))
+            query |= {k.strip(): v.strip() for k, v in [p.split("=") for p in extra.split(",")]}
         params = self._search_params(query)
         log.debug(f"Search params: {params}")
         records = []
