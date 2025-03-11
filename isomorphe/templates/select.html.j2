@@ -10,7 +10,8 @@
       <span class="fr-text--bold">Étape suivante :</span> Transformation des fiches
     </p>
   </div>
-  <form hx-validate="true" method="post" action="{{ url_for("transform") }}">
+  <form hx-validate="true" method="post" action="{{ url_for("transform") }}"
+        hx-on:input='document.getElementById("select_preview").innerHTML = ""'>
     {# TODO: add info about current connected catalog #}
     <div class="fr-input-group">
       <label class="fr-label" for="query">
