@@ -12,47 +12,166 @@
   </div>
   <form hx-validate="true" method="post" action="{{ url_for("transform") }}">
     {# TODO: add info about current connected catalog #}
-    <div class="fr-input-group">
-      <label class="fr-label" for="query">
-        Requête de recherche (geonetwork {{version}}.x) *
-        <span class="fr-hint-text">
-        {% if version == 3 %}
-        Exemple : type=dataset,_isTemplate=n,_source=&lt;SOURCE_ID&gt;
-        {% elif version == 4 %}
-        Exemple : resourceType=dataset,isTemplate=n,sourceCatalogue=&lt;SOURCE_ID&gt;
-        {% endif %}
-        <br/>
-        <a href="/docs#filtrage-fiches">Voir la documentation des filtres</a>.
-        </span>
-      </label>
-      <input required class="fr-input" type="text" id="query" name="query" />
-      <div class="fr-mt-2w fr-grid-row">
-        <button type="submit"
-                hx-post="{{ url_for("select_preview") }}"
-                hx-target="#select_preview"
-                hx-swap="innerHTML show:top"
-                class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
+    <fieldset class="fr-fieldset" id="filters">
+      <legend class="fr-fieldset__legend">
+        Filtres (geonetwork {{ version }}.x)
+      </legend>
+      <div class="fr-fieldset__element">
+        <fieldset class="fr-fieldset fr-mb-0" aria-labelledby="radio-inline-legend radio-inline-messages">
+          <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
+            Type de fiche
+          </legend>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input checked type="radio" id="filter-template-metadata" name="filter-template" value="n">
+              <label class="fr-label" for="filter-template-metadata">
+                Métadonnées
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-template-templates" name="filter-template" value="y">
+              <label class="fr-label" for="filter-template-templates">
+                Modèles
+              </label>
+            </div>
+          </div>
+        </fieldset>
       </div>
-    </div>
-    <div class="fr-select-group">
-      <label class="fr-label" for="transformation">
+      <div class="fr-fieldset__element">
+        <fieldset class="fr-fieldset fr-mb-0" aria-labelledby="radio-inline-legend radio-inline-messages">
+          <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
+            Type de ressource
+          </legend>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-type-all" name="filter-type" value="">
+              <label class="fr-label" for="filter-type-all">
+                Tous les types
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input checked type="radio" id="filter-type-dataset" name="filter-type" value="dataset">
+              <label class="fr-label" for="filter-type-dataset">
+                Jeux de données
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-type-service" name="filter-type" value="service">
+              <label class="fr-label" for="filter-type-service">
+                Services
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-select-group">
+          <label class="fr-label" for="filter-source">
+            Catalogue source
+          </label>
+          <select class="fr-select" id="filter-source" name="filter-source">
+            <option value="" selected>Tous les catalogues</option>
+            {% for source in sources %}
+              <option value="{{ source.id }}">{{ source.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-select-group">
+          <label class="fr-label" for="filter-group">
+            Groupe propriétaire
+          </label>
+          <select class="fr-select" id="filter-group" name="filter-group">
+            <option value="" selected >Tous les groupes</option>
+            {% for group in groups %}
+              <option value="{{ group.id }}">{{ group.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-input-group">
+          <label class="fr-label" for="filter-uuid">
+            UUID
+          </label>
+          <input class="fr-input" type="text" id="filter-uuid" name="filter-uuid" />
+        </div>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-input-group">
+          <label class="fr-label" for="filter-__extra__">
+            Filtres supplémentaires
+            <span class="fr-hint-text">
+              {% if version == 3 %}
+                {% set filter_def = "https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L107" %}
+                {% set filter_example = 'keyword=Réseaux de transport,orgName=IGN' %}
+                {% set filter_comment = 'Attention : Les champs tels que <code>keyword</code> ou <code>orgName</code> ne sont pas tokenisés. Il faut donc indiquer la forme exacte du libellé, ou <a href="https://github.com/geonetwork/core-geonetwork/blob/3.10.4/web/src/main/webapp/WEB-INF/config-lucene.xml#L336">modifier la configuration Geonetwork</a>.' %}
+              {% elif version == 4 %}
+                {% set filter_def = "https://github.com/geonetwork/core-geonetwork/blob/4.4.5/web/src/main/webResources/WEB-INF/data/config/index/records.json#L1568" %}
+                {% set filter_example = 'tag.default="Gestion de crise",OrgForResourceObject.default="IGN"' %}
+              {% endif %}
+              Liste de <a href={{ filter_def }}>filtres Geonetwork</a>, sous forme <code>&lt;champ>=&lt;val></code>, séparés par des virgules.
+              <br/>
+              Exemple : <code>{{ filter_example }}</code>
+              {% if filter_comment %}
+                <br/>
+                {{ filter_comment }}
+              {% endif %}
+            </span>
+          </label>
+          <input class="fr-input" type="text" id="filter-__extra__" name="filter-__extra__" />
+        </div>
+      </div>
+      <div class="fr-fieldset__element">
+        <ul class="fr-btns-group fr-btns-group--inline">
+          <li>
+            <button type="submit"
+                    hx-post="{{ url_for("select_preview") }}"
+                    hx-target="#select_preview"
+                    hx-swap="innerHTML show:top"
+                    class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
+          </li>
+          <li>
+            <button type="reset"
+                    class="fr-btn fr-btn--tertiary fr-mr-1w">Réinitialiser les filtres</button>
+          </li>
+        </ul>
+      </div>
+    </fieldset>
+    <fieldset class="fr-fieldset" id="transformation">
+      <legend class="fr-fieldset__legend">
         Transformation à appliquer *
-        <span class="fr-hint-text"><a href="/docs#transformations">Voir la documentation des transformations disponibles</a>.</span>
-      </label>
-      <select hx-get="{{ url_for("select_transformation") }}"
-              hx-target="#select-form-transformation-params"
-              hx-trigger="change"
-              required
-              class="fr-select"
-              id="transformation"
-              name="transformation">
-        <option value="" selected disabled hidden>Sélectionner une transformation</option>
-        {% for transformation in transformations %}
-          <option value="{{ transformation.name }}">{{ transformation.display_name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div id="select-form-transformation-params"></div>
+      </legend>
+      <div class="fr-fieldset__element">
+        <span class="fr-hint-text"><a href="{{ url_for("documentation", _anchor="transformations") }}">
+          Voir la documentation des transformations disponibles</a>.
+        </span>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-select-group">
+          <select hx-get="{{ url_for("select_transformation") }}"
+                  hx-target="#select-form-transformation-params"
+                  hx-trigger="change"
+                  required
+                  class="fr-select"
+                  id="transformation"
+                  name="transformation">
+            <option value="" selected disabled hidden>Sélectionner une transformation</option>
+            {% for transformation in transformations %}
+              <option value="{{ transformation.name }}">{{ transformation.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="select-form-transformation-params"></div>
+      </div>
+    </fieldset>
     <div class="fr-mt-2w fr-grid-row">
       <button type="submit" class="fr-btn">Suivant</button>
     </div>

@@ -5,7 +5,7 @@ import re
 import zipfile
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
-from typing import Any
+from typing import Any, Callable
 
 import requests
 from lxml import etree
@@ -130,7 +130,10 @@ class GeonetworkClient:
         return r.json()
 
     def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
+        if query and (extra := query.pop("__extra__", None)):
+            query |= {k.strip(): v.strip() for k, v in [p.split("=") for p in extra.split(",")]}
         params = self._search_params(query)
+        log.debug(f"Search params: {params}")
         records = []
         from_pos = 0
         while True:
@@ -373,6 +376,15 @@ class GeonetworkClient:
 class GeonetworkClientV3(GeonetworkClient):
     version = 3
 
+    QUERY_MAPPINGS: dict[str, Callable[[Any], tuple[str, Any]]] = {
+        "group": lambda v: ("_groupOwner", v),
+        "harvested": lambda v: ("_isHarvested", "y" if v else "n"),
+        "source": lambda v: ("_source", v),
+        # FIXME: can't do template+metadata in a single request
+        "template": lambda v: ("_isTemplate", v),
+        "uuid": lambda v: ("_uuid", v),
+    }
+
     def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
         params = {
             "_content_type": "json",
@@ -382,7 +394,9 @@ class GeonetworkClientV3(GeonetworkClient):
             "sortOrder": "reverse",
         }
         if query:
-            params |= query
+            params |= dict(
+                m(v) if (m := self.QUERY_MAPPINGS.get(k)) else (k, v) for k, v in query.items()
+            )
         return params
 
     def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
@@ -415,8 +429,16 @@ class GeonetworkClientV3(GeonetworkClient):
 class GeonetworkClientV4(GeonetworkClient):
     version = 4
 
+    QUERY_MAPPINGS: dict[str, Callable[[Any], tuple[str, Any]]] = {
+        "group": lambda v: ("groupOwner", v),
+        "harvested": lambda v: ("isHarvested", str(v).lower()),
+        "source": lambda v: ("sourceCatalogue", v),
+        "template": lambda v: ("isTemplate", v),
+        "type": lambda v: ("resourceType", v),
+    }
+
     def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
-        data = {
+        params = {
             "size": 20,
             "sort": [{"changeDate": "asc"}],
             "_source": [
@@ -429,9 +451,23 @@ class GeonetworkClientV4(GeonetworkClient):
             ],
         }
         if query:
-            q = " ".join(f"+{k}:{v}" for k, v in query.items())
-            data |= {"query": {"bool": {"filter": [{"query_string": {"query": q}}]}}}
-        return data
+            mapped_query = dict(
+                m(v) if (m := self.QUERY_MAPPINGS.get(k)) else (k, v) for k, v in query.items()
+            )
+            params |= {
+                "query": {
+                    "bool": {
+                        "filter": [
+                            {
+                                "query_string": {
+                                    "query": " ".join(f"+{k}:{v}" for k, v in mapped_query.items())
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        return params
 
     def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
         r = self.session.post(
