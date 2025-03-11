@@ -13,7 +13,7 @@
   <form method="post" action="{{ url_for('login') }}">
     <div class="fr-input-group">
       <label class="fr-label" for="query">URL du catalogue *
-        <span class="fr-hint-text">Ex : https://www.example.com/geonetwork/srv</span>
+        <span class="fr-hint-text">Exemple : <code>https://www.example.com/geonetwork/srv</code> ou <code>https://www.example.com/geonetwork/[PORTAIL]</code></span>
       </label>
       <input required class="fr-input" type="url" id="url" name="url" value="{{ url }}" />
     </div>
