@@ -136,7 +136,12 @@
                     hx-post="{{ url_for("select_preview") }}"
                     hx-target="#select_preview"
                     hx-swap="innerHTML show:top"
-                    class="fr-btn fr-btn--secondary fr-mr-1w">Prévisualiser la recherche</button>
+                    hx-indicator=".spinner-indicator"
+                    hx-disabled-elt=".fr-btn"
+                    class="fr-btn fr-btn--secondary fr-mr-1w">
+              <span>Prévisualiser la recherche</span>
+              <img class="spinner-indicator" src="{{ url_for("static", filename="images/180-ring.svg") }}"/>
+            </button>
           </li>
           <li>
             <button type="reset"
