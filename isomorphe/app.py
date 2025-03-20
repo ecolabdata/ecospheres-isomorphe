@@ -233,6 +233,18 @@ def transform_job_status(job_id: str):
     )
 
 
+@app.route("/transform/results_preview/<job_id>")
+def transform_results_preview(job_id: str):
+    job = get_job(job_id)
+    if not job:
+        abort(404)
+    statuses = request.args.getlist("status-filter")
+    results = job.result.select(only_statuses=statuses)
+    return render_template(
+        "fragments/transform_results_preview.html.j2", job_id=job_id, results=results
+    )
+
+
 @app.route("/transform/download_result/<job_id>")
 def transform_download_result(job_id: str):
     job = get_job(job_id)

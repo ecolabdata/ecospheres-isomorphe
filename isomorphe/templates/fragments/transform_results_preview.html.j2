@@ -1,0 +1,90 @@
+<div class="fr-table"> <!-- fr-table--no-caption fr-table--no-scroll -->
+  <div class="fr-table__header">
+    <p class="fr-table__detail"> {{ results|length }} fiches </p>
+  </div>
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table id="table-results">
+          <thead>
+            <tr>
+              <!--
+                   <th class="fr-cell--fixed" role="columnheader">
+                   <span class="fr-sr-only">Sélection</span>
+                   </th>
+              -->
+              <th scope="col"></th>
+              <th scope="col">Fiche d'origine</th>
+              <!-- TODO: add title? -->
+              <th scope="col">Original</th>
+              <th scope="col">Transformé</th>
+              <th scope="col">Différences</th>
+              <th scope="col">Messages</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in results %}
+              <!-- %set different column values here, instead of multiple ifs per column -->
+              <tr id="table-results-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
+                <!--
+                     <th class="fr-cell--fixed" scope="row">
+                     <div class='fr-checkbox-group fr-checkbox-group--sm'>
+                     <input name='row-select' id='table-results-select-checkbox--0' type='checkbox'>
+                     <label class='fr-label' for='table-results-select-checkbox--0'> Sélectionner la ligne {{ loop.index }} </label>
+                     </div>
+                     </th>
+                -->
+                <td>
+                  {% if record.status == 1 %}
+                    {% if record.needs_check() %}
+                      🟠
+                    {% else %}
+                      🟢
+                    {% endif %}
+                  {% elif record.status == 2 %}
+                    🔴
+                  {% elif record.status == 3 %}
+                    {% if record.needs_check() %}
+                      🟡
+                    {% else %}
+                      ⚪️
+                    {% endif %}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
+                     target="_blank" rel="noopener"> {{ record.uuid }} </a>
+                </td>
+                <td>
+                  <a href="{{ url_for('transform_original', job_id=job_id, uuid=record.uuid) }}"
+                     target="_blank" rel="noopener"> XML </a>
+                </td>
+                <td>
+                  {% if record.status == 1 %}
+                    <a href="{{ url_for('transform_result', job_id=job_id, uuid=record.uuid) }}"
+                       target="_blank" rel="noopener"> XML </a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if record.status == 1 %}
+                    <a href="{{ url_for('transform_diff', job_id=job_id, uuid=record.uuid) }}"
+                       target="_blank" rel="noopener"> diff </a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {{ "<br/>".join(record.messages) or "-" }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

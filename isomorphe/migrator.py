@@ -161,6 +161,7 @@ class Migrator:
                 }
                 transformer = transformation.transform
                 result = transformer(original, **transformation_params_quoted)
+                # TODO: log can have several messages => merge into most significant
                 transform_log = TransformLog(transformer.error_log)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)

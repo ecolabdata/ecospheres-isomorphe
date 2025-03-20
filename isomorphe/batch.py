@@ -61,6 +61,20 @@ class TransformBatchRecord:
     original: bytes
     url: str
 
+    def needs_check(self) -> bool:
+        if not self.log:
+            return False
+        return any(["CHECK" in log.message for log in self.log])
+
+    @property
+    def status(self) -> int:
+        return 0
+
+    # TODO: strip status codes
+    @property
+    def messages(self) -> list[str]:
+        return []
+
 
 @dataclass(kw_only=True)
 class SuccessTransformBatchRecord(TransformBatchRecord):
@@ -70,10 +84,34 @@ class SuccessTransformBatchRecord(TransformBatchRecord):
     # has_diff == False can happen when Transformation.always_apply
     has_diff: bool = True
 
+    @property
+    def status(self) -> int:
+        return 1
+
+    @property
+    def foobar(self) -> str:
+        return "apply-check" if self.needs_check() else "apply"
+
+    @property
+    def messages(self) -> list[str]:
+        return [log.message for log in self.log] if self.log else []
+
 
 @dataclass(kw_only=True)
 class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
+
+    @property
+    def status(self) -> int:
+        return 2
+
+    @property
+    def foobar(self) -> str:
+        return "error"
+
+    @property
+    def messages(self) -> list[str]:
+        return [self.error]
 
 
 class SkipReasonMessage(StrEnum):
@@ -95,9 +133,26 @@ class SkipReason(IntEnum):
 
 @dataclass(kw_only=True)
 class SkippedTransformBatchRecord(TransformBatchRecord):
-    reason: SkipReason
+    reason: SkipReason | None = None
     info: str
     log: TransformLog | None = None
+
+    @property
+    def status(self) -> int:
+        return 3
+
+    @property
+    def foobar(self) -> str:
+        return "ignore-check" if self.needs_check() else "ignore"
+
+    @property
+    def messages(self) -> list[str]:
+        if self.reason:
+            return [SkipReasonMessage[self.reason.name].value]
+        elif self.log:
+            return [log.message for log in self.log]
+        else:
+            return []
 
 
 class TransformBatch:
@@ -116,6 +171,11 @@ class TransformBatch:
 
     def skipped(self) -> list[SkippedTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
+
+    def select(self, only_statuses: list[str] | None = None) -> list[TransformBatchRecord]:
+        if only_statuses is None:
+            return self.records
+        return [r for r in self.records if r.foobar in only_statuses]
 
     def __repr__(self):
         return f"TransformBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
