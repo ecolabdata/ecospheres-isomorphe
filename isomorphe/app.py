@@ -22,7 +22,6 @@ from flask import (
 from isomorphe.auth import authenticated, connection_infos
 from isomorphe.batch import (
     MigrateMode,
-    SkippedTransformBatchRecord,
     SkipReasonMessage,
     SuccessTransformBatchRecord,
     TransformBatchRecord,
@@ -352,15 +351,6 @@ def documentation_transformation(transformation: str):
         "documentation.html.j2",
         content=render_markdown(md_content),
     )
-
-
-@app.template_filter("record_transform_log")
-def record_transform_log(record: TransformBatchRecord):
-    if not isinstance(record, (SkippedTransformBatchRecord, SuccessTransformBatchRecord)):
-        return "-"
-    if not record.log:
-        return "-"
-    return "<br>".join([e.message for e in record.log])
 
 
 if __name__ == "__main__":
