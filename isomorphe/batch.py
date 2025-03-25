@@ -101,10 +101,10 @@ class FailureTransformBatchRecord(TransformBatchRecord):
 
 @dataclass(kw_only=True)
 class CheckableTransformBatchRecord(TransformBatchRecord):
-    log: TransformLog
+    log: TransformLog | None = None
 
     def __post_init__(self):
-        if any(["CHECK" in log.message for log in self.log]):
+        if self.log and any(["CHECK" in log.message for log in self.log]):
             # TODO: log can have several messages => retain most significant for status (and messages?)
             self.status |= RecordStatus.CHECK  # FIXME: typechecker isn't happy
         else:
