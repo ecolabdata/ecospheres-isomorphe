@@ -1,11 +1,11 @@
-import abc
 import io
 import logging
 import re
 import zipfile
+from abc import abstractmethod
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
-from typing import Any, Callable
+from typing import Any, Callable, override
 
 import requests
 from lxml import etree
@@ -155,15 +155,15 @@ class GeonetworkClient:
             from_pos += len(hits)
         return records
 
-    @abc.abstractmethod
+    @abstractmethod
     def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def _search_hits(self, params: dict[str, Any], from_pos: int) -> list[dict[str, Any]]:
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def _as_record(self, hit: dict[str, Any]) -> Record | None:
         pass
 
@@ -191,6 +191,14 @@ class GeonetworkClient:
             status = WorkflowStatus.UNKNOWN
 
         return WorkflowState(stage=stage, status=status)
+
+    @staticmethod
+    @abstractmethod
+    def uuid_filter(uuids: list[str]) -> dict[str, str]:
+        """
+        Return list of uuids as a filter parameter
+        """
+        pass
 
     def get_record(self, uuid: str) -> etree._ElementTree:
         log.debug(f"Processing record: {uuid}")
@@ -425,6 +433,11 @@ class GeonetworkClientV3(GeonetworkClient):
             state=self._get_workflow_state(hit),
         )
 
+    @staticmethod
+    @override
+    def uuid_filter(uuids: list[str]) -> dict[str, str]:
+        return {"_uuid": " or ".join(uuids)}
+
 
 class GeonetworkClientV4(GeonetworkClient):
     version = 4
@@ -495,6 +508,11 @@ class GeonetworkClientV4(GeonetworkClient):
             md_type=self._get_metadata_type(md),
             state=self._get_workflow_state(md),
         )
+
+    @staticmethod
+    @override
+    def uuid_filter(uuids: list[str]) -> dict[str, str]:
+        return {"uuid": "[" + ",".join([f'"{u}"' for u in uuids]) + "]"}
 
 
 class MefArchive:

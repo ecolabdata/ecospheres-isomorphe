@@ -1,11 +1,9 @@
-{% set uuids = results|uuid_list %}
 <div class="fr-table"> <!-- fr-table--no-caption fr-table--no-scroll -->
   <div class="fr-table__header">
     <p class="fr-table__detail"> {{ results|length }} fiches </p>
     <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-md fr-btns-group--icon-left">
       <li>
-        <!-- TODO: GN3 -->
-        <form action="{{ url }}/fre/catalog.edit#/board?uuid={{ uuids|urlencode }}" target="_blank" rel="noopener external">
+        <form action="{{ url }}/fre/catalog.edit#/board?{{ uuid_filter|urlencode }}" target="_blank" rel="noopener external">
           <button type="submit" class="fr-btn fr-btn--icon-right fr-icon-external-link-fill fr-btn--secondary">
             Voir dans Geonetwork
           </button>

@@ -236,7 +236,8 @@ def transform_job_status(job_id: str):
 
 @app.route("/transform/results_preview/<job_id>")
 def transform_results_preview(job_id: str):
-    url, _, _ = connection_infos()
+    url, username, password = connection_infos()
+    migrator = Migrator(url=url, username=username, password=password)
     job = get_job(job_id)
     if not job:
         abort(404)
@@ -246,6 +247,7 @@ def transform_results_preview(job_id: str):
         "fragments/transform_results_preview.html.j2",
         job_id=job_id,
         results=results,
+        uuid_filter=migrator.gn.uuid_filter([r.uuid for r in results]),
         url=url,
         RecordStatus=RecordStatus,
     )
@@ -358,11 +360,6 @@ def documentation_transformation(transformation: str):
         "documentation.html.j2",
         content=render_markdown(md_content),
     )
-
-
-@app.template_filter("uuid_list")
-def uuid_list(results: list[TransformBatchRecord]):
-    return "[" + ",".join([f'"{r.uuid}"' for r in results]) + "]"
 
 
 STATUS_ICONS: dict[RecordStatus, str] = {
