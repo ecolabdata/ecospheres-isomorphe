@@ -373,11 +373,28 @@ STATUS_ICONS: dict[RecordStatus, str] = {
     RecordStatus.SKIPPED | RecordStatus.NOCHECK: "⚪️",
 }
 
+STATUS_LABELS: dict[RecordStatus, str] = {
+    RecordStatus.FAILURE: "Erreur",
+    RecordStatus.SUCCESS | RecordStatus.CHECK: "Modifié (à vérifier)",
+    RecordStatus.SKIPPED | RecordStatus.CHECK: "Ignoré (à vérifier)",
+    RecordStatus.SUCCESS | RecordStatus.NOCHECK: "Modifié",
+    RecordStatus.SKIPPED | RecordStatus.NOCHECK: "Ignoré",
+}
+
 
 @app.template_filter("status_icon")
 def status_icon(status: RecordStatus):
-    # FIXME: unknown icon
-    return STATUS_ICONS.get(status, "??")
+    return STATUS_ICONS.get(status, "-")
+
+
+@app.template_filter("status_label")
+def status_label(status: RecordStatus):
+    return STATUS_LABELS.get(status, "-")
+
+
+@app.template_filter("status_legend")
+def status_legend(status: RecordStatus):
+    return f"{status_icon(status)} {status_label(status)}"
 
 
 if __name__ == "__main__":

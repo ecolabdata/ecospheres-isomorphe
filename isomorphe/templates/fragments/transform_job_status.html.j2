@@ -60,7 +60,7 @@
                  value="{{ FAILURE }}" checked
                  aria-describedby="status-filter-error-messages">
           <label class="fr-label" for="status-filter-error">
-            {{ FAILURE | status_icon }} Erreur
+            {{ FAILURE | status_legend }}
           </label>
           <div class="fr-messages-group" id="status-filter-error-messages" aria-live="assertive">
           </div>
@@ -72,7 +72,7 @@
                  value="{{ SUCCESS_CHECK }}" checked
                  aria-describedby="status-filter-apply-check-messages">
           <label class="fr-label" for="status-filter-apply-check">
-            {{ SUCCESS_CHECK | status_icon }} À vérifier (modifié)
+            {{ SUCCESS_CHECK | status_legend }}
           </label>
           <div class="fr-messages-group" id="status-filter-apply-check-messages" aria-live="assertive">
           </div>
@@ -84,7 +84,7 @@
                  value="{{ SKIPPED_CHECK }}" checked
                  aria-describedby="status-filter-ignore-check-messages">
           <label class="fr-label" for="status-filter-ignore-check">
-            {{ SKIPPED_CHECK | status_icon }} À vérifier (ignoré)
+            {{ SKIPPED_CHECK | status_legend }}
           </label>
           <div class="fr-messages-group" id="status-filter-ignore-check-messages" aria-live="assertive">
           </div>
@@ -96,7 +96,7 @@
                  value="{{ SUCCESS_NOCHECK }}" checked
                  aria-describedby="status-filter-apply-messages">
           <label class="fr-label" for="status-filter-apply">
-            {{ SUCCESS_NOCHECK | status_icon }} Modifié
+            {{ SUCCESS_NOCHECK | status_legend }}
           </label>
           <div class="fr-messages-group" id="status-filter-apply-messages" aria-live="assertive">
           </div>
@@ -108,7 +108,7 @@
                  value="{{ SKIPPED_NOCHECK }}" checked
                  aria-describedby="status-filter-ignore-messages">
           <label class="fr-label" for="status-filter-ignore">
-            {{ SKIPPED_NOCHECK | status_icon }} Ignoré
+            {{ SKIPPED_NOCHECK | status_legend }}
           </label>
           <div class="fr-messages-group" id="status-filter-ignore-messages" aria-live="assertive">
           </div>

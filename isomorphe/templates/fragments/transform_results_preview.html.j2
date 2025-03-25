@@ -19,34 +19,24 @@
         <table id="transform-results-table">
           <thead>
             <tr>
-              <!--
-                   <th class="fr-cell--fixed" role="columnheader">
-                   <span class="fr-sr-only">Sélection</span>
-                   </th>
-              -->
-              <th scope="col"></th>
-              <th scope="col">Fiche d'origine</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Identifiant</th>
               <!-- TODO: add title? -->
               <th scope="col">Original</th>
-              <th scope="col">Transformé</th>
+              <th scope="col">Résultat</th>
               <th scope="col">Différences</th>
               <th scope="col">Messages</th>
             </tr>
           </thead>
           <tbody>
             {% for record in results %}
-              <!-- %set different column values here, instead of multiple ifs per column -->
               <tr id="table-results-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
-                <!--
-                     <th class="fr-cell--fixed" scope="row">
-                     <div class='fr-checkbox-group fr-checkbox-group--sm'>
-                     <input name='row-select' id='table-results-select-checkbox--0' type='checkbox'>
-                     <label class='fr-label' for='table-results-select-checkbox--0'> Sélectionner la ligne {{ loop.index }} </label>
-                     </div>
-                     </th>
-                -->
                 <td>
-                  {{ record.status | status_icon }}
+                  <span role="img"
+                        aria-label="{{ record.status | status_label }}"
+                        title="{{ record.status | status_label }}">
+                    {{ record.status | status_icon }}
+                  </span>
                 </td>
                 <td>
                   <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"

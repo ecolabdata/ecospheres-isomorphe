@@ -175,7 +175,6 @@ class Migrator:
                     batch.add(
                         SkippedTransformBatchRecord.derive_from(
                             batch_record,
-                            reason=SkipReason.NO_CHANGES,
                             log=transform_log,
                         )
                     )

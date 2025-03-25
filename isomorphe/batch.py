@@ -1,3 +1,4 @@
+import re
 from abc import abstractmethod
 from dataclasses import asdict, dataclass
 from enum import IntEnum, IntFlag, StrEnum, auto
@@ -64,7 +65,6 @@ class RecordStatus(IntFlag):
     NOCHECK = auto()
 
 
-# TODO: immutable
 @dataclass(kw_only=True)
 class TransformBatchRecord:
     status: RecordStatus = RecordStatus(0)
@@ -100,31 +100,34 @@ class FailureTransformBatchRecord(TransformBatchRecord):
 
 
 @dataclass(kw_only=True)
-class CheckableTransformBatchRecord(TransformBatchRecord):
+class AppliedTransformBatchRecord(TransformBatchRecord):
     log: TransformLog | None = None
 
     def __post_init__(self):
-        if self.log and any(["CHECK" in log.message for log in self.log]):
-            # TODO: log can have several messages => retain most significant for status (and messages?)
+        # We can have several [isomorphe] tags in the log, as multiple XSLT templates can trigger on a single record.
+        # For now, we only care if at least once of those is a :check to flag the record for verification.
+        if self.log and any(["[isomorphe:check]" in log.message for log in self.log]):
             self.status |= RecordStatus.CHECK  # FIXME: typechecker isn't happy
         else:
             self.status |= RecordStatus.NOCHECK
 
+    @property
+    @override
+    def messages(self) -> list[str]:
+        if self.log:
+            return [re.sub(r"\[isomorphe:[^]]*\]", "", log.message) for log in self.log]
+        else:
+            return []
+
 
 @final
 @dataclass(kw_only=True)
-class SuccessTransformBatchRecord(CheckableTransformBatchRecord):
+class SuccessTransformBatchRecord(AppliedTransformBatchRecord):
     result: bytes
 
     def __post_init__(self):
         self.status = RecordStatus.SUCCESS
         super().__post_init__()
-
-    # TODO: strip status code markers
-    @property
-    @override
-    def messages(self) -> list[str]:
-        return [log.message for log in self.log] if self.log else []
 
 
 class SkipReasonMessage(StrEnum):
@@ -133,21 +136,19 @@ class SkipReasonMessage(StrEnum):
     and want to be able to change the associated message inbetween jobs.
     """
 
-    NO_CHANGES = "Pas de modification lors de la transformation."
     UNSUPPORTED_METADATA_TYPE = "Type d'enregistrement non supporté."
     HAS_WORKING_COPY = "L'enregistrement a une copie de travail (working copy)."
 
 
 class SkipReason(IntEnum):
-    NO_CHANGES = 1
     UNSUPPORTED_METADATA_TYPE = 2
     HAS_WORKING_COPY = 3
 
 
 @final
 @dataclass(kw_only=True)
-class SkippedTransformBatchRecord(CheckableTransformBatchRecord):
-    reason: SkipReason
+class SkippedTransformBatchRecord(AppliedTransformBatchRecord):
+    reason: SkipReason | None = None
 
     def __post_init__(self):
         self.status = RecordStatus.SKIPPED
@@ -156,9 +157,11 @@ class SkippedTransformBatchRecord(CheckableTransformBatchRecord):
     @property
     @override
     def messages(self) -> list[str]:
-        # Explicit reason => takes precedence over log messages
-        # FIXME: preprend to super().messages?
-        return [SkipReasonMessage[self.reason.name].value]
+        if self.reason:
+            # Explicit reason => takes precedence over log messages
+            return [SkipReasonMessage[self.reason.name].value]
+        else:
+            return super().messages
 
 
 class TransformBatch:
