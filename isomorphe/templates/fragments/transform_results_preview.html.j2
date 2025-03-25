@@ -16,7 +16,7 @@
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
       <div class="fr-table__content">
-        <table id="table-results">
+        <table id="transform-results-table">
           <thead>
             <tr>
               <!--
@@ -46,23 +46,7 @@
                      </th>
                 -->
                 <td>
-                  {% if record.status == 1 %}
-                    {% if record.needs_check() %}
-                      🟠
-                    {% else %}
-                      🟢
-                    {% endif %}
-                  {% elif record.status == 2 %}
-                    🔴
-                  {% elif record.status == 3 %}
-                    {% if record.needs_check() %}
-                      🟡
-                    {% else %}
-                      ⚪️
-                    {% endif %}
-                  {% else %}
-                    -
-                  {% endif %}
+                  {{ record.status | status_icon }}
                 </td>
                 <td>
                   <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
@@ -73,7 +57,7 @@
                      target="_blank" rel="noopener"> XML </a>
                 </td>
                 <td>
-                  {% if record.status == 1 %}
+                  {% if RecordStatus.SUCCESS in record.status %}
                     <a href="{{ url_for('transform_result', job_id=job_id, uuid=record.uuid) }}"
                        target="_blank" rel="noopener"> XML </a>
                   {% else %}
@@ -81,7 +65,7 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if record.status == 1 %}
+                  {% if RecordStatus.SUCCESS in record.status %}
                     <a href="{{ url_for('transform_diff', job_id=job_id, uuid=record.uuid) }}"
                        target="_blank" rel="noopener"> diff </a>
                   {% else %}

@@ -7,76 +7,16 @@
   {# TODO: add normalized info about current connected catalog #}
   <p>Job terminé.</p>
 
-  <p>Les enregistrements sont listés dans l'ordre de traitement, du plus ancien au plus récent.</p>
-
-  <form id="status-filter-form">
-    <fieldset class="fr-fieldset" id="status-filter-set"
-              aria-labelledby="status-filter-legend status-filter-messages"
-              hx-get="{{ url_for("transform_results_preview", job_id=job.id) }}"
-              hx-target="#transform-results-preview"
-              hx-trigger="load, change"
-              hx-include="#status-filter-form"
-              hx-swap="innerHTML">
-    <legend class="fr-fieldset__legend--regular fr-fieldset__legend" id="status-filter-legend">
-      Afficher :
-    </legend>
-    <div class="fr-fieldset__element fr-fieldset__element--inline">
-      <div class="fr-checkbox-group">
-        <input type="checkbox" name="status-filter" id="status-filter-error" value="error" checked
-               aria-describedby="status-filter-error-messages">
-        <label class="fr-label" for="status-filter-error"> 🔴 Erreur </label>
-        <div class="fr-messages-group" id="status-filter-error-messages" aria-live="assertive">
-        </div>
-      </div>
-    </div>
-    <div class="fr-fieldset__element fr-fieldset__element--inline">
-      <div class="fr-checkbox-group">
-        <input type="checkbox" name="status-filter" id="status-filter-apply-check" value="apply-check" checked
-               aria-describedby="status-filter-apply-check-messages">
-        <label class="fr-label" for="status-filter-apply-check"> 🟠 À vérifier (modifié) </label>
-        <div class="fr-messages-group" id="status-filter-apply-check-messages" aria-live="assertive">
-        </div>
-      </div>
-    </div>
-    <div class="fr-fieldset__element fr-fieldset__element--inline">
-      <div class="fr-checkbox-group">
-        <input type="checkbox" name="status-filter" id="status-filter-ignore-check" value="ignore-check" checked
-               aria-describedby="status-filter-ignore-check-messages">
-        <label class="fr-label" for="status-filter-ignore-check"> 🟡 À vérifier (ignoré) </label>
-        <div class="fr-messages-group" id="status-filter-ignore-check-messages" aria-live="assertive">
-        </div>
-      </div>
-    </div>
-    <div class="fr-fieldset__element fr-fieldset__element--inline">
-      <div class="fr-checkbox-group">
-        <input type="checkbox" name="status-filter" id="status-filter-apply" value="apply" checked
-               aria-describedby="status-filter-apply-messages">
-        <label class="fr-label" for="status-filter-apply"> 🟢 Modifié </label>
-        <div class="fr-messages-group" id="status-filter-apply-messages" aria-live="assertive">
-        </div>
-      </div>
-    </div>
-    <div class="fr-fieldset__element fr-fieldset__element--inline">
-      <div class="fr-checkbox-group">
-        <input type="checkbox" name="status-filter" id="status-filter-ignore" value="ignore" checked
-               aria-describedby="status-filter-ignore-messages">
-        <label class="fr-label" for="status-filter-ignore"> ⚪️ Ignoré </label>
-        <div class="fr-messages-group" id="status-filter-ignore-messages" aria-live="assertive">
-        </div>
-      </div>
-    </div>
-    <div class="fr-messages-group" id="status-filter-messages" aria-live="assertive"></div>
-    </fieldset>
-  </form>
-
-  <div id="transform-results-preview" class="fr-mt-4w">
-    {% include "fragments/transform_results_preview.html.j2" %}
-  </div>
-
   <p>
-    Vous pouvez désormais mettre à jour le catalogue {{ url }}.
-    Seules les transformations réussies seront appliquées.
+    Vous pouvez désormais :
+    <ol>
+      <li>Contrôler le résultat des traitements dans la table ci-dessous.</li>
+      <li>Mettre à jour le catalogue {{ url }} en sélectionnant le mode de mise à jour souhaité.</li>
+    </ol>
+
+    Seules les transformations réussies et sélectionnées seront appliquées.
   </p>
+
   <form action="{{ url_for('migrate', job_id=job.id) }}"
         method="post"
         class="fr-mt-2w">
@@ -91,6 +31,97 @@
     <div id="migrate-form-group-field"></div>
     <button type="submit" class="fr-btn">Suivant</button>
   </form>
+
+  <div id="transform-results" class="fr-mt-4w">
+    <p>
+      Les enregistrements ci-dessous sont listés dans l'ordre de traitement, du plus ancien au plus récent.
+    </p>
+
+    {% set FAILURE = RecordStatus.FAILURE %}
+    {% set SUCCESS_CHECK = RecordStatus.SUCCESS + RecordStatus.CHECK %}
+    {% set SUCCESS_NOCHECK = RecordStatus.SUCCESS + RecordStatus.NOCHECK %}
+    {% set SKIPPED_CHECK = RecordStatus.SKIPPED + RecordStatus.CHECK %}
+    {% set SKIPPED_NOCHECK = RecordStatus.SKIPPED + RecordStatus.NOCHECK %}
+
+    <form id="status-filter-form">
+      <fieldset class="fr-fieldset" id="status-filter-set"
+                aria-labelledby="status-filter-legend status-filter-messages"
+                hx-get="{{ url_for("transform_results_preview", job_id=job.id) }}"
+                hx-target="#transform-results-preview"
+                hx-trigger="load, change"
+                hx-include="#status-filter-form"
+                hx-swap="innerHTML">
+        <legend class="fr-fieldset__legend--regular fr-fieldset__legend" id="status-filter-legend">
+          Sélectionner :
+        </legend>
+      <div class="fr-fieldset__element fr-fieldset__element--inline">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" name="status" id="status-filter-error"
+                 value="{{ FAILURE }}" checked
+                 aria-describedby="status-filter-error-messages">
+          <label class="fr-label" for="status-filter-error">
+            {{ FAILURE | status_icon }} Erreur
+          </label>
+          <div class="fr-messages-group" id="status-filter-error-messages" aria-live="assertive">
+          </div>
+        </div>
+      </div>
+      <div class="fr-fieldset__element fr-fieldset__element--inline">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" name="status" id="status-filter-apply-check"
+                 value="{{ SUCCESS_CHECK }}" checked
+                 aria-describedby="status-filter-apply-check-messages">
+          <label class="fr-label" for="status-filter-apply-check">
+            {{ SUCCESS_CHECK | status_icon }} À vérifier (modifié)
+          </label>
+          <div class="fr-messages-group" id="status-filter-apply-check-messages" aria-live="assertive">
+          </div>
+        </div>
+      </div>
+      <div class="fr-fieldset__element fr-fieldset__element--inline">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" name="status" id="status-filter-ignore-check"
+                 value="{{ SKIPPED_CHECK }}" checked
+                 aria-describedby="status-filter-ignore-check-messages">
+          <label class="fr-label" for="status-filter-ignore-check">
+            {{ SKIPPED_CHECK | status_icon }} À vérifier (ignoré)
+          </label>
+          <div class="fr-messages-group" id="status-filter-ignore-check-messages" aria-live="assertive">
+          </div>
+        </div>
+      </div>
+      <div class="fr-fieldset__element fr-fieldset__element--inline">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" name="status" id="status-filter-apply"
+                 value="{{ SUCCESS_NOCHECK }}" checked
+                 aria-describedby="status-filter-apply-messages">
+          <label class="fr-label" for="status-filter-apply">
+            {{ SUCCESS_NOCHECK | status_icon }} Modifié
+          </label>
+          <div class="fr-messages-group" id="status-filter-apply-messages" aria-live="assertive">
+          </div>
+        </div>
+      </div>
+      <div class="fr-fieldset__element fr-fieldset__element--inline">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" name="status" id="status-filter-ignore"
+                 value="{{ SKIPPED_NOCHECK }}" checked
+                 aria-describedby="status-filter-ignore-messages">
+          <label class="fr-label" for="status-filter-ignore">
+            {{ SKIPPED_NOCHECK | status_icon }} Ignoré
+          </label>
+          <div class="fr-messages-group" id="status-filter-ignore-messages" aria-live="assertive">
+          </div>
+        </div>
+      </div>
+      <div class="fr-messages-group" id="status-filter-messages" aria-live="assertive"></div>
+      </fieldset>
+    </form>
+
+    <div id="transform-results-preview" class="fr-mt-4w">
+      {% include "fragments/transform_results_preview.html.j2" %}
+    </div>
+  </div>
 {% elif status == "failed" %}
   Le job est en erreur :-/
   <pre>{{ job.exc_info }}</pre>

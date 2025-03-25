@@ -22,6 +22,7 @@ from flask import (
 from isomorphe.auth import authenticated, connection_infos
 from isomorphe.batch import (
     MigrateMode,
+    RecordStatus,
     SkipReasonMessage,
     SuccessTransformBatchRecord,
     TransformBatchRecord,
@@ -228,6 +229,7 @@ def transform_job_status(job_id: str):
         now=datetime.now().isoformat(timespec="seconds"),
         url=url,
         MigrateMode=MigrateMode,
+        RecordStatus=RecordStatus,
         SkipReasonMessage=SkipReasonMessage,
     )
 
@@ -238,10 +240,14 @@ def transform_results_preview(job_id: str):
     job = get_job(job_id)
     if not job:
         abort(404)
-    statuses = request.args.getlist("status-filter")
-    results = job.result.select(only_statuses=statuses)
+    statuses = [RecordStatus(s) for s in request.args.getlist("status", type=int)]
+    results = job.result.select(statuses=statuses)
     return render_template(
-        "fragments/transform_results_preview.html.j2", job_id=job_id, results=results, url=url
+        "fragments/transform_results_preview.html.j2",
+        job_id=job_id,
+        results=results,
+        url=url,
+        RecordStatus=RecordStatus,
     )
 
 
@@ -357,6 +363,21 @@ def documentation_transformation(transformation: str):
 @app.template_filter("uuid_list")
 def uuid_list(results: list[TransformBatchRecord]):
     return "[" + ",".join([f'"{r.uuid}"' for r in results]) + "]"
+
+
+STATUS_ICONS: dict[RecordStatus, str] = {
+    RecordStatus.FAILURE: "🔴",
+    RecordStatus.SUCCESS | RecordStatus.CHECK: "🟠",
+    RecordStatus.SKIPPED | RecordStatus.CHECK: "🟡",
+    RecordStatus.SUCCESS | RecordStatus.NOCHECK: "🟢",
+    RecordStatus.SKIPPED | RecordStatus.NOCHECK: "⚪️",
+}
+
+
+@app.template_filter("status_icon")
+def status_icon(status: RecordStatus):
+    # FIXME: unknown icon
+    return STATUS_ICONS.get(status, "??")
 
 
 if __name__ == "__main__":

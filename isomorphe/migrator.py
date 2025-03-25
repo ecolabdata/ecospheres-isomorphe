@@ -123,9 +123,10 @@ class Migrator:
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
-            # FIXME: extract_record_info() mutates `original`
-            # In the mean time, this must happen before we store `original` in the BatchRecord
-            info = extract_record_info(original, sources)
+            # TODO: remove extract_record_info
+            # extract_record_info() mutates `original`
+            # this must happen before we store `original` in the BatchRecord
+            _ = extract_record_info(original, sources)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
@@ -135,19 +136,17 @@ class Migrator:
             )
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
                 batch.add(
-                    SkippedTransformBatchRecord(
-                        **batch_record.__dict__,
+                    SkippedTransformBatchRecord.derive_from(
+                        batch_record,
                         reason=SkipReason.UNSUPPORTED_METADATA_TYPE,
-                        info="",
                     )
                 )
                 continue
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.add(
-                    SkippedTransformBatchRecord(
-                        **batch_record.__dict__,
+                    SkippedTransformBatchRecord.derive_from(
+                        batch_record,
                         reason=SkipReason.HAS_WORKING_COPY,
-                        info="",
                     )
                 )
                 continue
@@ -161,34 +160,29 @@ class Migrator:
                 }
                 transformer = transformation.transform
                 result = transformer(original, **transformation_params_quoted)
-                # TODO: log can have several messages => merge into most significant
                 transform_log = TransformLog(transformer.error_log)
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
-                has_diff = result_str != original_str
-                if has_diff or transformation.always_apply:
+                if result_str != original_str or transformation.always_apply:
                     batch.add(
-                        SuccessTransformBatchRecord(
-                            **batch_record.__dict__,
+                        SuccessTransformBatchRecord.derive_from(
+                            batch_record,
                             result=result_str,
-                            info=xml_to_string(info),
                             log=transform_log,
-                            has_diff=has_diff,
                         )
                     )
                 else:
                     batch.add(
-                        SkippedTransformBatchRecord(
-                            **batch_record.__dict__,
-                            info=xml_to_string(info),
+                        SkippedTransformBatchRecord.derive_from(
+                            batch_record,
                             reason=SkipReason.NO_CHANGES,
                             log=transform_log,
                         )
                     )
             except Exception as e:
                 batch.add(
-                    FailureTransformBatchRecord(
-                        **batch_record.__dict__,
+                    FailureTransformBatchRecord.derive_from(
+                        batch_record,
                         error=str(e),
                     )
                 )

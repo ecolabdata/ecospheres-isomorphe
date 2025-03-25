@@ -1,10 +1,11 @@
-from dataclasses import dataclass
-from enum import IntEnum, StrEnum
-from typing import Iterator
+from abc import abstractmethod
+from dataclasses import asdict, dataclass
+from enum import IntEnum, IntFlag, StrEnum, auto
+from typing import Any, Iterator, Self, final, override
 
 from lxml.etree import _ListErrorLog as ETListErrorLog
 
-from isomorphe.geonetwork import MefArchive, MetadataType, WorkflowState
+from isomorphe.geonetwork import MetadataType, WorkflowState
 
 
 @dataclass(kw_only=True)
@@ -53,65 +54,77 @@ class TransformLog:
         return len(self.errors)
 
 
+class RecordStatus(IntFlag):
+    # Base statuses, ordered (lower is more important in terms of reviewing)
+    FAILURE = auto()
+    SKIPPED = auto()
+    SUCCESS = auto()
+    # Modifiers
+    CHECK = auto()
+    NOCHECK = auto()
+
+
+# TODO: immutable
 @dataclass(kw_only=True)
 class TransformBatchRecord:
+    status: RecordStatus = RecordStatus(0)
     uuid: str
     md_type: MetadataType
     state: WorkflowState | None
     original: bytes
     url: str
 
-    def needs_check(self) -> bool:
-        if not self.log:
-            return False
-        return any(["CHECK" in log.message for log in self.log])
-
     @property
-    def status(self) -> int:
-        return 0
-
-    # TODO: strip status codes
-    @property
+    @abstractmethod
     def messages(self) -> list[str]:
-        return []
+        pass
+
+    @classmethod
+    def derive_from(cls, obj: "TransformBatchRecord", **changes: Any) -> Self:
+        return cls(**(asdict(obj) | changes))
 
 
-@dataclass(kw_only=True)
-class SuccessTransformBatchRecord(TransformBatchRecord):
-    result: bytes
-    info: str
-    log: TransformLog | None = None
-    # has_diff == False can happen when Transformation.always_apply
-    has_diff: bool = True
-
-    @property
-    def status(self) -> int:
-        return 1
-
-    @property
-    def foobar(self) -> str:
-        return "apply-check" if self.needs_check() else "apply"
-
-    @property
-    def messages(self) -> list[str]:
-        return [log.message for log in self.log] if self.log else []
-
-
+@final
 @dataclass(kw_only=True)
 class FailureTransformBatchRecord(TransformBatchRecord):
     error: str
 
-    @property
-    def status(self) -> int:
-        return 2
+    def __post_init__(self):
+        # FIXME: can't be as no-init attr, won't deserialize properly?
+        self.status = RecordStatus.FAILURE
 
     @property
-    def foobar(self) -> str:
-        return "error"
-
-    @property
+    @override
     def messages(self) -> list[str]:
         return [self.error]
+
+
+@dataclass(kw_only=True)
+class CheckableTransformBatchRecord(TransformBatchRecord):
+    log: TransformLog
+
+    def __post_init__(self):
+        if any(["CHECK" in log.message for log in self.log]):
+            # TODO: log can have several messages => retain most significant for status (and messages?)
+            self.status |= RecordStatus.CHECK  # FIXME: typechecker isn't happy
+        else:
+            self.status |= RecordStatus.NOCHECK
+
+
+@final
+@dataclass(kw_only=True)
+class SuccessTransformBatchRecord(CheckableTransformBatchRecord):
+    result: bytes
+
+    def __post_init__(self):
+        self.status = RecordStatus.SUCCESS
+        super().__post_init__()
+
+    # TODO: strip status code markers
+    @property
+    @override
+    def messages(self) -> list[str]:
+        return [log.message for log in self.log] if self.log else []
 
 
 class SkipReasonMessage(StrEnum):
@@ -131,28 +144,21 @@ class SkipReason(IntEnum):
     HAS_WORKING_COPY = 3
 
 
+@final
 @dataclass(kw_only=True)
-class SkippedTransformBatchRecord(TransformBatchRecord):
-    reason: SkipReason | None = None
-    info: str
-    log: TransformLog | None = None
+class SkippedTransformBatchRecord(CheckableTransformBatchRecord):
+    reason: SkipReason
+
+    def __post_init__(self):
+        self.status = RecordStatus.SKIPPED
+        super().__post_init__()
 
     @property
-    def status(self) -> int:
-        return 3
-
-    @property
-    def foobar(self) -> str:
-        return "ignore-check" if self.needs_check() else "ignore"
-
-    @property
+    @override
     def messages(self) -> list[str]:
-        if self.reason:
-            return [SkipReasonMessage[self.reason.name].value]
-        elif self.log:
-            return [log.message for log in self.log]
-        else:
-            return []
+        # Explicit reason => takes precedence over log messages
+        # FIXME: preprend to super().messages?
+        return [SkipReasonMessage[self.reason.name].value]
 
 
 class TransformBatch:
@@ -163,6 +169,7 @@ class TransformBatch:
     def add(self, batch: TransformBatchRecord):
         self.records.append(batch)
 
+    # FIXME: remove successes/failures/skipped
     def successes(self) -> list[SuccessTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, SuccessTransformBatchRecord)]
 
@@ -172,21 +179,19 @@ class TransformBatch:
     def skipped(self) -> list[SkippedTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
 
-    def select(self, only_statuses: list[str] | None = None) -> list[TransformBatchRecord]:
-        if only_statuses is None:
-            return self.records
-        return [r for r in self.records if r.foobar in only_statuses]
+    def select(self, statuses: list[RecordStatus]) -> list[TransformBatchRecord]:
+        return [r for r in self.records if r.status in statuses]
 
     def __repr__(self):
         return f"TransformBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
 
-    # FIXME: needed?
-    def to_mef(self):
-        mef = MefArchive()
-        for r in self.records:
-            if isinstance(r, SuccessTransformBatchRecord):
-                mef.add(r.uuid, r.result, r.info)
-        return mef.finalize()
+    # TODO: drop
+    # def to_mef(self):
+    #     mef = MefArchive()
+    #     for r in self.records:
+    #         if isinstance(r, SuccessTransformBatchRecord):
+    #             mef.add(r.uuid, r.result, r.info)
+    #     return mef.finalize()
 
 
 @dataclass(kw_only=True)
