@@ -10,11 +10,11 @@
   <p>
     Vous pouvez désormais :
     <ol>
-      <li>Contrôler le résultat des traitements dans la table ci-dessous.</li>
-      <li>Mettre à jour le catalogue {{ url }} en sélectionnant le mode de mise à jour souhaité.</li>
+      <li>Contrôler le résultat du traitement.</li>
+      <li>Mettre à jour le catalogue en sélectionnant le mode de mise à jour souhaité.</li>
     </ol>
 
-    Seules les transformations réussies et sélectionnées seront appliquées.
+    Seuls les enregistrements modifiés et sélectionnés dans la table ci-dessous seront mis à jour sur le catalogue ({{ url }}).
   </p>
 
   <form action="{{ url_for('migrate', job_id=job.id) }}"
@@ -33,9 +33,11 @@
   </form>
 
   <div id="transform-results" class="fr-mt-4w">
+    {# FIXME: keep? Precision isn't that important and makes UI more crowded
     <p>
       Les enregistrements ci-dessous sont listés dans l'ordre de traitement, du plus ancien au plus récent.
     </p>
+    #}
 
     {% set FAILURE = RecordStatus.FAILURE %}
     {% set SUCCESS_CHECK = RecordStatus.SUCCESS + RecordStatus.CHECK %}

@@ -115,7 +115,7 @@ class AppliedTransformBatchRecord(TransformBatchRecord):
     @override
     def messages(self) -> list[str]:
         if self.log:
-            return [re.sub(r"\[isomorphe:[^]]*\]", "", log.message) for log in self.log]
+            return [re.sub(r"\[isomorphe:[^]]*\]\s*", "", log.message) for log in self.log]
         else:
             return []
 
