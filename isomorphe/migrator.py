@@ -137,7 +137,7 @@ class Migrator:
                 original=xml_to_string(original),
             )
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
-                batch.add(
+                batch.append(
                     SkippedTransformBatchRecord.derive_from(
                         batch_record,
                         reason=SkipReason.UNSUPPORTED_METADATA_TYPE,
@@ -145,7 +145,7 @@ class Migrator:
                 )
                 continue
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
-                batch.add(
+                batch.append(
                     SkippedTransformBatchRecord.derive_from(
                         batch_record,
                         reason=SkipReason.HAS_WORKING_COPY,
@@ -166,7 +166,7 @@ class Migrator:
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
                 if result_str != original_str or transformation.always_apply:
-                    batch.add(
+                    batch.append(
                         SuccessTransformBatchRecord.derive_from(
                             batch_record,
                             result=result_str,
@@ -174,14 +174,14 @@ class Migrator:
                         )
                     )
                 else:
-                    batch.add(
+                    batch.append(
                         SkippedTransformBatchRecord.derive_from(
                             batch_record,
                             log=transform_log,
                         )
                     )
             except Exception as e:
-                batch.add(
+                batch.append(
                     FailureTransformBatchRecord.derive_from(
                         batch_record,
                         error=str(e),

@@ -3,6 +3,8 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import IntEnum, IntFlag, StrEnum, auto
+from itertools import groupby
+from operator import attrgetter
 from typing import Any, Iterator, Self, final, override
 
 from lxml.etree import _ListErrorLog as ETListErrorLog
@@ -168,28 +170,18 @@ class SkippedTransformBatchRecord(AppliedTransformBatchRecord):
 
 
 class TransformBatch(list[TransformBatchRecord]):
-    def __init__(self, transformation: str, data: list[TransformBatchRecord] | None = None):
+    def __init__(self, transformation: str, data: Sequence[TransformBatchRecord] | None = None):
         self.transformation = transformation
         super(TransformBatch, self).__init__(data or [])
-
-    def add(self, batch: TransformBatchRecord):
-        self.append(batch)
-
-    # FIXME: remove successes/failures/skipped
-    def successes(self) -> list[SuccessTransformBatchRecord]:
-        return [r for r in self if isinstance(r, SuccessTransformBatchRecord)]
-
-    def failures(self) -> list[FailureTransformBatchRecord]:
-        return [r for r in self if isinstance(r, FailureTransformBatchRecord)]
-
-    def skipped(self) -> list[SkippedTransformBatchRecord]:
-        return [r for r in self if isinstance(r, SkippedTransformBatchRecord)]
 
     def select(self, statuses: Sequence[RecordStatus]) -> "TransformBatch":
         return TransformBatch(self.transformation, [r for r in self if r.status in statuses])
 
+    @override
     def __repr__(self):
-        return f"TransformBatch({len(self)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
+        key = attrgetter("status")
+        stats = {k.name: len(list(v)) for k, v in groupby(sorted(self, key=key), key=key)}
+        return f"TransformBatch({len(self)} records, {stats})"
 
     # TODO: drop
     # def to_mef(self):
