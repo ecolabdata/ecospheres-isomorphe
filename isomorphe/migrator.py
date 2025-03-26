@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -11,6 +12,7 @@ from isomorphe.batch import (
     MigrateBatch,
     MigrateBatchRecord,
     MigrateMode,
+    RecordStatus,
     SkippedTransformBatchRecord,
     SkipReason,
     SuccessMigrateBatchRecord,
@@ -192,6 +194,7 @@ class Migrator:
     def migrate(
         self,
         batch: TransformBatch,
+        statuses: Sequence[RecordStatus] = (RecordStatus.SUCCESS,),
         overwrite: bool = False,
         group: int | None = None,
         update_date_stamp: bool = True,
@@ -202,7 +205,8 @@ class Migrator:
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
         )
-        for r in batch.successes():
+        successes = [s for s in statuses if RecordStatus.SUCCESS in s]
+        for r in batch.select(statuses=successes):
             batch_record = MigrateBatchRecord(
                 url=self.gn.url,
                 source_uuid=r.uuid,

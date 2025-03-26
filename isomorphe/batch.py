@@ -1,5 +1,6 @@
 import re
 from abc import abstractmethod
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import IntEnum, IntFlag, StrEnum, auto
 from typing import Any, Iterator, Self, final, override
@@ -182,7 +183,7 @@ class TransformBatch:
     def skipped(self) -> list[SkippedTransformBatchRecord]:
         return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
 
-    def select(self, statuses: list[RecordStatus]) -> list[TransformBatchRecord]:
+    def select(self, statuses: Sequence[RecordStatus]) -> list[TransformBatchRecord]:
         return [r for r in self.records if r.status in statuses]
 
     def __repr__(self):

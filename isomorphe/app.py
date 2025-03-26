@@ -241,7 +241,7 @@ def transform_results_preview(job_id: str):
     job = get_job(job_id)
     if not job:
         abort(404)
-    statuses = [RecordStatus(s) for s in request.args.getlist("status", type=int)]
+    statuses = request.args.getlist("status", type=lambda v: RecordStatus(int(v)))
     results = job.result.select(statuses=statuses)
     return render_template(
         "fragments/transform_results_preview.html.j2",
@@ -273,6 +273,7 @@ def migrate(job_id: str):
     if not transform_job:
         abort(404)
     url, username, password = connection_infos()
+    statuses = request.form.getlist("status", type=lambda v: RecordStatus(int(v)))
     mode = request.form.get("mode")
     mode = MigrateMode(mode)
     group = request.form.get("group")
@@ -284,6 +285,7 @@ def migrate(job_id: str):
     migrate_job = get_queue().enqueue(
         migrator.migrate,
         transform_job.result,
+        statuses=statuses,
         overwrite=overwrite,
         group=group,
         update_date_stamp=update_date_stamp,
