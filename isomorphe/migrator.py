@@ -12,7 +12,6 @@ from isomorphe.batch import (
     MigrateBatch,
     MigrateBatchRecord,
     MigrateMode,
-    RecordStatus,
     SkippedTransformBatchRecord,
     SkipReason,
     SuccessMigrateBatchRecord,
@@ -134,7 +133,7 @@ class Migrator:
                 uuid=r.uuid,
                 md_type=r.md_type,
                 state=r.state,
-                original=xml_to_string(original),
+                original_content=xml_to_string(original),
             )
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
                 batch.append(
@@ -169,7 +168,7 @@ class Migrator:
                     batch.append(
                         SuccessTransformBatchRecord.derive_from(
                             batch_record,
-                            result=result_str,
+                            transformed_content=result_str,
                             log=transform_log,
                         )
                     )
@@ -194,7 +193,7 @@ class Migrator:
     def migrate(
         self,
         batch: TransformBatch,
-        statuses: Sequence[RecordStatus] = (RecordStatus.SUCCESS,),
+        statuses: Sequence[int] | None = None,
         overwrite: bool = False,
         group: int | None = None,
         update_date_stamp: bool = True,
@@ -205,44 +204,42 @@ class Migrator:
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
         )
-        successes = [s for s in statuses if RecordStatus.SUCCESS in s]
-        for r in batch.select(statuses=successes):
+        successes = [
+            r for r in batch.select(statuses=statuses) if isinstance(r, SuccessTransformBatchRecord)
+        ]
+        for r in successes:
             batch_record = MigrateBatchRecord(
                 url=self.gn.url,
-                source_uuid=r.uuid,
+                uuid=r.uuid,
                 md_type=r.md_type,
-                source_content=r.original,
-                target_content=r.result,
+                original_content=r.original_content,
+                transformed_content=r.transformed_content,
             )
             try:
                 if overwrite:
                     self.gn.update_record(
-                        r.uuid, r.result, md_type=r.md_type, update_date_stamp=update_date_stamp
+                        r.uuid,
+                        r.transformed_content,
+                        md_type=r.md_type,
+                        update_date_stamp=update_date_stamp,
                     )
-                    migrate_batch.add(
-                        SuccessMigrateBatchRecord(
-                            **batch_record.__dict__,
-                            target_uuid=r.uuid,
-                        )
+                    migrate_batch.append(
+                        SuccessMigrateBatchRecord.derive_from(batch_record, target_uuid=r.uuid)
                     )
                 else:
                     assert group is not None, "Group must be set when not overwriting"
                     # TODO: publish flag
                     new_record = self.gn.put_record(
-                        r.uuid, r.result, md_type=r.md_type, group=group
+                        r.uuid, r.transformed_content, md_type=r.md_type, group=group
                     )
-                    migrate_batch.add(
-                        SuccessMigrateBatchRecord(
-                            **batch_record.__dict__,
-                            target_uuid=new_record["new_record_uuid"],
+                    migrate_batch.append(
+                        SuccessMigrateBatchRecord.derive_from(
+                            batch_record, target_uuid=new_record["new_record_uuid"]
                         )
                     )
             except Exception as e:
-                migrate_batch.add(
-                    FailureMigrateBatchRecord(
-                        **batch_record.__dict__,
-                        error=str(e),
-                    )
+                migrate_batch.append(
+                    FailureMigrateBatchRecord.derive_from(batch_record, error=str(e))
                 )
         log.info("Migration done.")
         return migrate_batch

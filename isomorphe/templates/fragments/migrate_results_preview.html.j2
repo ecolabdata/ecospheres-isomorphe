@@ -18,11 +18,10 @@
           <thead>
             <tr>
               <th scope="col">Statut</th>
-              <th scope="col">Fiche</th>
-              <th scope="col">Original</th>
-              <th scope="col">Résultat</th>
-              <th scope="col">Différences</th>
-              <th scope="col">Messages</th>
+              {% if job.result.mode == MigrateMode.CREATE %}
+                <th scope="col">Fiche originale</th>
+              {% endif %}
+              <th scope="col">Fiche transformée</th>
             </tr>
           </thead>
           <tbody>
@@ -35,33 +34,14 @@
                     {{ record.status_icon }}
                   </span>
                 </td>
+                {% if job.result.mode == MigrateMode.CREATE %}
+                  <td>
+                    <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
+                       target="_blank" rel="noopener">{{ record.uuid }}</a></td>
+                {% endif %}
                 <td>
-                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
-                     target="_blank" rel="noopener"> {{ record.uuid }} </a>
-                </td>
-                <td>
-                  <a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}"
-                     target="_blank" rel="noopener"> XML </a>
-                </td>
-                <td>
-                  {% if record | attr("transformed_content") %}
-                    <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}"
-                       target="_blank" rel="noopener"> XML </a>
-                  {% else %}
-                    -
-                  {% endif %}
-                </td>
-                <td>
-                  {% if record | attr("transformed_content") %}
-                    <a href="{{ url_for('transform_diff', job_id=job.id, uuid=record.uuid) }}"
-                       target="_blank" rel="noopener"> diff </a>
-                  {% else %}
-                    -
-                  {% endif %}
-                </td>
-                <td>
-                  {# TODO: display as list? #}
-                  {{ "<br/>".join(record.messages) or "-" }}
+                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.target_uuid }}"
+                     target="_blank" rel="noopener">{{ record.target_uuid }}</a>
                 </td>
               </tr>
             {% endfor %}

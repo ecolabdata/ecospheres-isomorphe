@@ -22,7 +22,6 @@ from flask import (
 from isomorphe.auth import authenticated, connection_infos
 from isomorphe.batch import (
     MigrateMode,
-    RecordStatus,
     SkipReasonMessage,
     SuccessTransformBatchRecord,
     TransformBatchRecord,
@@ -229,7 +228,6 @@ def transform_job_status(job_id: str):
         now=datetime.now().isoformat(timespec="seconds"),
         url=url,
         MigrateMode=MigrateMode,
-        RecordStatus=RecordStatus,
         SkipReasonMessage=SkipReasonMessage,
     )
 
@@ -241,15 +239,14 @@ def transform_results_preview(job_id: str):
     job = get_job(job_id)
     if not job:
         abort(404)
-    statuses = request.args.getlist("status", type=lambda v: RecordStatus(int(v)))
+    statuses = request.args.getlist("status", type=int)
     results = job.result.select(statuses=statuses)
     return render_template(
         "fragments/transform_results_preview.html.j2",
-        job_id=job_id,
+        job=job,
         results=results,
         uuid_filter=migrator.gn.uuid_filter([r.uuid for r in results]),
         url=url,
-        RecordStatus=RecordStatus,
     )
 
 
@@ -273,7 +270,6 @@ def migrate(job_id: str):
     if not transform_job:
         abort(404)
     url, username, password = connection_infos()
-    statuses = request.form.getlist("status", type=lambda v: RecordStatus(int(v)))
     mode = request.form.get("mode")
     mode = MigrateMode(mode)
     group = request.form.get("group")
@@ -281,7 +277,9 @@ def migrate(job_id: str):
     if not overwrite and not group:
         abort(400, "Missing `group` parameter")
     update_date_stamp = request.form.get("update_date_stamp") is not None
+    statuses = request.form.getlist("status", type=int)
     migrator = Migrator(url=url, username=username, password=password)
+    # TODO: filter by status here to avoid serializing records that won't be migrated
     migrate_job = get_queue().enqueue(
         migrator.migrate,
         transform_job.result,
@@ -335,6 +333,25 @@ def migrate_update_mode():
     )
 
 
+@app.route("/migrate/results_preview/<job_id>")
+def migrate_results_preview(job_id: str):
+    url, username, password = connection_infos()
+    migrator = Migrator(url=url, username=username, password=password)
+    job = get_job(job_id)
+    if not job:
+        abort(404)
+    statuses = request.args.getlist("status", type=int)
+    results = job.result.select(statuses=statuses)
+    return render_template(
+        "fragments/migrate_results_preview.html.j2",
+        job=job,
+        results=results,
+        uuid_filter=migrator.gn.uuid_filter([r.target_uuid for r in results]),
+        url=url,
+        MigrateMode=MigrateMode,
+    )
+
+
 @app.route("/docs")
 def documentation():
     index_page = Path("doc/index.md")
@@ -362,38 +379,6 @@ def documentation_transformation(transformation: str):
         "documentation.html.j2",
         content=render_markdown(md_content),
     )
-
-
-STATUS_ICONS: dict[RecordStatus, str] = {
-    RecordStatus.FAILURE: "🔴",
-    RecordStatus.SUCCESS | RecordStatus.CHECK: "🟠",
-    RecordStatus.SKIPPED | RecordStatus.CHECK: "🟡",
-    RecordStatus.SUCCESS | RecordStatus.NOCHECK: "🟢",
-    RecordStatus.SKIPPED | RecordStatus.NOCHECK: "⚪️",
-}
-
-STATUS_LABELS: dict[RecordStatus, str] = {
-    RecordStatus.FAILURE: "Erreur",
-    RecordStatus.SUCCESS | RecordStatus.CHECK: "Modifié, à vérifier",
-    RecordStatus.SKIPPED | RecordStatus.CHECK: "Ignoré, à vérifier",
-    RecordStatus.SUCCESS | RecordStatus.NOCHECK: "Modifié",
-    RecordStatus.SKIPPED | RecordStatus.NOCHECK: "Ignoré",
-}
-
-
-@app.template_filter("status_icon")
-def status_icon(status: RecordStatus):
-    return STATUS_ICONS.get(status, "-")
-
-
-@app.template_filter("status_label")
-def status_label(status: RecordStatus):
-    return STATUS_LABELS.get(status, "-")
-
-
-@app.template_filter("status_legend")
-def status_legend(status: RecordStatus):
-    return f"{status_icon(status)} {status_label(status)}"
 
 
 if __name__ == "__main__":

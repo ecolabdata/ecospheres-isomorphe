@@ -1,10 +1,10 @@
-{% set job_status = job.get_status(refresh=True) %}
+{% set status = job.get_status(refresh=True) %}
 {% set results = job.result %}
-{% if job_status in ["queued", "started"] %}
+{% if status in ["queued", "started"] %}
   <div hx-get="{{ url_for('transform_job_status', job_id=job.id) }}"
        hx-trigger="load delay:1s"
-       hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ job_status }}).</div>
-{% elif job_status == "finished" %}
+       hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
+{% elif status == "finished" %}
   {# TODO: add normalized info about current connected catalog #}
   <p>Job terminé.</p>
   <p>
@@ -41,28 +41,25 @@
       <button type="submit" class="fr-btn">Suivant</button>
     </div>
 
-    <div id="transform-results" class="fr-mt-4w">
+    <div id="results-preview" class="fr-mt-4w">
       <p>
         Les enregistrements ci-dessous sont listés dans l'ordre de traitement, du plus ancien au plus récent.
       </p>
       <fieldset class="fr-fieldset" id="status-filter-set"
                 aria-labelledby="status-filter-legend status-filter-messages"
                 hx-get="{{ url_for("transform_results_preview", job_id=job.id) }}"
-                hx-target="#transform-results-preview"
+                hx-target="#results-preview-table"
                 hx-trigger="load, change"
                 hx-include="#main-form"
                 hx-swap="innerHTML">
-        <legend class="fr-fieldset__legend--regular fr-fieldset__legend" id="status-filter-legend">
-          Sélectionner :
-        </legend>
-        {% for status, items in results | groupby("status") | sort %}
+        {% for _, records in results | groupby("status") | sort %}
           <div class="fr-fieldset__element fr-fieldset__element--inline fr-mr-2w">
             <div class="fr-checkbox-group">
               <input type="checkbox" name="status" id="status-filter-{{ loop.index }}"
-                     value="{{ status }}" checked
+                     value="{{ records[0].status }}" checked
                      aria-describedby="status-filter-messages-{{ loop.index }}">
               <label class="fr-label" for="status-filter-{{ loop.index }}">
-                {{ status | status_legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ items | length }}</p>
+                {{ records[0].status_legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ records | length }}</p>
               </label>
               <div class="fr-messages-group" id="status-filter-messages-{{ loop.index }}" aria-live="assertive">
               </div>
@@ -73,13 +70,12 @@
       </fieldset>
     </div>
   </form>
-
-  <div id="transform-results-preview">
+  <div id="results-preview-table">
     {% include "fragments/transform_results_preview.html.j2" %}
   </div>
-{% elif job_status == "failed" %}
+{% elif status == "failed" %}
   Le job est en erreur :-/
   <pre>{{ job.exc_info }}</pre>
 {% else %}
-  Statut inconnu : {{ job_status }}
+  Statut inconnu : {{ status }}
 {% endif %}
