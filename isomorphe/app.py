@@ -374,8 +374,8 @@ STATUS_ICONS: dict[RecordStatus, str] = {
 
 STATUS_LABELS: dict[RecordStatus, str] = {
     RecordStatus.FAILURE: "Erreur",
-    RecordStatus.SUCCESS | RecordStatus.CHECK: "Modifié (à vérifier)",
-    RecordStatus.SKIPPED | RecordStatus.CHECK: "Ignoré (à vérifier)",
+    RecordStatus.SUCCESS | RecordStatus.CHECK: "Modifié, à vérifier",
+    RecordStatus.SKIPPED | RecordStatus.CHECK: "Ignoré, à vérifier",
     RecordStatus.SUCCESS | RecordStatus.NOCHECK: "Modifié",
     RecordStatus.SKIPPED | RecordStatus.NOCHECK: "Ignoré",
 }

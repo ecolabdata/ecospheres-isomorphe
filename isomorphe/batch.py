@@ -57,11 +57,13 @@ class TransformLog:
 
 
 class RecordStatus(IntFlag):
-    # Base statuses, ordered (lower is more important in terms of reviewing)
+    # Order below defines priority (e.g. for user to look at record)
+    # lower values are higher priority: sorted() will put them first
+    ## Base statuses
     FAILURE = auto()
-    SKIPPED = auto()
     SUCCESS = auto()
-    # Modifiers
+    SKIPPED = auto()
+    ## Modifiers
     CHECK = auto()
     NOCHECK = auto()
 
@@ -165,29 +167,29 @@ class SkippedTransformBatchRecord(AppliedTransformBatchRecord):
             return super().messages
 
 
-class TransformBatch:
-    def __init__(self, transformation: str):
-        self.records: list[TransformBatchRecord] = []
+class TransformBatch(list[TransformBatchRecord]):
+    def __init__(self, transformation: str, data: list[TransformBatchRecord] | None = None):
         self.transformation = transformation
+        super(TransformBatch, self).__init__(data or [])
 
     def add(self, batch: TransformBatchRecord):
-        self.records.append(batch)
+        self.append(batch)
 
     # FIXME: remove successes/failures/skipped
     def successes(self) -> list[SuccessTransformBatchRecord]:
-        return [r for r in self.records if isinstance(r, SuccessTransformBatchRecord)]
+        return [r for r in self if isinstance(r, SuccessTransformBatchRecord)]
 
     def failures(self) -> list[FailureTransformBatchRecord]:
-        return [r for r in self.records if isinstance(r, FailureTransformBatchRecord)]
+        return [r for r in self if isinstance(r, FailureTransformBatchRecord)]
 
     def skipped(self) -> list[SkippedTransformBatchRecord]:
-        return [r for r in self.records if isinstance(r, SkippedTransformBatchRecord)]
+        return [r for r in self if isinstance(r, SkippedTransformBatchRecord)]
 
-    def select(self, statuses: Sequence[RecordStatus]) -> list[TransformBatchRecord]:
-        return [r for r in self.records if r.status in statuses]
+    def select(self, statuses: Sequence[RecordStatus]) -> "TransformBatch":
+        return TransformBatch(self.transformation, [r for r in self if r.status in statuses])
 
     def __repr__(self):
-        return f"TransformBatch({len(self.records)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
+        return f"TransformBatch({len(self)} records, {len(self.failures())} failures, {len(self.successes())} successes, {len(self.skipped())} skipped)"
 
     # TODO: drop
     # def to_mef(self):

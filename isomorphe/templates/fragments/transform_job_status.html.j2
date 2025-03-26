@@ -1,9 +1,10 @@
-{% set status = job.get_status(refresh=True) %}
-{% if status in ["queued", "started"] %}
+{% set job_status = job.get_status(refresh=True) %}
+{% set results = job.result %}
+{% if job_status in ["queued", "started"] %}
   <div hx-get="{{ url_for('transform_job_status', job_id=job.id) }}"
        hx-trigger="load delay:1s"
-       hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ status }}).</div>
-{% elif status == "finished" %}
+       hx-swap="outerHTML">{{ now }} — le job est en cours de traitement ({{ job_status }}).</div>
+{% elif job_status == "finished" %}
   {# TODO: add normalized info about current connected catalog #}
   <p>Job terminé.</p>
   <p>
@@ -40,12 +41,6 @@
         Les enregistrements ci-dessous sont listés dans l'ordre de traitement, du plus ancien au plus récent.
       </p>
       #}
-      {% set FAILURE = RecordStatus.FAILURE %}
-      {% set SUCCESS_CHECK = RecordStatus.SUCCESS + RecordStatus.CHECK %}
-      {% set SUCCESS_NOCHECK = RecordStatus.SUCCESS + RecordStatus.NOCHECK %}
-      {% set SKIPPED_CHECK = RecordStatus.SKIPPED + RecordStatus.CHECK %}
-      {% set SKIPPED_NOCHECK = RecordStatus.SKIPPED + RecordStatus.NOCHECK %}
-
       <fieldset class="fr-fieldset" id="status-filter-set"
                 aria-labelledby="status-filter-legend status-filter-messages"
                 hx-get="{{ url_for("transform_results_preview", job_id=job.id) }}"
@@ -56,66 +51,20 @@
         <legend class="fr-fieldset__legend--regular fr-fieldset__legend" id="status-filter-legend">
           Sélectionner :
         </legend>
-        <div class="fr-fieldset__element fr-fieldset__element--inline">
-          <div class="fr-checkbox-group">
-            <input type="checkbox" name="status" id="status-filter-error"
-                   value="{{ FAILURE }}" checked
-                   aria-describedby="status-filter-error-messages">
-            <label class="fr-label" for="status-filter-error">
-              {{ FAILURE | status_legend }}
-            </label>
-            <div class="fr-messages-group" id="status-filter-error-messages" aria-live="assertive">
+        {% for status, items in results | groupby("status") | sort %}
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mr-2w">
+            <div class="fr-checkbox-group">
+              <input type="checkbox" name="status" id="status-filter-{{ loop.index }}"
+                     value="{{ status }}" checked
+                     aria-describedby="status-filter-messages-{{ loop.index }}">
+              <label class="fr-label" for="status-filter-{{ loop.index }}">
+                {{ status | status_legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ items | length }}</p>
+              </label>
+              <div class="fr-messages-group" id="status-filter-messages-{{ loop.index }}" aria-live="assertive">
+              </div>
             </div>
           </div>
-        </div>
-        <div class="fr-fieldset__element fr-fieldset__element--inline">
-          <div class="fr-checkbox-group">
-            <input type="checkbox" name="status" id="status-filter-apply-check"
-                   value="{{ SUCCESS_CHECK }}" checked
-                   aria-describedby="status-filter-apply-check-messages">
-            <label class="fr-label" for="status-filter-apply-check">
-              {{ SUCCESS_CHECK | status_legend }}
-            </label>
-            <div class="fr-messages-group" id="status-filter-apply-check-messages" aria-live="assertive">
-            </div>
-          </div>
-        </div>
-        <div class="fr-fieldset__element fr-fieldset__element--inline">
-          <div class="fr-checkbox-group">
-            <input type="checkbox" name="status" id="status-filter-ignore-check"
-                   value="{{ SKIPPED_CHECK }}" checked
-                   aria-describedby="status-filter-ignore-check-messages">
-            <label class="fr-label" for="status-filter-ignore-check">
-              {{ SKIPPED_CHECK | status_legend }}
-            </label>
-            <div class="fr-messages-group" id="status-filter-ignore-check-messages" aria-live="assertive">
-            </div>
-          </div>
-        </div>
-        <div class="fr-fieldset__element fr-fieldset__element--inline">
-          <div class="fr-checkbox-group">
-            <input type="checkbox" name="status" id="status-filter-apply"
-                   value="{{ SUCCESS_NOCHECK }}" checked
-                   aria-describedby="status-filter-apply-messages">
-            <label class="fr-label" for="status-filter-apply">
-              {{ SUCCESS_NOCHECK | status_legend }}
-            </label>
-            <div class="fr-messages-group" id="status-filter-apply-messages" aria-live="assertive">
-            </div>
-          </div>
-        </div>
-        <div class="fr-fieldset__element fr-fieldset__element--inline">
-          <div class="fr-checkbox-group">
-            <input type="checkbox" name="status" id="status-filter-ignore"
-                   value="{{ SKIPPED_NOCHECK }}" checked
-                   aria-describedby="status-filter-ignore-messages">
-            <label class="fr-label" for="status-filter-ignore">
-              {{ SKIPPED_NOCHECK | status_legend }}
-            </label>
-            <div class="fr-messages-group" id="status-filter-ignore-messages" aria-live="assertive">
-            </div>
-          </div>
-        </div>
+        {% endfor %}
         <div class="fr-messages-group" id="status-filter-messages" aria-live="assertive"></div>
       </fieldset>
     </div>
@@ -124,9 +73,9 @@
   <div id="transform-results-preview" class="fr-mt-4w">
     {% include "fragments/transform_results_preview.html.j2" %}
   </div>
-{% elif status == "failed" %}
+{% elif job_status == "failed" %}
   Le job est en erreur :-/
   <pre>{{ job.exc_info }}</pre>
 {% else %}
-  Statut inconnu : {{ status }}
+  Statut inconnu : {{ job_status }}
 {% endif %}
