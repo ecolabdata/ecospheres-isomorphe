@@ -1,11 +1,10 @@
-import copy
 import re
 from abc import abstractmethod
-from collections import UserList, defaultdict
+from collections import UserDict, UserList, defaultdict
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import IntEnum, StrEnum
-from typing import Any, ClassVar, Iterator, Self, final, override
+from typing import Any, ClassVar, Iterator, Self, override
 
 from lxml.etree import _ListErrorLog as ETListErrorLog
 
@@ -58,34 +57,40 @@ class TransformLog:
         return len(self.errors)
 
 
-# TODO: Extract all status stuff in a separate class, so it can be a key
+@dataclass(frozen=True, order=True)
+class RecordStatus:
+    priority: int  # first because order=True
+    code: int
+    label: str = "-"
+    icon: str = "-"
+
+    @property
+    def legend(self) -> str:
+        return f"{self.icon} {self.label}"
+
+
+class RecordStatuses(UserDict[int, RecordStatus]):
+    def __init__(self, *args: RecordStatus):
+        super().__init__({s.code: s for s in args})
 
 
 @dataclass(kw_only=True)
 class BatchRecord:
-    STATUS_PRIORITY: ClassVar[int] = 0
-    STATUS_LABEL: ClassVar[str] = "-"
-    STATUS_ICON: ClassVar[str] = "-"
+    # Don't change CLASS_ID once assigned or it'll mess up pickled jobs
+    CLASS_ID: ClassVar[int]  # TODO: rename
     uuid: str
     md_type: MetadataType
     original_content: bytes
-    url: str  # store at Batch level?
+    url: str  # TODO: store at Batch level
 
+    # TODO: rename
     @property
-    def status(self) -> int:
-        return self.STATUS_PRIORITY
+    def ihash(self) -> int:
+        return self.hash(**asdict(self))
 
-    @property
-    def status_label(self) -> str:
-        return self.STATUS_LABEL
-
-    @property
-    def status_icon(self) -> str:
-        return self.STATUS_ICON
-
-    @property
-    def status_legend(self) -> str:
-        return f"{self.status_icon} {self.status_label}"
+    @classmethod
+    def hash(cls, **kwargs) -> int:
+        return cls.CLASS_ID
 
     @classmethod
     def derive_from(cls, obj: "BatchRecord", **changes: Any) -> Self:
@@ -95,24 +100,25 @@ class BatchRecord:
 
 
 class Batch[R: BatchRecord](UserList[R]):
-    def select(self, statuses: Sequence[int] | None = None) -> Self:
-        if statuses is None:  # not the same as []
-            return self
-        obj = copy.copy(self)
-        obj.data = [r for r in self.data if r.status in statuses]
-        return obj
+    RECORD_STATUSES: ClassVar[RecordStatuses]
+
+    @property
+    def records(self) -> list[R]:
+        return self.data
+
+    def status_info(self, ihash: int) -> RecordStatus:
+        return self.RECORD_STATUSES[ihash]
 
     @override
     def __repr__(self):
         stats = defaultdict(int)
-        for r in self.data:
-            stats[r.status_label] += 1
-        return f"{type(self).__name__}({len(self.data)} records, {dict(sorted(stats.items()))})"
+        for r in self.records:
+            stats[self.status_info(r.ihash).label] += 1
+        return f"{type(self).__name__}({len(self.records)} records, {dict(sorted(stats.items()))})"
 
 
 @dataclass(kw_only=True)
 class TransformBatchRecord(BatchRecord):
-    MAX_STATUS_PRIORITY: ClassVar[int] = 10  # must be higher than all subclasses.STATUS_PRIORIY
     state: WorkflowState | None
 
     @property
@@ -121,12 +127,9 @@ class TransformBatchRecord(BatchRecord):
         pass
 
 
-@final
 @dataclass(kw_only=True)
 class FailureTransformBatchRecord(TransformBatchRecord):
-    STATUS_PRIORITY = 1
-    STATUS_LABEL = "Erreur"
-    STATUS_ICON = "⚠️"
+    CLASS_ID = 1
     error: str
 
     @property
@@ -146,64 +149,46 @@ class AppliedTransformBatchRecord(TransformBatchRecord):
         if self.log and any(["[isomorphe:check]" in log.message for log in self.log]):
             self.needs_check = True
 
-    @property
+    @classmethod
     @override
-    def status(self) -> int:
-        return (0 if self.needs_check else self.MAX_STATUS_PRIORITY) + self.STATUS_PRIORITY
-
-    @property
-    @override
-    def status_label(self) -> str:
-        return self.STATUS_LABEL + (", à vérifier" if self.needs_check else "")
+    def hash(cls, **kwargs) -> int:
+        # Don't change hash function once assigned or it'll mess up pickled jobs
+        h = cls.CLASS_ID + 0 if kwargs["needs_check"] else 10
+        return h
 
     @property
     @override
     def messages(self) -> list[str]:
-        if self.log:
-            return [re.sub(r"\[isomorphe:[^]]*\]\s*", "", log.message) for log in self.log]
-        else:
-            return []
+        return (
+            [re.sub(r"\[isomorphe:[^]]*\]\s*", "", log.message) for log in self.log]
+            if self.log
+            else []
+        )
 
 
-@final
 @dataclass(kw_only=True)
 class SuccessTransformBatchRecord(AppliedTransformBatchRecord):
-    STATUS_PRIORITY = 2
-    STATUS_LABEL = "Modifié"
+    CLASS_ID = 2
     transformed_content: bytes
-
-    @property
-    @override
-    def status_icon(self) -> str:
-        return "🟠" if self.needs_check else "🟢"
 
 
 class SkipReasonMessage(StrEnum):
-    """
-    We don't use `SkipReason.value` for this because we pickle the reason
-    and want to be able to change the associated message inbetween jobs.
-    """
-
+    # We don't use `SkipReason.value` for this because we pickle the reason
+    # and want to be able to change the associated message inbetween jobs.
     UNSUPPORTED_METADATA_TYPE = "Type d'enregistrement non supporté."
     HAS_WORKING_COPY = "L'enregistrement a une copie de travail (working copy)."
 
 
 class SkipReason(IntEnum):
+    # Don't change codes once assigned or it'll mess up pickled jobs
     UNSUPPORTED_METADATA_TYPE = 2
     HAS_WORKING_COPY = 3
 
 
-@final
 @dataclass(kw_only=True)
 class SkippedTransformBatchRecord(AppliedTransformBatchRecord):
-    STATUS_PRIORITY = 3
-    STATUS_LABEL = "Ignoré"
+    CLASS_ID = 3
     reason: SkipReason | None = None
-
-    @property
-    @override
-    def status_icon(self) -> str:
-        return "🟡" if self.needs_check else "⚪️"
 
     @property
     @override
@@ -215,10 +200,67 @@ class SkippedTransformBatchRecord(AppliedTransformBatchRecord):
             return super().messages
 
 
-class TransformBatch(Batch[TransformBatchRecord]):
-    def __init__(self, transformation: str, data: Sequence[TransformBatchRecord] | None = None):
+TRANSFORM_RECORD_STATUSES = RecordStatuses(
+    RecordStatus(
+        code=FailureTransformBatchRecord.hash(),
+        priority=1,
+        label="Erreur",
+        icon="⚠️",
+    ),
+    RecordStatus(
+        code=SuccessTransformBatchRecord.hash(needs_check=True),
+        priority=2,
+        label="Modifié, à vérifier",
+        icon="🟠",
+    ),
+    RecordStatus(
+        code=SuccessTransformBatchRecord.hash(needs_check=False),
+        priority=12,
+        label="Modifié",
+        icon="🟢",
+    ),
+    RecordStatus(
+        code=SkippedTransformBatchRecord.hash(needs_check=True),
+        priority=3,
+        label="Ignoré, à vérifier",
+        icon="🟡",
+    ),
+    RecordStatus(
+        code=SkippedTransformBatchRecord.hash(needs_check=False),
+        priority=13,
+        label="Ignoré",
+        icon="⚪️",
+    ),
+)
+
+
+class TransformBatch[R: TransformBatchRecord](Batch[R]):
+    RECORD_STATUSES = TRANSFORM_RECORD_STATUSES
+
+    def __init__(self, transformation: str, records: Sequence[R] | None = None):
         self.transformation = transformation
-        super(TransformBatch, self).__init__(data or [])
+        super().__init__(records)
+
+    # TODO: rename
+    def select(self, statuses: Sequence[int] | None = None) -> "TransformBatch[R]":
+        if statuses is None:  # not the same as []
+            return self
+        records = [r for r in self.records if r.ihash in statuses]
+        return TransformBatch[R](self.transformation, records)
+
+    # TODO: rename
+    def filter[T: TransformBatchRecord](self, t: type[T]) -> "TransformBatch[T]":
+        records = [r for r in self.records if isinstance(r, t)]
+        return TransformBatch[T](self.transformation, records)
+
+    def successes(self) -> "TransformBatch[SuccessTransformBatchRecord]":
+        return self.filter(SuccessTransformBatchRecord)
+
+    def failures(self) -> "TransformBatch[FailureTransformBatchRecord]":
+        return self.filter(FailureTransformBatchRecord)
+
+    def skipped(self) -> "TransformBatch[SkippedTransformBatchRecord]":
+        return self.filter(SkippedTransformBatchRecord)
 
     # TODO: drop
     # def to_mef(self):
@@ -234,21 +276,15 @@ class MigrateBatchRecord(BatchRecord):
     transformed_content: bytes
 
 
-@final
 @dataclass(kw_only=True)
 class FailureMigrateBatchRecord(MigrateBatchRecord):
-    STATUS_PRIORITY = 1
-    STATUS_LABEL = "Erreur"
-    STATUS_ICON = "⚠️"
+    CLASS_ID = 1
     error: str
 
 
-@final
 @dataclass(kw_only=True)
 class SuccessMigrateBatchRecord(MigrateBatchRecord):
-    STATUS_PRIORITY = 2
-    STATUS_LABEL = "Mis à jour"
-    STATUS_ICON = "✅️"
+    CLASS_ID = 2
     target_uuid: str
 
 
@@ -257,8 +293,44 @@ class MigrateMode(StrEnum):
     OVERWRITE = "overwrite"
 
 
-class MigrateBatch(Batch[MigrateBatchRecord]):
-    def __init__(self, mode: MigrateMode, transform_job_id: str | None):
+MIGRATE_RECORD_STATUSES = RecordStatuses(
+    RecordStatus(
+        code=FailureMigrateBatchRecord.hash(),
+        priority=1,
+        label="Erreur",
+        icon="⚠️",
+    ),
+    RecordStatus(
+        code=SuccessMigrateBatchRecord.hash(),
+        priority=2,
+        label="Mis à jour",
+        icon="✅️",
+    ),
+)
+
+
+class MigrateBatch[R: MigrateBatchRecord](Batch[R]):
+    RECORD_STATUSES = MIGRATE_RECORD_STATUSES
+
+    def __init__(
+        self, mode: MigrateMode, transform_job_id: str | None, records: Sequence[R] | None = None
+    ):
         self.mode = mode
         self.transform_job_id = transform_job_id
-        super(MigrateBatch, self).__init__()
+        super().__init__(records)
+
+    def select(self, statuses: Sequence[int] | None = None) -> "MigrateBatch[R]":
+        if statuses is None:  # not the same as []
+            return self
+        records = [r for r in self.records if r.ihash in statuses]
+        return MigrateBatch[R](self.mode, self.transform_job_id, records)
+
+    def filter[T: MigrateBatchRecord](self, t: type[T]) -> "MigrateBatch[T]":
+        records = [r for r in self.records if isinstance(r, t)]
+        return MigrateBatch[T](self.mode, self.transform_job_id, records)
+
+    def successes(self) -> "MigrateBatch[SuccessMigrateBatchRecord]":
+        return self.filter(SuccessMigrateBatchRecord)
+
+    def failures(self) -> "MigrateBatch[FailureMigrateBatchRecord]":
+        return self.filter(FailureMigrateBatchRecord)

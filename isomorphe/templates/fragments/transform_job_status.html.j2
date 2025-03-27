@@ -52,14 +52,14 @@
                 hx-trigger="load, change"
                 hx-include="#main-form"
                 hx-swap="innerHTML">
-        {% for _, records in results | groupby("status") | sort %}
+        {% for ihash, records in results | groupby("ihash") | sort %}
           <div class="fr-fieldset__element fr-fieldset__element--inline fr-mr-2w">
             <div class="fr-checkbox-group">
               <input type="checkbox" name="status" id="status-filter-{{ loop.index }}"
-                     value="{{ records[0].status }}" checked
+                     value="{{ ihash }}" checked
                      aria-describedby="status-filter-messages-{{ loop.index }}">
               <label class="fr-label" for="status-filter-{{ loop.index }}">
-                {{ records[0].status_legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ records | length }}</p>
+                {{ results.status_info(ihash).legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ records | length }}</p>
               </label>
               <div class="fr-messages-group" id="status-filter-messages-{{ loop.index }}" aria-live="assertive">
               </div>

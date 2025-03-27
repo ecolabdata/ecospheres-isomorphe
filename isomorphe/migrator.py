@@ -113,14 +113,14 @@ class Migrator:
         transformation: Transformation,
         selection: list[Record],
         transformation_params: dict[str, str] = {},
-    ) -> TransformBatch:
+    ) -> TransformBatch[TransformBatchRecord]:
         """
         Transform data from a selection
         """
         log.info(f"Transforming {selection} via {transformation}")
         sources = self.gn.get_sources()
 
-        batch = TransformBatch(transformation=transformation.name)
+        batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
@@ -192,22 +192,20 @@ class Migrator:
 
     def migrate(
         self,
-        batch: TransformBatch,
+        # TODO: pre-filter so it's TransformBatch[SuccessTransformBatchRecord]
+        batch: TransformBatch[TransformBatchRecord],
         statuses: Sequence[int] | None = None,
         overwrite: bool = False,
         group: int | None = None,
         update_date_stamp: bool = True,
         transform_job_id: str | None = None,
-    ) -> MigrateBatch:
+    ) -> MigrateBatch[MigrateBatchRecord]:
         log.info(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
-        migrate_batch = MigrateBatch(
+        migrate_batch = MigrateBatch[MigrateBatchRecord](
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
         )
-        successes = [
-            r for r in batch.select(statuses=statuses) if isinstance(r, SuccessTransformBatchRecord)
-        ]
-        for r in successes:
+        for r in batch.successes().select(statuses=statuses):
             batch_record = MigrateBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,

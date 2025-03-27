@@ -148,12 +148,12 @@ def test_migrate_batch_records_success(
     migrate_batch = migrator.migrate(batch, overwrite=False, group=group_fixture)
     assert len(migrate_batch.successes()) == len(batch.records)
     for record in migrate_batch.successes():
-        assert record.source_uuid in [f.uuid for f in md_fixtures]
+        assert record.uuid in [f.uuid for f in md_fixtures]
         assert record.target_uuid not in [f.uuid for f in md_fixtures]
         assert record.url == GN_TEST_URL
-        assert record.source_content is not None
-        assert record.target_content is not None
-        assert record.source_content != record.target_content
+        assert record.original_content is not None
+        assert record.transformed_content is not None
+        assert record.original_content != record.transformed_content
         assert record.md_type == MetadataType.METADATA
 
 
@@ -164,11 +164,11 @@ def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fix
         migrate_batch = migrator.migrate(batch, overwrite=False, group=None)
     assert len(migrate_batch.failures()) == len(migrate_batch.records)
     for record in migrate_batch.failures():
-        assert record.source_uuid in [f.uuid for f in md_fixtures]
+        assert record.uuid in [f.uuid for f in md_fixtures]
         assert record.url == GN_TEST_URL
-        assert record.source_content is not None
-        assert record.target_content is not None
-        assert record.source_content != record.target_content
+        assert record.original_content is not None
+        assert record.transformed_content is not None
+        assert record.original_content != record.transformed_content
         assert record.md_type == MetadataType.METADATA
         assert record.error is not None  # actual error is tested below
 

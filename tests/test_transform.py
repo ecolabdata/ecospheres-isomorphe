@@ -98,7 +98,7 @@ def test_transform_change_language_params(migrator: Migrator, clean_md_fixtures:
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     for result in results.successes():
-        assert lang in result.result.decode("utf-8")
+        assert lang in result.transformed_content.decode("utf-8")
 
 
 def test_transform_warning_error_log(migrator: Migrator):

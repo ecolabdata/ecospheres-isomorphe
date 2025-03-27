@@ -27,12 +27,13 @@
           </thead>
           <tbody>
             {% for record in results %}
+              {% set status = results.status_info(record.ihash) %}
               <tr id="table-results-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                 <td>
                   <span role="img"
-                        aria-label="{{ record.status_label }}"
-                        title="{{ record.status_label }}">
-                    {{ record.status_icon }}
+                        aria-label="{{ status.label }}"
+                        title="{{ status.label }}">
+                    {{ status.icon }}
                   </span>
                 </td>
                 <td>
