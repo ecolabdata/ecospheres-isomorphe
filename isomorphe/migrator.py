@@ -205,7 +205,7 @@ class Migrator:
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
         )
-        for r in batch.successes().select(statuses=statuses):
+        for r in batch.successes().filter_status(statuses):
             batch_record = MigrateBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,

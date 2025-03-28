@@ -240,7 +240,7 @@ def transform_results_preview(job_id: str):
     if not job:
         abort(404)
     statuses = request.args.getlist("status", type=int)
-    results = job.result.select(statuses=statuses)
+    results = job.result.filter_status(statuses)
     return render_template(
         "fragments/transform_results_preview.html.j2",
         job=job,
@@ -341,7 +341,7 @@ def migrate_results_preview(job_id: str):
     if not job:
         abort(404)
     statuses = request.args.getlist("status", type=int)
-    results = job.result.select(statuses=statuses)
+    results = job.result.filter_status(statuses)
     return render_template(
         "fragments/migrate_results_preview.html.j2",
         job=job,

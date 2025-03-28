@@ -27,7 +27,7 @@
           </thead>
           <tbody>
             {% for record in results %}
-              {% set status = results.status_info(record.ihash) %}
+              {% set status = results.status_info(record.status_code) %}
               <tr id="table-results-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
                 <td>
                   <span role="img"
@@ -61,7 +61,6 @@
                   {% endif %}
                 </td>
                 <td>
-                  {# TODO: display as list? #}
                   {{ "<br/>".join(record.messages) or "-" }}
                 </td>
               </tr>

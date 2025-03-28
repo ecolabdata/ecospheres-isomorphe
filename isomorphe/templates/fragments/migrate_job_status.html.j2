@@ -9,15 +9,13 @@
   <p>
     Mode de mise à jour du catalogue :
     {% if job.result.mode == MigrateMode.CREATE %}
-      création de nouvelles fiches
+      création de nouvelles fiches.
     {% else %}
-      mise à jour des fiches existantes
+      mise à jour des fiches existantes.
     {% endif %}
-    .
   </p>
 
   <form class="fr-mt-2w" id="main-form">
-    {# TODO: factor w/ transform? #}
     <div id="results-preview" class="fr-mt-4w">
       <p>
         Les enregistrements ci-dessous sont listés dans l'ordre de traitement, du plus ancien au plus récent.
@@ -29,14 +27,14 @@
                 hx-trigger="load, change"
                 hx-include="#main-form"
                 hx-swap="innerHTML">
-        {% for ihash, records in results | groupby("ihash") | sort %}
+        {% for status_code, records in results | groupby("status_code") | sort %}
           <div class="fr-fieldset__element fr-fieldset__element--inline fr-mr-2w">
             <div class="fr-checkbox-group">
               <input type="checkbox" name="status" id="status-filter-{{ loop.index }}"
-                     value="{{ ihash }}" checked
+                     value="{{ status_code }}" checked
                      aria-describedby="status-filter-messages-{{ loop.index }}">
               <label class="fr-label" for="status-filter-{{ loop.index }}">
-                {{ results.status_info(ihash).legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ records | length }}</p>
+                {{ results.status_info(status_code).legend }} <p class="fr-tag fr-tag--sm fr-ml-1w">{{ records | length }}</p>
               </label>
               <div class="fr-messages-group" id="status-filter-messages-{{ loop.index }}" aria-live="assertive">
               </div>
