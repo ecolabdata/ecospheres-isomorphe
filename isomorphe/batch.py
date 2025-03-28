@@ -150,7 +150,7 @@ class AppliedTransformBatchRecord(TransformBatchRecord):
     @override
     def status_code_for(cls, **kwargs) -> int:
         # Don't change hash function once assigned or it'll mess up pickled jobs
-        h = cls.STATUS_CODE + 0 if kwargs["needs_check"] else 10
+        h = cls.STATUS_CODE + (0 if kwargs["needs_check"] else 10)
         return h
 
     @property
