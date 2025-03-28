@@ -181,9 +181,11 @@ def transform_result(job_id: str, uuid: str):
     result: SuccessTransformBatchRecord | None = next(
         (j for j in job.result.successes() if j.uuid == uuid), None
     )
-    if not result or not result.result:
+    if not result or not result.transformed_content:
         abort(404)
-    return Response(result.result, mimetype="text/xml", headers={"Content-Type": "text/xml"})
+    return Response(
+        result.transformed_content, mimetype="text/xml", headers={"Content-Type": "text/xml"}
+    )
 
 
 @app.route("/transform/success/<job_id>/original/<uuid>")
@@ -194,9 +196,11 @@ def transform_original(job_id: str, uuid: str):
     result: TransformBatchRecord | None = next(
         (j for j in job.result.records if j.uuid == uuid), None
     )
-    if not result or not result.original:
+    if not result or not result.original_content:
         abort(404)
-    return Response(result.original, mimetype="text/xml", headers={"Content-Type": "text/xml"})
+    return Response(
+        result.original_content, mimetype="text/xml", headers={"Content-Type": "text/xml"}
+    )
 
 
 @app.route("/transform/success/<job_id>/diff/<uuid>")
@@ -207,11 +211,11 @@ def transform_diff(job_id: str, uuid: str):
     result: SuccessTransformBatchRecord | None = next(
         (j for j in job.result.records if j.uuid == uuid), None
     )
-    if not result or not result.original or not result.result:
+    if not result or not result.original_content or not result.transformed_content:
         abort(404)
     diff = difflib.unified_diff(
-        result.original.decode("utf-8").splitlines(),
-        result.result.decode("utf-8").splitlines(),
+        result.original_content.decode("utf-8").splitlines(),
+        result.transformed_content.decode("utf-8").splitlines(),
         fromfile=result.uuid,
         tofile=result.uuid,
         lineterm="",
