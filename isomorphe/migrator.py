@@ -24,7 +24,6 @@ from isomorphe.geonetwork import (
     MetadataType,
     Record,
     WorkflowStage,
-    extract_record_info,
 )
 from isomorphe.util import xml_to_string
 
@@ -117,16 +116,11 @@ class Migrator:
         Transform data from a selection
         """
         log.info(f"Transforming {selection} via {transformation}")
-        sources = self.gn.get_sources()
 
         batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
-            # TODO: remove extract_record_info
-            # extract_record_info() mutates `original`
-            # this must happen before we store `original` in the BatchRecord
-            _ = extract_record_info(original, sources)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,

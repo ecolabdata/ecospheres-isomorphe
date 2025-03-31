@@ -2,16 +2,13 @@ from datetime import datetime
 from time import sleep
 from unittest.mock import patch
 
-from conftest import GN_TEST_URL, Fixture
+from conftest import GN_TEST_URL, XPATH_ISO_DATE_STAMP, Fixture
 from lxml import etree
 from test_transform import get_transform_results
 
 from isomorphe.batch import MigrateMode, SuccessTransformBatchRecord, TransformBatch
 from isomorphe.geonetwork import MetadataType
 from isomorphe.migrator import Migrator
-
-XPATH_ISO_DATE_STAMP = "/gmd:MD_Metadata/gmd:dateStamp/gco:DateTime/text()"
-XPATH_GEONET_CHANGE_DATE = "/gmd:MD_Metadata/geonet:info//changeDate/text()"
 
 
 def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, etree._ElementTree]:
@@ -38,13 +35,12 @@ def test_migrate_change_language_overwrite(migrator: Migrator, md_fixtures: list
 
     records_after = get_records(migrator, md_fixtures)
 
-    # content has changed on original records (especially the date stamps)
+    # content has changed on original records (especially the metadata date stamp)
     for uuid in [f.uuid for f in md_fixtures]:
         assert etree.tostring(records_after[uuid]) != etree.tostring(records_before[uuid])
-        for xpath in [XPATH_ISO_DATE_STAMP, XPATH_GEONET_CHANGE_DATE]:
-            dt_before = get_datetime(records_before[uuid], xpath)
-            dt_after = get_datetime(records_after[uuid], xpath)
-            assert dt_after > dt_before
+        dt_before = get_datetime(records_before[uuid], XPATH_ISO_DATE_STAMP)
+        dt_after = get_datetime(records_after[uuid], XPATH_ISO_DATE_STAMP)
+        assert dt_after > dt_before
 
 
 def test_migrate_change_language_overwrite_preserve_date_stamp(
@@ -61,12 +57,11 @@ def test_migrate_change_language_overwrite_preserve_date_stamp(
 
     records_after = get_records(migrator, md_fixtures)
 
-    # content has changed on original records (but not the date stamps)
+    # content has changed on original records (but not the metadata date stamp)
     for uuid in [f.uuid for f in md_fixtures]:
-        for xpath in [XPATH_ISO_DATE_STAMP, XPATH_GEONET_CHANGE_DATE]:
-            dt_before = get_datetime(records_before[uuid], xpath)
-            dt_after = get_datetime(records_after[uuid], xpath)
-            assert dt_after == dt_before
+        dt_before = get_datetime(records_before[uuid], XPATH_ISO_DATE_STAMP)
+        dt_after = get_datetime(records_after[uuid], XPATH_ISO_DATE_STAMP)
+        assert dt_after == dt_before
 
 
 def test_migrate_change_language_duplicate(

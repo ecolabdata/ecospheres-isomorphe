@@ -1,7 +1,5 @@
-import io
 import logging
 import re
-import zipfile
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
@@ -9,7 +7,6 @@ from typing import Any, Callable, override
 
 import requests
 from lxml import etree
-from lxml.builder import E
 
 log = logging.getLogger(__name__)
 
@@ -208,7 +205,7 @@ class GeonetworkClient:
             params={
                 "addSchemaLocation": "true",  # FIXME: needed?
                 "increasePopularity": "false",
-                "withInfo": "true",
+                "withInfo": "false",
                 "attachment": "false",
                 "approved": "false",  # only relevant when workflow is enabled
             },
@@ -296,7 +293,7 @@ class GeonetworkClient:
         # API expects x-www-form-urlencoded here
         data: dict[str, Any] = {
             "tab": "xml",
-            "minor": "false" if update_date_stamp else "true",
+            "minor": str(not update_date_stamp).lower(),
             "withAttributes": "false",
             "withValidationErrors": "false",
             "commit": "true",
@@ -513,61 +510,3 @@ class GeonetworkClientV4(GeonetworkClient):
     @override
     def uuid_filter(uuids: list[str]) -> dict[str, str]:
         return {"uuid": "[" + ",".join([f'"{u}"' for u in uuids]) + "]"} if uuids else {}
-
-
-class MefArchive:
-    def __init__(self, compression=zipfile.ZIP_DEFLATED):
-        self.zipb = io.BytesIO()
-        self.zipf = zipfile.ZipFile(self.zipb, "w", compression=compression)
-
-    def add(self, uuid: str, record: bytes, info: str):
-        """
-        Add a record to the MEF archive.
-
-        :param uuid: Record UUID.
-        :param record: Record metadata.
-        :param info: Record info in MEF `info.xml` format.
-        """
-        self.zipf.writestr(f"{uuid}/info.xml", info)
-        self.zipf.writestr(f"{uuid}/metadata/metadata.xml", record)
-
-    def finalize(self):
-        """
-        Finalize and return bytes of the full MEF archive.
-        """
-        self.zipf.close()
-        return self.zipb.getvalue()
-
-
-def extract_record_info(record: etree._ElementTree, sources: dict) -> etree._ElementTree:
-    """
-    Extract (remove and return) the `geonet:info` structure from the given record.
-
-    :param record: Record to process.
-    :param sources: List of existing sources, as returned by `GeonetworkClient.get_sources`.
-    :returns: Record info in MEF `info.xml` format.
-    """
-    ri = record.xpath("/gmd:MD_Metadata/geonet:info", namespaces=record.nsmap)[0]
-    ri.getparent().remove(ri)
-    source_id = ri.find("source").text
-    info = E.info(
-        E.general(
-            E.createDate(ri.find("createDate").text),
-            E.changeDate(ri.find("changeDate").text),
-            E.schema(ri.find("schema").text),
-            E.isTemplate(ri.find("isTemplate").text),
-            E.localId(ri.find("id").text),
-            E.format("simple"),
-            E.rating(ri.find("rating").text),
-            E.popularity(ri.find("popularity").text),
-            E.uuid(ri.find("uuid").text),
-            E.siteId(source_id),
-            E.siteName(sources[source_id]),
-        ),
-        E.categories(),
-        E.privileges(),
-        E.public(),
-        E.private(),
-        version="1.1",
-    )
-    return info.getroottree()
