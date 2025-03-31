@@ -209,14 +209,6 @@ class TransformBatch[R: TransformBatchRecord](Batch[R]):
     def skipped(self) -> "TransformBatch[SkippedTransformBatchRecord]":
         return self.filter_type(SkippedTransformBatchRecord)
 
-    # TODO: drop
-    # def to_mef(self):
-    #     mef = MefArchive()
-    #     for r in self.records:
-    #         if isinstance(r, SuccessTransformBatchRecord):
-    #             mef.add(r.uuid, r.result, r.info)
-    #     return mef.finalize()
-
 
 @dataclass(kw_only=True)
 class MigrateBatchRecord(BatchRecord):
