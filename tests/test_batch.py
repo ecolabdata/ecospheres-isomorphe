@@ -117,7 +117,7 @@ def test_migrate_instance_statuses(dummy_mbr):
     )
     assert (
         SuccessMigrateBatchRecord.status_code_for()
-        == SuccessMigrateBatchRecord.derive_from(dummy_mbr, target_uuid="").status_code
+        == SuccessMigrateBatchRecord.derive_from(dummy_mbr, transformed_uuid="").status_code
     )
 
 
@@ -156,9 +156,9 @@ def test_migrate_filter_status(dummy_mbr):
         mode=MigrateMode.CREATE,
         transform_job_id="",
         records=[
-            SuccessMigrateBatchRecord.derive_from(dummy_mbr, target_uuid=""),
+            SuccessMigrateBatchRecord.derive_from(dummy_mbr, transformed_uuid=""),
             FailureMigrateBatchRecord.derive_from(dummy_mbr, error=""),
-            SuccessMigrateBatchRecord.derive_from(dummy_mbr, target_uuid=""),
+            SuccessMigrateBatchRecord.derive_from(dummy_mbr, transformed_uuid=""),
         ],
     )
     filtered = batch.filter_status([SuccessMigrateBatchRecord.status_code_for()])

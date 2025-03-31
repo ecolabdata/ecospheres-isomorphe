@@ -149,7 +149,7 @@ def test_migrate_batch_records_success(
     assert len(migrate_batch.successes()) == len(batch.records)
     for record in migrate_batch.successes():
         assert record.uuid in [f.uuid for f in md_fixtures]
-        assert record.target_uuid not in [f.uuid for f in md_fixtures]
+        assert record.transformed_uuid not in [f.uuid for f in md_fixtures]
         assert record.url == GN_TEST_URL
         assert record.original_content is not None
         assert record.transformed_content is not None

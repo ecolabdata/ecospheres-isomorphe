@@ -350,7 +350,7 @@ def migrate_results_preview(job_id: str):
         "fragments/migrate_results_preview.html.j2",
         job=job,
         results=results,
-        uuid_filter=migrator.gn.uuid_filter([r.target_uuid for r in results]),
+        uuid_filter=migrator.gn.uuid_filter([r.transformed_uuid for r in results]),
         url=url,
         MigrateMode=MigrateMode,
     )

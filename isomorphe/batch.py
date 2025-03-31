@@ -232,7 +232,7 @@ class FailureMigrateBatchRecord(MigrateBatchRecord):
 @dataclass(kw_only=True)
 class SuccessMigrateBatchRecord(MigrateBatchRecord):
     STATUS_CODE = 2
-    target_uuid: str
+    transformed_uuid: str
 
 
 class MigrateMode(StrEnum):

@@ -41,8 +41,8 @@
                        target="_blank" rel="noopener">{{ record.uuid }}</a></td>
                 {% endif %}
                 <td>
-                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.target_uuid }}"
-                     target="_blank" rel="noopener">{{ record.target_uuid }}</a>
+                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.transformed_uuid }}"
+                     target="_blank" rel="noopener">{{ record.transformed_uuid }}</a>
                 </td>
               </tr>
             {% endfor %}

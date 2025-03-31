@@ -221,7 +221,7 @@ class Migrator:
                         update_date_stamp=update_date_stamp,
                     )
                     migrate_batch.append(
-                        SuccessMigrateBatchRecord.derive_from(batch_record, target_uuid=r.uuid)
+                        SuccessMigrateBatchRecord.derive_from(batch_record, transformed_uuid=r.uuid)
                     )
                 else:
                     assert group is not None, "Group must be set when not overwriting"
@@ -231,7 +231,7 @@ class Migrator:
                     )
                     migrate_batch.append(
                         SuccessMigrateBatchRecord.derive_from(
-                            batch_record, target_uuid=new_record["new_record_uuid"]
+                            batch_record, transformed_uuid=new_record["new_record_uuid"]
                         )
                     )
             except Exception as e:
