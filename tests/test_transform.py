@@ -109,7 +109,7 @@ def test_transform_warning_error_log(migrator: Migrator):
     assert len(results.failures()) == 0
     for result in results.successes():
         assert result.log and len(result.log) == 2
-        assert any("Hello world" in error_log.message for error_log in result.log)
+        assert any("Hello world" in log for log in result.log)
 
 
 @pytest.mark.parametrize(

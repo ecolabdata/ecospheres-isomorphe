@@ -436,7 +436,7 @@ class GeonetworkClientV3(GeonetworkClient):
     @staticmethod
     @override
     def uuid_filter(uuids: list[str]) -> dict[str, str]:
-        return {"_uuid": " or ".join(uuids)}
+        return {"_uuid": " or ".join(uuids)} if uuids else {}
 
 
 class GeonetworkClientV4(GeonetworkClient):
@@ -512,7 +512,7 @@ class GeonetworkClientV4(GeonetworkClient):
     @staticmethod
     @override
     def uuid_filter(uuids: list[str]) -> dict[str, str]:
-        return {"uuid": "[" + ",".join([f'"{u}"' for u in uuids]) + "]"}
+        return {"uuid": "[" + ",".join([f'"{u}"' for u in uuids]) + "]"} if uuids else {}
 
 
 class MefArchive:

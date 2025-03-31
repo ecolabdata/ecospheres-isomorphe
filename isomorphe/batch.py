@@ -4,57 +4,9 @@ from collections import UserDict, UserList, defaultdict
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import IntEnum, StrEnum
-from typing import Any, ClassVar, Iterator, Self, override
-
-from lxml.etree import _ListErrorLog as ETListErrorLog
+from typing import Any, ClassVar, Self, override
 
 from isomorphe.geonetwork import MetadataType, WorkflowState
-
-
-@dataclass(kw_only=True)
-class TransformLogItem:
-    message: str
-    line: int
-    column: int
-    domain_name: str
-    domain: int
-    type_name: str
-    type: int
-    level_name: str
-    level: int
-    filename: str
-
-
-class TransformLog:
-    """An iterator over a list of TransformLogItem, defined from a lxml.etree._ListErrorLog."""
-
-    errors: list[TransformLogItem]
-
-    def __init__(self, error_log: ETListErrorLog):
-        self.errors = [
-            TransformLogItem(
-                message=e.message,
-                line=e.line,
-                column=e.column,
-                domain_name=e.domain_name,
-                domain=e.domain,
-                type_name=e.type_name,
-                type=e.type,
-                level_name=e.level_name,
-                level=e.level,
-                filename=e.filename,
-            )
-            for e in error_log.filter_from_warnings()
-        ]
-
-    def __iter__(self) -> Iterator[TransformLogItem]:
-        return iter(self.errors)
-
-    def __getitem__(self, index: int) -> TransformLogItem:
-        return self.errors[index]
-
-    def __len__(self) -> int:
-        return len(self.errors)
 
 
 @dataclass(kw_only=True, frozen=True, order=True)
@@ -137,13 +89,13 @@ class FailureTransformBatchRecord(TransformBatchRecord):
 
 @dataclass(kw_only=True)
 class AppliedTransformBatchRecord(TransformBatchRecord):
-    log: TransformLog | None = None
+    log: list[str] | None = None
     needs_check: bool = False
 
     def __post_init__(self):
         # We can have several [isomorphe] tags in the log, as multiple XSLT templates can trigger on a single record.
         # For now, we only care if at least once of those is a :check to flag the record for verification.
-        if self.log and any(["[isomorphe:check]" in log.message for log in self.log]):
+        if self.log and any(["[isomorphe:check]" in log for log in self.log]):
             self.needs_check = True
 
     @classmethod
@@ -157,7 +109,7 @@ class AppliedTransformBatchRecord(TransformBatchRecord):
     @override
     def messages(self) -> list[str]:
         return (
-            [re.sub(r"\[isomorphe:[^]]*\]\s*", "", log.message) for log in self.log]
+            [re.sub(r"\[isomorphe[^]]*\]\s*", "", log).strip() for log in self.log]
             if self.log
             else []
         )

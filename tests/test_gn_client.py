@@ -206,3 +206,17 @@ def test_get_records_with_abstract_filters_v4(requests_mock: requests_mock.Mocke
     data = requests_mock.request_history[0].json()
     query = data["query"]["bool"]["filter"][0]["query_string"]["query"]
     assert query == "+resourceType:dataset +isHarvested:true +isTemplate:n"
+
+
+def test_uuid_filter_v3():
+    assert GeonetworkClientV3.uuid_filter([]) == {}
+    assert GeonetworkClientV3.uuid_filter(["foo"]) == {"_uuid": "foo"}
+    assert GeonetworkClientV3.uuid_filter(["foo", "bar"]) == {"_uuid": "foo or bar"}
+    GeonetworkClientV3.uuid_filter(["foo", "bar", "baz"]) == {"_uuid": "foo or bar or baz"}
+
+
+def test_uuid_filter_v4():
+    assert GeonetworkClientV4.uuid_filter([]) == {}
+    assert GeonetworkClientV4.uuid_filter(["foo"]) == {"uuid": '["foo"]'}
+    assert GeonetworkClientV4.uuid_filter(["foo", "bar"]) == {"uuid": '["foo","bar"]'}
+    assert GeonetworkClientV4.uuid_filter(["foo", "bar", "baz"]) == {"uuid": '["foo","bar","baz"]'}

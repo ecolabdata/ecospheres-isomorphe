@@ -6,7 +6,7 @@ from conftest import GN_TEST_URL, Fixture
 from lxml import etree
 from test_transform import get_transform_results
 
-from isomorphe.batch import MigrateMode, TransformBatch
+from isomorphe.batch import MigrateMode, SuccessTransformBatchRecord, TransformBatch
 from isomorphe.geonetwork import MetadataType
 from isomorphe.migrator import Migrator
 
@@ -155,6 +155,19 @@ def test_migrate_batch_records_success(
         assert record.transformed_content is not None
         assert record.original_content != record.transformed_content
         assert record.md_type == MetadataType.METADATA
+
+
+def test_migrate_batch_records_filtered_success(
+    migrator: Migrator, md_fixtures: list[Fixture], group_fixture: int
+):
+    batch, _ = get_transform_results("change-language", migrator)
+
+    nocheck = SuccessTransformBatchRecord.status_code_for(needs_check=False)
+    assert (
+        len(migrator.migrate(batch, overwrite=False, group=group_fixture, statuses=[nocheck])) == 2
+    )
+    check = SuccessTransformBatchRecord.status_code_for(needs_check=True)
+    assert len(migrator.migrate(batch, overwrite=False, group=group_fixture, statuses=[check])) == 0
 
 
 def test_migrate_batch_records_failure(migrator: Migrator, md_fixtures: list[Fixture]):

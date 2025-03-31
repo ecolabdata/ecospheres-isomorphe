@@ -18,7 +18,6 @@ from isomorphe.batch import (
     SuccessTransformBatchRecord,
     TransformBatch,
     TransformBatchRecord,
-    TransformLog,
 )
 from isomorphe.geonetwork import (
     GeonetworkClient,
@@ -161,7 +160,7 @@ class Migrator:
                 }
                 transformer = transformation.transform
                 result = transformer(original, **transformation_params_quoted)
-                transform_log = TransformLog(transformer.error_log)
+                transform_log = [m.message for m in transformer.error_log.filter_from_warnings()]
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
                 if result_str != original_str or transformation.always_apply:
