@@ -30,7 +30,7 @@ Si cette chaîne de conversion permet de prendre en charge efficacement les cata
 
 ISOmorphe se focalise sur les points 1 et 2 pour adapter les fiches des catalogues d'origine afin de maximiser les chances de succès des étapes suivantes.
 
-Les transformations proposées par cet outil correspondent aux [recommandations ISO/DCAT](https://ecospheres.gitbook.io/recommandations-iso-dcat) formulées par Écosphères.
+Les transformations proposées par cet outil correspondent aux [recommandations ISO/DCAT](https://github.com/ecolabdata/ecospheres/wiki/Recommandations-ISO-DCAT) formulées par Écosphères.
 
 
 ## <a name="comment"></a>Comment fonctionne ISOmorphe ?
