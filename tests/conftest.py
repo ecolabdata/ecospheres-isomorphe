@@ -16,6 +16,8 @@ GN_TEST_URL: Final = "http://localhost:57455/geonetwork/srv"
 GN_TEST_USER: Final = "admin"
 GN_TEST_PASSWORD: Final = "admin"
 
+XPATH_ISO_DATE_STAMP = "/gmd:MD_Metadata/gmd:dateStamp/gco:DateTime/text()"
+
 
 @dataclass(kw_only=True)
 class Fixture:

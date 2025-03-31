@@ -1,5 +1,4 @@
 import difflib
-import io
 import logging
 import os
 from datetime import datetime
@@ -14,7 +13,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
     session,
     url_for,
 )
@@ -251,19 +249,6 @@ def transform_results_preview(job_id: str):
         results=results,
         uuid_filter=migrator.gn.uuid_filter([r.uuid for r in results]),
         url=url,
-    )
-
-
-@app.route("/transform/download_result/<job_id>")
-def transform_download_result(job_id: str):
-    job = get_job(job_id)
-    if not job:
-        abort(404)
-    return send_file(
-        io.BytesIO(job.result.to_mef()),
-        mimetype="application/zip",
-        download_name=f"{job_id}.zip",
-        as_attachment=True,
     )
 
 

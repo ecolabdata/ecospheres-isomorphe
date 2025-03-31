@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 import requests_mock
-from conftest import Fixture
+from conftest import XPATH_ISO_DATE_STAMP, Fixture
 
 from isomorphe.geonetwork import (
     GeonetworkClient,
@@ -12,7 +12,6 @@ from isomorphe.geonetwork import (
     GeonetworkConnectionError,
     MetadataType,
     Record,
-    extract_record_info,
 )
 
 GN_FAKE_URL = "http://example.com/geonetwork/srv"
@@ -62,15 +61,14 @@ def test_duplicate_uuid(
     assert new_record is not None
 
 
-def test_records_order(gn_client: GeonetworkClient):
+def test_records_order(gn_client: GeonetworkClient, clean_md_fixtures: list[Fixture]):
     """Records should be ordered by changeDate asc"""
     records = gn_client.get_records()
     assert len(records) >= 2
 
     def get_change_date_from_record(record: Record) -> str:
-        full_record = gn_client.get_record(record.uuid)
-        info = extract_record_info(full_record, sources=gn_client.get_sources())
-        return info.xpath("//changeDate/text()")[0]
+        r = gn_client.get_record(record.uuid)
+        return r.xpath(XPATH_ISO_DATE_STAMP, namespaces=r.nsmap)[0]
 
     assert records == sorted(records, key=get_change_date_from_record)
 
