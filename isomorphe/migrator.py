@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -17,7 +18,6 @@ from isomorphe.batch import (
     SuccessTransformBatchRecord,
     TransformBatch,
     TransformBatchRecord,
-    TransformLog,
 )
 from isomorphe.geonetwork import (
     GeonetworkClient,
@@ -112,42 +112,41 @@ class Migrator:
         transformation: Transformation,
         selection: list[Record],
         transformation_params: dict[str, str] = {},
-    ) -> TransformBatch:
+    ) -> TransformBatch[TransformBatchRecord]:
         """
         Transform data from a selection
         """
         log.info(f"Transforming {selection} via {transformation}")
         sources = self.gn.get_sources()
 
-        batch = TransformBatch(transformation=transformation.name)
+        batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
             original = self.gn.get_record(r.uuid)
-            # FIXME: extract_record_info() mutates `original`
-            # In the mean time, this must happen before we store `original` in the BatchRecord
-            info = extract_record_info(original, sources)
+            # TODO: remove extract_record_info
+            # extract_record_info() mutates `original`
+            # this must happen before we store `original` in the BatchRecord
+            _ = extract_record_info(original, sources)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
                 md_type=r.md_type,
                 state=r.state,
-                original=xml_to_string(original),
+                original_content=xml_to_string(original),
             )
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
-                batch.add(
-                    SkippedTransformBatchRecord(
-                        **batch_record.__dict__,
+                batch.append(
+                    SkippedTransformBatchRecord.derive_from(
+                        batch_record,
                         reason=SkipReason.UNSUPPORTED_METADATA_TYPE,
-                        info="",
                     )
                 )
                 continue
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
-                batch.add(
-                    SkippedTransformBatchRecord(
-                        **batch_record.__dict__,
+                batch.append(
+                    SkippedTransformBatchRecord.derive_from(
+                        batch_record,
                         reason=SkipReason.HAS_WORKING_COPY,
-                        info="",
                     )
                 )
                 continue
@@ -161,33 +160,28 @@ class Migrator:
                 }
                 transformer = transformation.transform
                 result = transformer(original, **transformation_params_quoted)
-                transform_log = TransformLog(transformer.error_log)
+                transform_log = [m.message for m in transformer.error_log.filter_from_warnings()]
                 result_str = xml_to_string(result)
                 original_str = xml_to_string(original)
-                has_diff = result_str != original_str
-                if has_diff or transformation.always_apply:
-                    batch.add(
-                        SuccessTransformBatchRecord(
-                            **batch_record.__dict__,
-                            result=result_str,
-                            info=xml_to_string(info),
+                if result_str != original_str or transformation.always_apply:
+                    batch.append(
+                        SuccessTransformBatchRecord.derive_from(
+                            batch_record,
+                            transformed_content=result_str,
                             log=transform_log,
-                            has_diff=has_diff,
                         )
                     )
                 else:
-                    batch.add(
-                        SkippedTransformBatchRecord(
-                            **batch_record.__dict__,
-                            info=xml_to_string(info),
-                            reason=SkipReason.NO_CHANGES,
+                    batch.append(
+                        SkippedTransformBatchRecord.derive_from(
+                            batch_record,
                             log=transform_log,
                         )
                     )
             except Exception as e:
-                batch.add(
-                    FailureTransformBatchRecord(
-                        **batch_record.__dict__,
+                batch.append(
+                    FailureTransformBatchRecord.derive_from(
+                        batch_record,
                         error=str(e),
                     )
                 )
@@ -197,54 +191,52 @@ class Migrator:
 
     def migrate(
         self,
-        batch: TransformBatch,
+        # TODO: pre-filter so it's TransformBatch[SuccessTransformBatchRecord]
+        batch: TransformBatch[TransformBatchRecord],
+        statuses: Sequence[int] | None = None,
         overwrite: bool = False,
         group: int | None = None,
         update_date_stamp: bool = True,
         transform_job_id: str | None = None,
-    ) -> MigrateBatch:
+    ) -> MigrateBatch[MigrateBatchRecord]:
         log.info(f"Migrating batch {batch} for {self.url} (overwrite={overwrite})")
-        migrate_batch = MigrateBatch(
+        migrate_batch = MigrateBatch[MigrateBatchRecord](
             mode=MigrateMode.OVERWRITE if overwrite else MigrateMode.CREATE,
             transform_job_id=transform_job_id,
         )
-        for r in batch.successes():
+        for r in batch.successes().filter_status(statuses):
             batch_record = MigrateBatchRecord(
                 url=self.gn.url,
-                source_uuid=r.uuid,
+                uuid=r.uuid,
                 md_type=r.md_type,
-                source_content=r.original,
-                target_content=r.result,
+                original_content=r.original_content,
+                transformed_content=r.transformed_content,
             )
             try:
                 if overwrite:
                     self.gn.update_record(
-                        r.uuid, r.result, md_type=r.md_type, update_date_stamp=update_date_stamp
+                        r.uuid,
+                        r.transformed_content,
+                        md_type=r.md_type,
+                        update_date_stamp=update_date_stamp,
                     )
-                    migrate_batch.add(
-                        SuccessMigrateBatchRecord(
-                            **batch_record.__dict__,
-                            target_uuid=r.uuid,
-                        )
+                    migrate_batch.append(
+                        SuccessMigrateBatchRecord.derive_from(batch_record, transformed_uuid=r.uuid)
                     )
                 else:
                     assert group is not None, "Group must be set when not overwriting"
                     # TODO: publish flag
                     new_record = self.gn.put_record(
-                        r.uuid, r.result, md_type=r.md_type, group=group
+                        r.uuid, r.transformed_content, md_type=r.md_type, group=group
                     )
-                    migrate_batch.add(
-                        SuccessMigrateBatchRecord(
-                            **batch_record.__dict__,
-                            target_uuid=new_record["new_record_uuid"],
+                    migrate_batch.append(
+                        SuccessMigrateBatchRecord.derive_from(
+                            batch_record, transformed_uuid=new_record["new_record_uuid"]
                         )
                     )
             except Exception as e:
-                migrate_batch.add(
-                    FailureMigrateBatchRecord(
-                        **batch_record.__dict__,
-                        error=str(e),
-                    )
+                migrate_batch.append(
+                    FailureMigrateBatchRecord.derive_from(batch_record, error=str(e))
                 )
         log.info("Migration done.")
         return migrate_batch

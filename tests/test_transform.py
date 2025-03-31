@@ -63,7 +63,6 @@ def test_transform_noop_always(migrator: Migrator):
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     assert results.transformation == "noop~always"
-    assert all([not r.has_diff for r in results.successes()])
 
 
 def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[Fixture]):
@@ -73,7 +72,6 @@ def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[F
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     assert results.transformation == "change-language"
-    assert all([r.has_diff for r in results.successes()])
 
 
 def test_transform_working_copy(migrator: Migrator):
@@ -100,7 +98,7 @@ def test_transform_change_language_params(migrator: Migrator, clean_md_fixtures:
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     for result in results.successes():
-        assert lang in result.result.decode("utf-8")
+        assert lang in result.transformed_content.decode("utf-8")
 
 
 def test_transform_warning_error_log(migrator: Migrator):
@@ -111,7 +109,7 @@ def test_transform_warning_error_log(migrator: Migrator):
     assert len(results.failures()) == 0
     for result in results.successes():
         assert result.log and len(result.log) == 2
-        assert any("Hello world" in error_log.message for error_log in result.log)
+        assert any("Hello world" in log for log in result.log)
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,73 @@
+<div class="fr-table">
+  <div class="fr-table__header">
+    <p class="fr-table__detail"> {{ results|length }} fiches </p>
+    <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-md fr-btns-group--icon-left">
+      <li>
+        <form action="{{ url }}/fre/catalog.edit#/board?{{ uuid_filter|urlencode }}" target="_blank" rel="noopener external">
+          <button type="submit" class="fr-btn fr-btn--icon-right fr-icon-external-link-fill fr-btn--secondary">
+            Voir dans Geonetwork
+          </button>
+        </form>
+      </li>
+    </ul>
+  </div>
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table id="transform-results-table">
+          <thead>
+            <tr>
+              <th scope="col">Statut</th>
+              <th scope="col">Fiche</th>
+              <th scope="col">Original</th>
+              <th scope="col">Résultat</th>
+              <th scope="col">Différences</th>
+              <th scope="col">Messages</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in results %}
+              {% set status = results.status_info(record.status_code) %}
+              <tr id="table-results-row-key-{{ loop.index }}" data-row-key="{{ loop.index }}">
+                <td>
+                  <span role="img"
+                        aria-label="{{ status.label }}"
+                        title="{{ status.label }}">
+                    {{ status.icon }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
+                     target="_blank" rel="noopener"> {{ record.uuid }} </a>
+                </td>
+                <td>
+                  <a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}"
+                     target="_blank" rel="noopener"> XML </a>
+                </td>
+                <td>
+                  {% if record | attr("transformed_content") %}
+                    <a href="{{ url_for('transform_result', job_id=job.id, uuid=record.uuid) }}"
+                       target="_blank" rel="noopener"> XML </a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if record | attr("transformed_content") %}
+                    <a href="{{ url_for('transform_diff', job_id=job.id, uuid=record.uuid) }}"
+                       target="_blank" rel="noopener"> diff </a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {{ "<br/>".join(record.messages) or "-" }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

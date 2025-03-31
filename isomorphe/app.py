@@ -22,7 +22,6 @@ from flask import (
 from isomorphe.auth import authenticated, connection_infos
 from isomorphe.batch import (
     MigrateMode,
-    SkippedTransformBatchRecord,
     SkipReasonMessage,
     SuccessTransformBatchRecord,
     TransformBatchRecord,
@@ -182,9 +181,11 @@ def transform_result(job_id: str, uuid: str):
     result: SuccessTransformBatchRecord | None = next(
         (j for j in job.result.successes() if j.uuid == uuid), None
     )
-    if not result or not result.result:
+    if not result or not result.transformed_content:
         abort(404)
-    return Response(result.result, mimetype="text/xml", headers={"Content-Type": "text/xml"})
+    return Response(
+        result.transformed_content, mimetype="text/xml", headers={"Content-Type": "text/xml"}
+    )
 
 
 @app.route("/transform/success/<job_id>/original/<uuid>")
@@ -195,9 +196,11 @@ def transform_original(job_id: str, uuid: str):
     result: TransformBatchRecord | None = next(
         (j for j in job.result.records if j.uuid == uuid), None
     )
-    if not result or not result.original:
+    if not result or not result.original_content:
         abort(404)
-    return Response(result.original, mimetype="text/xml", headers={"Content-Type": "text/xml"})
+    return Response(
+        result.original_content, mimetype="text/xml", headers={"Content-Type": "text/xml"}
+    )
 
 
 @app.route("/transform/success/<job_id>/diff/<uuid>")
@@ -208,11 +211,11 @@ def transform_diff(job_id: str, uuid: str):
     result: SuccessTransformBatchRecord | None = next(
         (j for j in job.result.records if j.uuid == uuid), None
     )
-    if not result or not result.original or not result.result:
+    if not result or not result.original_content or not result.transformed_content:
         abort(404)
     diff = difflib.unified_diff(
-        result.original.decode("utf-8").splitlines(),
-        result.result.decode("utf-8").splitlines(),
+        result.original_content.decode("utf-8").splitlines(),
+        result.transformed_content.decode("utf-8").splitlines(),
         fromfile=result.uuid,
         tofile=result.uuid,
         lineterm="",
@@ -230,6 +233,24 @@ def transform_job_status(job_id: str):
         url=url,
         MigrateMode=MigrateMode,
         SkipReasonMessage=SkipReasonMessage,
+    )
+
+
+@app.route("/transform/results_preview/<job_id>")
+def transform_results_preview(job_id: str):
+    url, username, password = connection_infos()
+    migrator = Migrator(url=url, username=username, password=password)
+    job = get_job(job_id)
+    if not job:
+        abort(404)
+    statuses = request.args.getlist("status", type=int)
+    results = job.result.filter_status(statuses)
+    return render_template(
+        "fragments/transform_results_preview.html.j2",
+        job=job,
+        results=results,
+        uuid_filter=migrator.gn.uuid_filter([r.uuid for r in results]),
+        url=url,
     )
 
 
@@ -260,10 +281,13 @@ def migrate(job_id: str):
     if not overwrite and not group:
         abort(400, "Missing `group` parameter")
     update_date_stamp = request.form.get("update_date_stamp") is not None
+    statuses = request.form.getlist("status", type=int)
     migrator = Migrator(url=url, username=username, password=password)
+    # TODO: filter by status here to avoid serializing records that won't be migrated
     migrate_job = get_queue().enqueue(
         migrator.migrate,
         transform_job.result,
+        statuses=statuses,
         overwrite=overwrite,
         group=group,
         update_date_stamp=update_date_stamp,
@@ -313,6 +337,25 @@ def migrate_update_mode():
     )
 
 
+@app.route("/migrate/results_preview/<job_id>")
+def migrate_results_preview(job_id: str):
+    url, username, password = connection_infos()
+    migrator = Migrator(url=url, username=username, password=password)
+    job = get_job(job_id)
+    if not job:
+        abort(404)
+    statuses = request.args.getlist("status", type=int)
+    results = job.result.filter_status(statuses)
+    return render_template(
+        "fragments/migrate_results_preview.html.j2",
+        job=job,
+        results=results,
+        uuid_filter=migrator.gn.uuid_filter([r.transformed_uuid for r in results]),
+        url=url,
+        MigrateMode=MigrateMode,
+    )
+
+
 @app.route("/docs")
 def documentation():
     index_page = Path("doc/index.md")
@@ -340,15 +383,6 @@ def documentation_transformation(transformation: str):
         "documentation.html.j2",
         content=render_markdown(md_content),
     )
-
-
-@app.template_filter("record_transform_log")
-def record_transform_log(record: TransformBatchRecord):
-    if not isinstance(record, (SkippedTransformBatchRecord, SuccessTransformBatchRecord)):
-        return "-"
-    if not record.log:
-        return "-"
-    return "<br>".join([e.message for e in record.log])
 
 
 if __name__ == "__main__":
