@@ -89,16 +89,11 @@ def login():
 def select():
     url, username, password = connection_infos()
     migrator = Migrator(url=url, username=username, password=password)
-    sources = sorted(
-        [{"id": k, "name": v} for k, v in migrator.gn.get_sources().items()],
-        key=lambda x: x["name"].casefold(),
-    )
     return render_template(
         "select.html.j2",
         url=session.get("url", ""),
         version=migrator.geonetwork_version,
         transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
-        sources=sources,
         groups=migrator.gn.get_groups(),
     )
 
