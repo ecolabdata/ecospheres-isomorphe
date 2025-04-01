@@ -361,6 +361,7 @@ def documentation_transformation(transformation: str):
     md_content = doc_page.read_text()
     return render_template(
         "documentation.html.j2",
+        name=transformation,
         content=render_markdown(md_content),
     )
 

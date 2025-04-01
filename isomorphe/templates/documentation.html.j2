@@ -1,6 +1,8 @@
 {% extends "base.html.j2" %}
+
 {% block content %}
+  <h1>{{ name }}</h1>
   <div class="markdown fr-mt-4v">
-  {{ content|safe }}
+    {{ content|safe }}
   </div>
 {% endblock content %}
