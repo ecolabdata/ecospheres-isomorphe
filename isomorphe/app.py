@@ -212,6 +212,7 @@ def transform_diff(job_id: str, uuid: str):
         fromfile=result.uuid,
         tofile=result.uuid,
         lineterm="",
+        n=10,
     )
     return render_template("diff.html.j2", diff="\n".join(diff))
 
