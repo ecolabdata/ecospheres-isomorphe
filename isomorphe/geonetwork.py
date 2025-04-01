@@ -331,12 +331,6 @@ class GeonetworkClient:
             )
             r.raise_for_status()
 
-    def get_sources(self) -> dict:
-        r = self.session.get(f"{self.api}/sources", headers={"Accept": "application/json"})
-        r.raise_for_status()
-        sources = {s["uuid"]: s["name"] for s in r.json()}
-        return sources
-
     def delete_record(self, uuid: str) -> None:
         log.debug(f"Deleting record: {uuid}")
         r = self.session.delete(
