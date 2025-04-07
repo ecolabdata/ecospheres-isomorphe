@@ -63,6 +63,7 @@ class Record:
     title: str
     md_type: MetadataType
     state: WorkflowState | None
+    published: bool
 
 
 class GeonetworkConnectionError(Exception):
@@ -413,8 +414,9 @@ class GeonetworkClientV3(GeonetworkClient):
         return hits
 
     def _as_record(self, hit: dict[str, Any]) -> Record | None:
+        info = hit["geonet:info"]
         try:
-            uuid = hit["geonet:info"]["uuid"]
+            uuid = info["uuid"]
         except KeyError:
             return None
         return Record(
@@ -422,6 +424,7 @@ class GeonetworkClientV3(GeonetworkClient):
             title=hit.get("defaultTitle", ""),
             md_type=self._get_metadata_type(hit),
             state=self._get_workflow_state(hit),
+            published=info.get("isPublishedToAll") == "true",
         )
 
     @staticmethod
@@ -498,6 +501,7 @@ class GeonetworkClientV4(GeonetworkClient):
             title=title.get("default", ""),
             md_type=self._get_metadata_type(md),
             state=self._get_workflow_state(md),
+            published=hit.get("isPublishedToAll", False),
         )
 
     @staticmethod

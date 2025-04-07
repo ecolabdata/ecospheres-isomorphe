@@ -10,6 +10,7 @@
                 <th scope="col">Identifiant</th>
                 <th scope="col">Fiche XML</th>
                 <th scope="col">Type</th>
+                <th scope="col">Publié</th>
                 <th scope="col">Statut</th>
                 <th scope="col">Titre</th>
               </tr>
@@ -28,6 +29,7 @@
                     rel="noopener">Voir le XML</a>
                 </td>
                 <td>{{ "Template" if result.template else "Record" }}</td>
+                <td>{{ "oui" if result.published else "non" }}</td>
                 <td>{{ "Draft" if (result.state and result.state.stage == "working_copy") else "-" }}</td>
                 <td>{{ result.title }}</td>
               </tr>
