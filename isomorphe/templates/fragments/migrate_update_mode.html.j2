@@ -3,7 +3,7 @@
   <label class="fr-label" for="mode">Groupe de rattachement des fiches créées *</label>
   <select required class="fr-select" id="group" name="group">
     <option value="" selected disabled hidden>Sélectionner un groupe</option>
-    {% for group in groups %}
+    {% for group in groups | sort(attribute="name") %}
     <option value="{{ group.id }}">{{ group.name }}</option>
     {% endfor %}
   </select>
