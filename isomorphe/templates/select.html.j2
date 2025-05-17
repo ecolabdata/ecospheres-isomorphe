@@ -77,7 +77,7 @@
           </label>
           <select class="fr-select" id="filter-group" name="filter-group">
             <option value="" selected >Tous les groupes</option>
-            {% for group in groups %}
+            {% for group in groups | sort(attribute="name") %}
               <option value="{{ group.id }}">{{ group.name }}</option>
             {% endfor %}
           </select>
