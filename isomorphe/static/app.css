@@ -18,7 +18,7 @@ fieldset {
 }
 
 .markdown blockquote {
-  border-left: 4px solid silver;
+  border-left: 0.25em solid silver;
   margin: 0;
   padding-left: 0.5em;
   font-style: italic;
