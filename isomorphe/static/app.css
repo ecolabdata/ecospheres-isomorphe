@@ -12,12 +12,17 @@ fieldset {
   margin-top: 1em;
 }
 
-
 .markdown p {
   margin-block-start: 1em;
   margin-block-end: 1em;
 }
 
+.markdown blockquote {
+  border-left: 0.25em solid silver;
+  margin: 0;
+  padding-left: 0.5em;
+  font-style: italic;
+}
 
 .spinner-indicator {
   margin-left: 0.5em;
