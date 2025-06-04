@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 import requests_mock
-from conftest import XPATH_ISO_DATE_STAMP, Fixture
+from conftest import XPATH_GN_DATE_STAMP, Fixture
 
 from isomorphe.geonetwork import (
     GeonetworkClient,
@@ -67,8 +67,8 @@ def test_records_order(gn_client: GeonetworkClient, clean_md_fixtures: list[Fixt
     assert len(records) >= 2
 
     def get_change_date_from_record(record: Record) -> str:
-        r = gn_client.get_record(record.uuid)
-        return r.xpath(XPATH_ISO_DATE_STAMP, namespaces=r.nsmap)[0]
+        r = gn_client.get_record(record.uuid, query={"withInfo": "true"})
+        return r.xpath(XPATH_GN_DATE_STAMP, namespaces=r.nsmap)[0]
 
     assert records == sorted(records, key=get_change_date_from_record)
 

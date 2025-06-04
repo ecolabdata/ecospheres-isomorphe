@@ -198,18 +198,23 @@ class GeonetworkClient:
         """
         pass
 
-    def get_record(self, uuid: str) -> etree._ElementTree:
+    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> etree._ElementTree:
         log.debug(f"Processing record: {uuid}")
+        params = {
+            "addSchemaLocation": "true",  # FIXME: needed?
+            "increasePopularity": "false",
+            "withInfo": "false",
+            "attachment": "false",
+            "approved": "false",  # only relevant when workflow is enabled
+        }
+        if query:
+            params |= dict(
+                m(v) if (m := self.QUERY_MAPPINGS.get(k)) else (k, v) for k, v in query.items()
+            )
         r = self.session.get(
             f"{self.api}/records/{uuid}/formatters/xml",
             headers={"Accept": "application/xml"},
-            params={
-                "addSchemaLocation": "true",  # FIXME: needed?
-                "increasePopularity": "false",
-                "withInfo": "false",
-                "attachment": "false",
-                "approved": "false",  # only relevant when workflow is enabled
-            },
+            params=params,
         )
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
