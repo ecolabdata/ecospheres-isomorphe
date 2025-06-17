@@ -17,6 +17,7 @@ GN_TEST_USER: Final = "admin"
 GN_TEST_PASSWORD: Final = "admin"
 
 XPATH_ISO_DATE_STAMP = "/gmd:MD_Metadata/gmd:dateStamp/gco:DateTime/text()"
+XPATH_GN_DATE_STAMP = "/gmd:MD_Metadata/geonet:info/changeDate/text()"
 
 
 @dataclass(kw_only=True)
@@ -90,6 +91,7 @@ def seed_fixtures(gn_client: GeonetworkClient, group_fixture: int) -> list[Fixtu
                 group=None,
                 uuid_processing="NOTHING",
             )
+            sleep(1)  # make sure each record has a different database changeDate
             fixtures.append(Fixture(uuid=uuid, name=fixture.stem, content=content))
 
     total_records = gn_client.get_records()
