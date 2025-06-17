@@ -3,6 +3,7 @@ import re
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
+from textwrap import shorten
 from typing import Any, Callable, override
 
 import requests
@@ -73,59 +74,80 @@ class GeonetworkConnectionError(Exception):
 class GeonetworkClient:
     @staticmethod
     def connect(url: str, username: str | None = None, password: str | None = None):
-        session = requests.Session()
-        GeonetworkClient._authenticate_session(url, session, username, password)
-        version = GeonetworkClient._server_version(url, session)
-        if version == 3:
-            return GeonetworkClientV3(url, session)
-        elif version == 4:
-            return GeonetworkClientV4(url, session)
-        else:
-            raise GeonetworkConnectionError(f"Version Geonetwork non prise en charge: {version}")
+        version = GeonetworkClient._server_version(url)
+        client = GeonetworkClient._create(version, url)
+        client.authenticate(username, password)
+        return client
 
     @staticmethod
-    def _authenticate_session(
-        url: str, session: requests.Session, username: str | None, password: str | None
-    ):
-        if username and password:
-            session.auth = (username, password)
-            log.info(f"Authenticating as: {username}")
-
-        r = session.post(f"{url}/api/info?_content_type=json&type=me", allow_redirects=False)
-        if r.is_redirect:
-            raise GeonetworkConnectionError(
-                f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
-            )
-        # if the POST above failed, we need the XSFR-TOKEN to proceed further
-        # if it did not, (username, password) basic auth should be enough
-        if not r.ok:
-            xsrf_token = r.cookies.get("XSRF-TOKEN")
-            if xsrf_token:
-                session.headers.update({"X-XSRF-TOKEN": xsrf_token})
-                log.debug("XSRF token found")
-            else:
-                raise GeonetworkConnectionError("Impossible de récupérer le token XSRF")
-
-    @staticmethod
-    def _server_version(url: str, session: requests.Session):
-        r = session.get(f"{url}/api/site", headers={"Accept": "application/json"})
+    def _server_version(url: str):
+        r = requests.get(f"{url}/api/site", headers={"Accept": "application/json"})
         r.raise_for_status()
         try:
             version = int(r.json()["system/platform/version"].split(".")[0])
         except KeyError:
-            raise GeonetworkConnectionError("Version Geonetwork manquante")
+            raise GeonetworkConnectionError("Version Geonetwork manquante.")
+        except requests.exceptions.JSONDecodeError:
+            err = GeonetworkConnectionError(
+                "Format de réponse serveur invalide. Avez-vous la bonne URL ?"
+            )
+            err.add_note(f"Response: {shorten(r.text, 200)}")
+            raise err
         log.info(f"Geonetwork version: {version}")
         return version
 
-    def __init__(self, url: str, session: requests.Session | None = None):
+    @staticmethod
+    def _create(version: int, url: str):
+        if version == 3:
+            return GeonetworkClientV3(url)
+        elif version == 4:
+            return GeonetworkClientV4(url)
+        else:
+            raise GeonetworkConnectionError(f"Version Geonetwork non prise en charge: {version}")
+
+    def __init__(self, url: str):
         self.url = url
         self.api = f"{url}/api"
-        self.session = session if session else requests.Session()
+        self.session = requests.Session()
 
-    def info(self):
-        r = self.session.get(f"{self.api}/info?_content_type=json&type=me")
-        r.raise_for_status()
-        return r.json()
+    def authenticate(self, username: str | None, password: str | None):
+        auth_url = f"{self.api}/info?_content_type=json&type=me"
+        auth_headers = {"Accept": "application/json"}
+
+        # First POST request to Geonetwork should return an error and the XSRF token (no need for credentials)
+        # See https://docs.geonetwork-opensource.org/4.4/customizing-application/misc/
+        r = self.session.post(auth_url, headers=auth_headers, allow_redirects=False)
+
+        if r.is_redirect:
+            raise GeonetworkConnectionError(
+                f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
+            )
+
+        xsrf_token = r.cookies.get("XSRF-TOKEN")
+        log.debug(f"XSRF token found: {xsrf_token is not None}")
+        if xsrf_token:
+            self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
+        elif not r.ok:
+            raise GeonetworkConnectionError("Impossible de récupérer le token XSRF.")
+
+        if username and password:
+            log.debug(f"Authenticating as: {username}")
+            self.session.auth = (username, password)
+            # Retry the initial request but with credentials to make sure they're valid
+            r = self.session.post(auth_url, headers=auth_headers)
+            r.raise_for_status()
+            try:
+                me = r.json().get("me")
+            except requests.exceptions.JSONDecodeError:
+                err = GeonetworkConnectionError(
+                    "Format de réponse serveur invalide. Avez-vous la bonne URL ?"
+                )
+                err.add_note(f"Response: {shorten(r.text, 200)}")
+                raise err
+            if not me:
+                raise GeonetworkConnectionError("Réponse serveur vide.")
+            if me.get("@authenticated") != "true":
+                raise GeonetworkConnectionError("Non authentifié.")
 
     def get_records(self, query: dict[str, Any] | None = None) -> list[Record]:
         if query and (extra := query.pop("__extra__", None)):

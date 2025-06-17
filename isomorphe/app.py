@@ -43,6 +43,8 @@ app.config["TRANSFORMATIONS_PATH"] = (
 
 logging.basicConfig(level=logging.DEBUG if app.debug else logging.INFO)
 
+log = logging.getLogger(__name__)
+
 
 @app.route("/")
 def login_form():
@@ -62,25 +64,19 @@ def login():
     if not username or not password or not url:
         abort(400, "Missing login parameter(s)")
 
-    try:
-        migrator = Migrator(url=url, username=username, password=password)
-        gn_info = migrator.gn.info()
-    except (requests.exceptions.RequestException, GeonetworkConnectionError) as e:
-        flash(f"Problème d'authentification ({e})", "error")
-        # still record the login info for the next try
-        session["url"] = url.rstrip("/")
-        session["username"] = username
-        session["password"] = password
-        return redirect(url_for("login_form"))
-    else:
-        authenticated = gn_info.get("me", {}).get("@authenticated", "false") == "true"
-        if not authenticated:
-            flash("Problème d'authentification (retour api geonetwork)", "error")
-            return redirect(url_for("login_form"))
-
+    # Always record the login info so it's also available for retries in case of failures
     session["url"] = url.rstrip("/")
     session["username"] = username
     session["password"] = password
+
+    try:
+        _ = Migrator(url=url, username=username, password=password)
+    except (requests.exceptions.RequestException, GeonetworkConnectionError) as e:
+        msg = f"Problème de connexion : {e}"
+        flash(msg, "error")
+        log.error(msg, exc_info=True)
+        return redirect(url_for("login_form"))
+
     return redirect(url_for("select"))
 
 
