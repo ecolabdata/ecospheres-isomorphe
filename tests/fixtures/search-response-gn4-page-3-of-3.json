@@ -39,9 +39,9 @@
         "sort": [
           1316442357000
         ],
-        "edit": false,
-        "canReview": false,
-        "owner": false,
+        "edit": true,
+        "canReview": true,
+        "owner": true,
         "isPublishedToAll": true,
         "view": true,
         "notify": false,
@@ -75,9 +75,9 @@
         "sort": [
           1316530395000
         ],
-        "edit": false,
-        "canReview": false,
-        "owner": false,
+        "edit": true,
+        "canReview": true,
+        "owner": true,
         "isPublishedToAll": true,
         "view": true,
         "notify": false,

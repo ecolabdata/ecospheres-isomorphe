@@ -65,6 +65,7 @@ class Record:
     md_type: MetadataType
     state: WorkflowState | None
     published: bool
+    writable: bool
 
 
 class GeonetworkConnectionError(Exception):
@@ -167,8 +168,11 @@ class GeonetworkClient:
                 except Exception as e:
                     raise RuntimeError(f"Failed to process record: {hit}") from e
                 if rec:
-                    log.debug(f"Record: {rec}")
-                    recs.append(rec)
+                    if rec.writable:
+                        log.debug(f"Record: {rec}")
+                        recs.append(rec)
+                    else:
+                        log.debug(f"Skipping non-writable record: {rec}")
                 else:
                     log.debug(f"Skipping empty record: {hit}")
             records += recs
@@ -452,6 +456,7 @@ class GeonetworkClientV3(GeonetworkClient):
             md_type=self._get_metadata_type(hit),
             state=self._get_workflow_state(hit),
             published=info.get("isPublishedToAll") == "true",
+            writable=info.get("edit") == "true",
         )
 
     @staticmethod
@@ -529,6 +534,7 @@ class GeonetworkClientV4(GeonetworkClient):
             md_type=self._get_metadata_type(md),
             state=self._get_workflow_state(md),
             published=hit.get("isPublishedToAll", False),
+            writable=hit.get("edit", False),
         )
 
     @staticmethod

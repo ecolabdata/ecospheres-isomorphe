@@ -39,9 +39,9 @@
         "sort": [
           1289811182000
         ],
-        "edit": false,
-        "canReview": false,
-        "owner": false,
+        "edit": true,
+        "canReview": true,
+        "owner": true,
         "isPublishedToAll": true,
         "view": true,
         "notify": false,
@@ -75,9 +75,9 @@
         "sort": [
           1293723836000
         ],
-        "edit": false,
-        "canReview": false,
-        "owner": false,
+        "edit": true,
+        "canReview": true,
+        "owner": true,
         "isPublishedToAll": true,
         "view": true,
         "notify": false,
@@ -100,7 +100,7 @@
           "uuid": "48cb7ee8-0392-4346-ad03-172d71e7e3da",
           "draft": "n",
           "id": "2215",
-          "owner": "1",
+          "owner": "2",
           "groupOwner": "101",
           "op0": "1",
           "op1": "1",
