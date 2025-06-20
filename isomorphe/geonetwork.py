@@ -422,7 +422,6 @@ class GeonetworkClientV3(GeonetworkClient):
             "buildSummary": "false",
             "fast": "index",  # needed to get info such as title
             "sortBy": "changeDate",
-            "sortOrder": "reverse",
         }
         if query:
             params |= dict(
@@ -479,7 +478,7 @@ class GeonetworkClientV4(GeonetworkClient):
     def _search_params(self, query: dict[str, Any] | None) -> dict[str, Any]:
         params = {
             "size": 20,
-            "sort": [{"changeDate": "asc"}],
+            "sort": [{"changeDate": "desc"}],
             "_source": [
                 "uuid",
                 "resourceTitleObject.default",

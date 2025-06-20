@@ -16,18 +16,18 @@
     "hits": [
       {
         "_index": "gn-records",
-        "_id": "043f7128-924e-4f73-8454-e1246fec2f18",
+        "_id": "de740a65-2246-46ce-bc69-e3e649280cc2",
         "_score": null,
         "_source": {
           "resourceType": [
             "featureCatalog"
           ],
           "resourceTitleObject": {
-            "default": "043f7128-924e-4f73-8454-e1246fec2f18"
+            "default": "de740a65-2246-46ce-bc69-e3e649280cc2"
           },
-          "uuid": "043f7128-924e-4f73-8454-e1246fec2f18",
+          "uuid": "de740a65-2246-46ce-bc69-e3e649280cc2",
           "draft": "n",
-          "id": "2201",
+          "id": "2247",
           "owner": "1",
           "groupOwner": "101",
           "op0": "1",
@@ -37,7 +37,7 @@
           "isTemplate": "n"
         },
         "sort": [
-          1289811182000
+          1316530395000
         ],
         "edit": true,
         "canReview": true,
@@ -52,18 +52,18 @@
       },
       {
         "_index": "gn-records",
-        "_id": "ec81be98-9c59-426e-9d43-a016e60ceb7c",
+        "_id": "3cc7b776-3b8d-4330-9196-2c1d12267650",
         "_score": null,
         "_source": {
           "resourceType": [
             "featureCatalog"
           ],
           "resourceTitleObject": {
-            "default": "ec81be98-9c59-426e-9d43-a016e60ceb7c"
+            "default": "3cc7b776-3b8d-4330-9196-2c1d12267650"
           },
-          "uuid": "ec81be98-9c59-426e-9d43-a016e60ceb7c",
+          "uuid": "3cc7b776-3b8d-4330-9196-2c1d12267650",
           "draft": "n",
-          "id": "2252",
+          "id": "2213",
           "owner": "1",
           "groupOwner": "101",
           "op0": "1",
@@ -73,7 +73,7 @@
           "isTemplate": "n"
         },
         "sort": [
-          1293723836000
+          1316442357000
         ],
         "edit": true,
         "canReview": true,
@@ -88,19 +88,19 @@
       },
       {
         "_index": "gn-records",
-        "_id": "48cb7ee8-0392-4346-ad03-172d71e7e3da",
+        "_id": "c391f1b1-177c-4989-b093-9d6b675a8ca5",
         "_score": null,
         "_source": {
           "resourceType": [
             "featureCatalog"
           ],
           "resourceTitleObject": {
-            "default": "48cb7ee8-0392-4346-ad03-172d71e7e3da"
+            "default": "c391f1b1-177c-4989-b093-9d6b675a8ca5"
           },
-          "uuid": "48cb7ee8-0392-4346-ad03-172d71e7e3da",
+          "uuid": "c391f1b1-177c-4989-b093-9d6b675a8ca5",
           "draft": "n",
-          "id": "2215",
-          "owner": "2",
+          "id": "2243",
+          "owner": "1",
           "groupOwner": "101",
           "op0": "1",
           "op1": "1",
@@ -109,11 +109,11 @@
           "isTemplate": "n"
         },
         "sort": [
-          1294066579000
+          1303134664000
         ],
-        "edit": false,
-        "canReview": false,
-        "owner": false,
+        "edit": true,
+        "canReview": true,
+        "owner": true,
         "isPublishedToAll": true,
         "view": true,
         "notify": false,
