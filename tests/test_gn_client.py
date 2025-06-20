@@ -70,7 +70,7 @@ def test_records_order(gn_client: GeonetworkClient, clean_md_fixtures: list[Fixt
         r = gn_client.get_record(record.uuid, query={"withInfo": "true"})
         return r.xpath(XPATH_GN_DATE_STAMP, namespaces=r.nsmap)[0]
 
-    assert records == sorted(records, key=get_change_date_from_record)
+    assert records == sorted(records, key=get_change_date_from_record, reverse=True)
 
 
 def test_get_records_v3(requests_mock: requests_mock.Mocker):
@@ -101,7 +101,6 @@ def test_get_records_v3(requests_mock: requests_mock.Mocker):
         "buildsummary": ["false"],
         "fast": ["index"],
         "sortby": ["changedate"],
-        "sortorder": ["reverse"],
         "from": ["1"],
     }
 
@@ -168,7 +167,7 @@ def test_get_records_v4(requests_mock: requests_mock.Mocker):
     assert history[0].qs == {"bucket": ["metadata"]}
     assert history[0].json() == {
         "size": 20,
-        "sort": [{"changeDate": "asc"}],
+        "sort": [{"changeDate": "desc"}],
         "_source": [
             "uuid",
             "resourceTitleObject.default",

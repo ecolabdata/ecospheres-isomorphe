@@ -16,18 +16,18 @@
     "hits": [
       {
         "_index": "gn-records",
-        "_id": "3cc7b776-3b8d-4330-9196-2c1d12267650",
+        "_id": "ec81be98-9c59-426e-9d43-a016e60ceb7c",
         "_score": null,
         "_source": {
           "resourceType": [
             "featureCatalog"
           ],
           "resourceTitleObject": {
-            "default": "3cc7b776-3b8d-4330-9196-2c1d12267650"
+            "default": "ec81be98-9c59-426e-9d43-a016e60ceb7c"
           },
-          "uuid": "3cc7b776-3b8d-4330-9196-2c1d12267650",
+          "uuid": "ec81be98-9c59-426e-9d43-a016e60ceb7c",
           "draft": "n",
-          "id": "2213",
+          "id": "2252",
           "owner": "1",
           "groupOwner": "101",
           "op0": "1",
@@ -37,7 +37,7 @@
           "isTemplate": "n"
         },
         "sort": [
-          1316442357000
+          1293723836000
         ],
         "edit": true,
         "canReview": true,
@@ -52,18 +52,18 @@
       },
       {
         "_index": "gn-records",
-        "_id": "de740a65-2246-46ce-bc69-e3e649280cc2",
+        "_id": "043f7128-924e-4f73-8454-e1246fec2f18",
         "_score": null,
         "_source": {
           "resourceType": [
             "featureCatalog"
           ],
           "resourceTitleObject": {
-            "default": "de740a65-2246-46ce-bc69-e3e649280cc2"
+            "default": "043f7128-924e-4f73-8454-e1246fec2f18"
           },
-          "uuid": "de740a65-2246-46ce-bc69-e3e649280cc2",
+          "uuid": "043f7128-924e-4f73-8454-e1246fec2f18",
           "draft": "n",
-          "id": "2247",
+          "id": "2201",
           "owner": "1",
           "groupOwner": "101",
           "op0": "1",
@@ -73,7 +73,7 @@
           "isTemplate": "n"
         },
         "sort": [
-          1316530395000
+          1289811182000
         ],
         "edit": true,
         "canReview": true,

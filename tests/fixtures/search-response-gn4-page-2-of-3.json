@@ -16,42 +16,6 @@
     "hits": [
       {
         "_index": "gn-records",
-        "_id": "6eed3de7-cb96-44a3-8ea6-11a0bf5f1be7",
-        "_score": null,
-        "_source": {
-          "resourceType": [
-            "featureCatalog"
-          ],
-          "resourceTitleObject": {
-            "default": "6eed3de7-cb96-44a3-8ea6-11a0bf5f1be7"
-          },
-          "uuid": "6eed3de7-cb96-44a3-8ea6-11a0bf5f1be7",
-          "draft": "n",
-          "id": "2227",
-          "owner": "2",
-          "groupOwner": "101",
-          "op0": "1",
-          "op1": "1",
-          "documentStandard": "iso19110",
-          "op5": "1",
-          "isTemplate": "n"
-        },
-        "sort": [
-          1295856711000
-        ],
-        "edit": true,
-        "canReview": false,
-        "owner": false,
-        "isPublishedToAll": true,
-        "view": true,
-        "notify": false,
-        "download": true,
-        "dynamic": true,
-        "featured": false,
-        "selected": false
-      },
-      {
-        "_index": "gn-records",
         "_id": "299c0349-133e-4865-8a11-0be06c39c6ec",
         "_score": null,
         "_source": {
@@ -88,19 +52,19 @@
       },
       {
         "_index": "gn-records",
-        "_id": "c391f1b1-177c-4989-b093-9d6b675a8ca5",
+        "_id": "6eed3de7-cb96-44a3-8ea6-11a0bf5f1be7",
         "_score": null,
         "_source": {
           "resourceType": [
             "featureCatalog"
           ],
           "resourceTitleObject": {
-            "default": "c391f1b1-177c-4989-b093-9d6b675a8ca5"
+            "default": "6eed3de7-cb96-44a3-8ea6-11a0bf5f1be7"
           },
-          "uuid": "c391f1b1-177c-4989-b093-9d6b675a8ca5",
+          "uuid": "6eed3de7-cb96-44a3-8ea6-11a0bf5f1be7",
           "draft": "n",
-          "id": "2243",
-          "owner": "1",
+          "id": "2227",
+          "owner": "2",
           "groupOwner": "101",
           "op0": "1",
           "op1": "1",
@@ -109,11 +73,47 @@
           "isTemplate": "n"
         },
         "sort": [
-          1303134664000
+          1295856711000
         ],
         "edit": true,
-        "canReview": true,
-        "owner": true,
+        "canReview": false,
+        "owner": false,
+        "isPublishedToAll": true,
+        "view": true,
+        "notify": false,
+        "download": true,
+        "dynamic": true,
+        "featured": false,
+        "selected": false
+      },
+      {
+        "_index": "gn-records",
+        "_id": "48cb7ee8-0392-4346-ad03-172d71e7e3da",
+        "_score": null,
+        "_source": {
+          "resourceType": [
+            "featureCatalog"
+          ],
+          "resourceTitleObject": {
+            "default": "48cb7ee8-0392-4346-ad03-172d71e7e3da"
+          },
+          "uuid": "48cb7ee8-0392-4346-ad03-172d71e7e3da",
+          "draft": "n",
+          "id": "2215",
+          "owner": "2",
+          "groupOwner": "101",
+          "op0": "1",
+          "op1": "1",
+          "documentStandard": "iso19110",
+          "op5": "1",
+          "isTemplate": "n"
+        },
+        "sort": [
+          1294066579000
+        ],
+        "edit": false,
+        "canReview": false,
+        "owner": false,
         "isPublishedToAll": true,
         "view": true,
         "notify": false,

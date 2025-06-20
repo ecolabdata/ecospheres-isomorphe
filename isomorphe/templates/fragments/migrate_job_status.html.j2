@@ -17,9 +17,6 @@
 
   <form class="fr-mt-2w" id="main-form">
     <div id="results-preview" class="fr-mt-4w">
-      <p>
-        Les enregistrements ci-dessous sont listés dans l'ordre de traitement, du plus ancien au plus récent.
-      </p>
       <fieldset class="fr-fieldset" id="status-filter-set"
                 aria-labelledby="status-filter-legend status-filter-messages"
                 hx-get="{{ url_for("migrate_results_preview", job_id=job.id) }}"
