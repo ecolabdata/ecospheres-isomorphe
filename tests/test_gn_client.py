@@ -80,13 +80,18 @@ def test_get_records_v3(requests_mock: requests_mock.Mocker):
         json.load(Path(f"tests/fixtures/search-response-gn3-page-{i + 1}-of-3.json").open())
         for i in range(4)
     ]
-    results_uuids = [x["geonet:info"]["uuid"] for p in results_pages for x in p.get("metadata", [])]
+    results_uuids = [
+        x["geonet:info"]["uuid"]
+        for p in results_pages
+        for x in p.get("metadata", [])
+        if x["geonet:info"].get("edit") == "true"
+    ]
 
     requests_mock.get(f"{client.api}/q", response_list=[{"json": p} for p in results_pages])
 
     records = client.get_records()
 
-    assert len(records) == 8
+    assert len(records) == 7
     assert [r.uuid for r in records] == results_uuids
 
     history = requests_mock.request_history
@@ -144,7 +149,9 @@ def test_get_records_v4(requests_mock: requests_mock.Mocker):
         json.load(Path(f"tests/fixtures/search-response-gn4-page-{i + 1}-of-3.json").open())
         for i in range(4)
     ]
-    results_uuids = [x["_source"]["uuid"] for p in results_pages for x in p["hits"]["hits"]]
+    results_uuids = [
+        x["_source"]["uuid"] for p in results_pages for x in p["hits"]["hits"] if x.get("edit")
+    ]
 
     requests_mock.post(
         f"{client.api}/search/records/_search",
@@ -153,7 +160,7 @@ def test_get_records_v4(requests_mock: requests_mock.Mocker):
 
     records = client.get_records()
 
-    assert len(records) == 8
+    assert len(records) == 7
     assert [r.uuid for r in records] == results_uuids
 
     history = requests_mock.request_history
