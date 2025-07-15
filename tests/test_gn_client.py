@@ -102,6 +102,7 @@ def test_get_records_v3(requests_mock: requests_mock.Mocker):
         "fast": ["index"],
         "sortby": ["changedate"],
         "from": ["1"],
+        "_istemplate": ["y or n"],
     }
 
 
@@ -109,7 +110,6 @@ def test_get_records_with_native_filters_v3(requests_mock: requests_mock.Mocker)
     client = GeonetworkClientV3("http://example.com/geonetwork/srv")
     requests_mock.get(f"{client.api}/q", json={})
 
-    requests_mock.reset_mock()
     client.get_records(
         query={
             "type": "dataset",
@@ -127,7 +127,6 @@ def test_get_records_with_abstract_filters_v3(requests_mock: requests_mock.Mocke
     client = GeonetworkClientV3("http://example.com/geonetwork/srv")
     requests_mock.get(f"{client.api}/q", json={})
 
-    requests_mock.reset_mock()
     client.get_records(
         query={
             "type": "dataset",
@@ -210,6 +209,46 @@ def test_get_records_with_abstract_filters_v4(requests_mock: requests_mock.Mocke
     data = requests_mock.request_history[0].json()
     query = data["query"]["bool"]["filter"][0]["query_string"]["query"]
     assert query == "+resourceType:dataset +isHarvested:true +isTemplate:n"
+
+
+def test_get_records_param_template_v3(requests_mock: requests_mock.Mocker):
+    client = GeonetworkClientV3("http://example.com/geonetwork/srv")
+    requests_mock.get(f"{client.api}/q", json={})
+
+    client.get_records(query={})
+    qs = requests_mock.request_history[0].qs
+    assert qs["_istemplate"] == ["y or n"]
+
+    requests_mock.reset_mock()
+    client.get_records(query={"template": "y"})
+    qs = requests_mock.request_history[0].qs
+    assert qs["_istemplate"] == ["y"]
+
+    requests_mock.reset_mock()
+    client.get_records(query={"template": "n"})
+    qs = requests_mock.request_history[0].qs
+    assert qs["_istemplate"] == ["n"]
+
+
+def test_get_records_param_template_v4(requests_mock: requests_mock.Mocker):
+    client = GeonetworkClientV4("http://example.com/geonetwork/srv")
+    requests_mock.post(f"{client.api}/search/records/_search", json={})
+
+    client.get_records(query={})
+    data = requests_mock.request_history[0].json()
+    assert "query" not in data
+
+    requests_mock.reset_mock()
+    client.get_records(query={"template": "y"})
+    data = requests_mock.request_history[0].json()
+    query = data["query"]["bool"]["filter"][0]["query_string"]["query"]
+    assert query == "+isTemplate:y"
+
+    requests_mock.reset_mock()
+    client.get_records(query={"template": "n"})
+    data = requests_mock.request_history[0].json()
+    query = data["query"]["bool"]["filter"][0]["query_string"]["query"]
+    assert query == "+isTemplate:n"
 
 
 def test_uuid_filter_v3():

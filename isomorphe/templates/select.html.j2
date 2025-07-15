@@ -23,9 +23,17 @@
           </legend>
           <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
             <div class="fr-radio-group">
-              <input checked type="radio" id="filter-template-metadata" name="filter-template" value="n">
+              <input checked type="radio" id="filter-template-all" name="filter-template" value="">
+              <label class="fr-label" for="filter-template-all">
+                Métadonnées et modèles
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-template-metadata" name="filter-template" value="n">
               <label class="fr-label" for="filter-template-metadata">
-                Métadonnées
+                Métadonnées uniquement
               </label>
             </div>
           </div>
@@ -33,7 +41,7 @@
             <div class="fr-radio-group">
               <input type="radio" id="filter-template-templates" name="filter-template" value="y">
               <label class="fr-label" for="filter-template-templates">
-                Modèles
+                Modèles uniquement
               </label>
             </div>
           </div>

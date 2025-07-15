@@ -18,6 +18,17 @@ class MetadataType(StrEnum):
     SUB_TEMPLATE = "s"
     TEMPLATE_OF_SUB_TEMPLATE = "t"
 
+    def label(self) -> str:
+        match self:
+            case self.METADATA:
+                return "métadonnées"
+            case self.TEMPLATE:
+                return "modèle"
+            case self.SUB_TEMPLATE:
+                return "sous-modèle"
+            case self.TEMPLATE_OF_SUB_TEMPLATE:
+                return "modèle de sous-modèle"
+
 
 class WorkflowStatus(IntEnum):
     UNKNOWN = 0
@@ -411,7 +422,6 @@ class GeonetworkClientV3(GeonetworkClient):
         "group": lambda v: ("_groupOwner", v),
         "harvested": lambda v: ("_isHarvested", "y" if v else "n"),
         "source": lambda v: ("_source", v),
-        # FIXME: can't do template+metadata in a single request
         "template": lambda v: ("_isTemplate", v),
         "uuid": lambda v: ("_uuid", v),
     }
@@ -422,6 +432,7 @@ class GeonetworkClientV3(GeonetworkClient):
             "buildSummary": "false",
             "fast": "index",  # needed to get info such as title
             "sortBy": "changeDate",
+            "_isTemplate": "y or n",  # force default to "both" to match GN4 default
         }
         if query:
             params |= dict(
