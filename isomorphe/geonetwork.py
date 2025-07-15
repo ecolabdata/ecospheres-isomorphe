@@ -411,7 +411,6 @@ class GeonetworkClientV3(GeonetworkClient):
         "group": lambda v: ("_groupOwner", v),
         "harvested": lambda v: ("_isHarvested", "y" if v else "n"),
         "source": lambda v: ("_source", v),
-        # FIXME: can't do template+metadata in a single request
         "template": lambda v: ("_isTemplate", v),
         "uuid": lambda v: ("_uuid", v),
     }
@@ -422,6 +421,7 @@ class GeonetworkClientV3(GeonetworkClient):
             "buildSummary": "false",
             "fast": "index",  # needed to get info such as title
             "sortBy": "changeDate",
+            "_isTemplate": "y or n",  # force default to "both" to match GN4 default
         }
         if query:
             params |= dict(
