@@ -18,6 +18,17 @@ class MetadataType(StrEnum):
     SUB_TEMPLATE = "s"
     TEMPLATE_OF_SUB_TEMPLATE = "t"
 
+    def label(self) -> str:
+        match self:
+            case self.METADATA:
+                return "métadonnées"
+            case self.TEMPLATE:
+                return "modèle"
+            case self.SUB_TEMPLATE:
+                return "sous-modèle"
+            case self.TEMPLATE_OF_SUB_TEMPLATE:
+                return "modèle de sous-modèle"
+
 
 class WorkflowStatus(IntEnum):
     UNKNOWN = 0

@@ -28,7 +28,7 @@
                     target="_blank"
                     rel="noopener">Voir le XML</a>
                 </td>
-                <td>{{ "Template" if result.template else "Record" }}</td>
+                <td>{{ result.md_type.label() }}</td>
                 <td>{{ "oui" if result.published else "non" }}</td>
                 <td>{{ "Draft" if (result.state and result.state.stage == "working_copy") else "-" }}</td>
                 <td>{{ result.title }}</td>
