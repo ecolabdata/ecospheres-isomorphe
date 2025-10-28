@@ -12,6 +12,13 @@ from lxml import etree
 log = logging.getLogger(__name__)
 
 
+# ecospheres-xslt/$standard/ -> GeoNetwork $documentStandard
+GEONETWORK_STANDARDS = {
+    "iso-19139": "iso19139",
+    "iso-19115-3": "iso19115-3.2018",
+}
+
+
 class MetadataType(StrEnum):
     METADATA = "n"
     TEMPLATE = "y"
@@ -419,6 +426,7 @@ class GeonetworkClientV3(GeonetworkClient):
     version = 3
 
     QUERY_MAPPINGS: dict[str, Callable[[Any], tuple[str, Any]]] = {
+        "standard": lambda v: ("_schema", GEONETWORK_STANDARDS[v]),
         "group": lambda v: ("_groupOwner", v),
         "harvested": lambda v: ("_isHarvested", "y" if v else "n"),
         "source": lambda v: ("_source", v),
@@ -479,6 +487,7 @@ class GeonetworkClientV4(GeonetworkClient):
     version = 4
 
     QUERY_MAPPINGS: dict[str, Callable[[Any], tuple[str, Any]]] = {
+        "standard": lambda v: ("documentStandard", GEONETWORK_STANDARDS[v]),
         "group": lambda v: ("groupOwner", v),
         "harvested": lambda v: ("isHarvested", str(v).lower()),
         "source": lambda v: ("sourceCatalogue", v),

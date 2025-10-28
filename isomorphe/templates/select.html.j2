@@ -17,10 +17,40 @@
         Filtres (geonetwork {{ version }}.x)
       </legend>
       <div class="fr-fieldset__element">
+        <fieldset class="fr-fieldset fr-mb-0" aria-labelledby="radio-inline-legend radio-inline-messages"
+                  hx-target="#select_transformation"
+                  hx-swap="innerHTML">
+          <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
+            Standard
+          </legend>
+          <!-- Occurrences of input@value below must match ecospheres-xslt standards folder names -->
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input checked type="radio" id="filter-standard-iso-19139" name="filter-standard" value="iso-19139"
+                     hx-get="{{ url_for("list_transformations") }}"
+                     hx-trigger="load, change">
+              <label class="fr-label" for="filter-standard-iso-19139">
+                ISO-19139
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
+            <div class="fr-radio-group">
+              <input type="radio" id="filter-standard-iso-19115-3" name="filter-standard" value="iso-19115-3"
+                     hx-get="{{ url_for("list_transformations") }}">
+              <label class="fr-label" for="filter-standard-iso-19115-3">
+                ISO-19115-3
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="fr-fieldset__element">
         <fieldset class="fr-fieldset fr-mb-0" aria-labelledby="radio-inline-legend radio-inline-messages">
           <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
             Type de fiche
           </legend>
+          <!-- Occurrences of input@value below must match GeoNetwork "isTemplate" values (or empty to disable) -->
           <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
             <div class="fr-radio-group">
               <input checked type="radio" id="filter-template-all" name="filter-template" value="">
@@ -52,6 +82,7 @@
           <legend class="fr-fieldset__legend--regular fr-fieldset__legend fr-pb-3v">
             Type de ressource
           </legend>
+          <!-- Occurrences of input@value below must match GeoNetwork record types (same as ISO-19139 types) -->
           <div class="fr-fieldset__element fr-fieldset__element--inline fr-mb-0">
             <div class="fr-radio-group">
               <input type="radio" id="filter-type-all" name="filter-type" value="">
@@ -154,23 +185,7 @@
           Voir la documentation des transformations disponibles</a>.
         </span>
       </div>
-      <div class="fr-fieldset__element">
-        <div class="fr-select-group">
-          <select hx-get="{{ url_for("select_transformation") }}"
-                  hx-target="#select-form-transformation-params"
-                  hx-trigger="change"
-                  required
-                  class="fr-select"
-                  id="transformation"
-                  name="transformation">
-            <option value="" selected disabled hidden>Sélectionner une transformation</option>
-            {% for transformation in transformations %}
-              <option value="{{ transformation.name }}">{{ transformation.display_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div id="select-form-transformation-params"></div>
-      </div>
+      <div class="fr-fieldset__element" id="select_transformation"></div>
     </fieldset>
     <div class="fr-mt-2w fr-grid-row">
       <button type="submit" class="fr-btn">Suivant</button>

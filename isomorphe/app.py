@@ -89,7 +89,6 @@ def select():
         "select.html.j2",
         url=session.get("url", ""),
         version=migrator.geonetwork_version,
-        transformations=Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"]),
         groups=migrator.gn.get_groups(),
     )
 
@@ -333,6 +332,13 @@ def migrate_results_preview(job_id: str):
     )
 
 
+@app.route("/transformations")
+def list_transformations():
+    standard = request.args.get("filter-standard", type=str)
+    transformations = Migrator.list_transformations(app.config["TRANSFORMATIONS_PATH"] / standard)
+    return render_template("fragments/transformations.html.j2", transformations=transformations)
+
+
 @app.route("/docs")
 def documentation():
     index_page = Path("doc/index.md")
@@ -340,7 +346,8 @@ def documentation():
         abort(404)
     index_content = index_page.read_text()
     tdocs_toc = "<ul>"
-    for tdoc in sorted(app.config["TRANSFORMATIONS_PATH"].glob("*.md")):
+    # TODO: Per-standard doc
+    for tdoc in sorted(app.config["TRANSFORMATIONS_PATH"].glob("iso-19139/*.md")):
         tdocs_toc += f'<li><a href="{url_for("documentation_transformation", transformation=tdoc.stem)}">{tdoc.stem}</a></li>'
     tdocs_toc += "</ul>"
     index_content = index_content.replace("<!-- insert:transformations_docs -->", tdocs_toc)

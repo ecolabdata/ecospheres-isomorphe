@@ -1,0 +1,15 @@
+<div class="fr-select-group" >
+  <select hx-get="{{ url_for("select_transformation") }}"
+          hx-target="#select-form-transformation-params"
+          hx-trigger="change"
+          required
+          class="fr-select"
+          id="transformation"
+          name="transformation">
+    <option value="" selected disabled hidden>Sélectionner une transformation</option>
+    {% for transformation in transformations %}
+      <option value="{{ transformation.name }}">{{ transformation.display_name }}</option>
+    {% endfor %}
+  </select>
+  <div id="select-form-transformation-params"></div>
+</div>
