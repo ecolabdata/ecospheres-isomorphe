@@ -45,7 +45,9 @@ class Transformation:
 
     @property
     def name(self) -> str:
-        return str(self.path.with_suffix("").relative_to(self.path.parents[1]))
+        standard = self.path.parent.stem
+        stem = self.path.stem
+        return str(Path(standard, stem))
 
     @property
     def display_name(self) -> str:
