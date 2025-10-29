@@ -28,6 +28,7 @@ export FLASK_APP=isomorphe.app
 export FLASK_DEBUG=1
 export FLASK_SECRET_KEY=s3cr3t
 export REDIS_URL=redis://localhost:6379
+export TRANSFORMATIONS_PATH=/path/to/xslt/repository
 ```
 
 ## Installation

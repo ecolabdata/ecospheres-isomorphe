@@ -17,7 +17,10 @@ from isomorphe.migrator import Migrator, SkipReason, Transformation, Transformat
 
 
 def get_transformation(name: str) -> Transformation:
-    transformation = Migrator.get_transformation(name, Path("isomorphe/transformations/default"))
+    # TODO: For now tests are hard-coded on ISO-19139
+    transformation = Migrator.get_transformation(
+        f"iso-19139/{name}", Path("isomorphe/transformations/default")
+    )
     if not transformation:
         raise ValueError(f"No transformation found with name {name}")
     return transformation
@@ -44,7 +47,7 @@ def test_transform_noop(migrator: Migrator):
     assert len(results.skipped()) == len(selection)
     assert len(results.successes()) == 0
     assert len(results.failures()) == 0
-    assert results.transformation == "noop"
+    assert results.transformation == "iso-19139/noop"
 
 
 def test_transform_error(migrator: Migrator):
@@ -53,7 +56,7 @@ def test_transform_error(migrator: Migrator):
     assert len(results.skipped()) == 0
     assert len(results.successes()) == 0
     assert len(results.failures()) == len(selection)
-    assert results.transformation == "error"
+    assert results.transformation == "iso-19139/error"
 
 
 def test_transform_noop_always(migrator: Migrator):
@@ -62,7 +65,7 @@ def test_transform_noop_always(migrator: Migrator):
     assert len(results.skipped()) == 0
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
-    assert results.transformation == "noop~always"
+    assert results.transformation == "iso-19139/noop~always"
 
 
 def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[Fixture]):
@@ -71,7 +74,7 @@ def test_transform_change_language(migrator: Migrator, clean_md_fixtures: list[F
     assert len(results.skipped()) == 0
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
-    assert results.transformation == "change-language"
+    assert results.transformation == "iso-19139/change-language"
 
 
 def test_transform_working_copy(migrator: Migrator):
