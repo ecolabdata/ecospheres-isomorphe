@@ -25,7 +25,7 @@ from isomorphe.geonetwork import (
     Record,
     WorkflowStage,
 )
-from isomorphe.util import xml_to_string
+from isomorphe.util import bytes_to_xml, xml_to_bytes
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class Migrator:
                 uuid=r.uuid,
                 md_type=r.md_type,
                 state=r.state,
-                original_content=xml_to_string(original),
+                original_content=original,
             )
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
                 batch.append(
@@ -156,10 +156,11 @@ class Migrator:
                     for k, v in transformation_params.items()
                 }
                 transformer = transformation.transform
-                result = transformer(original, **transformation_params_quoted)
+                tree = bytes_to_xml(original)
+                result = transformer(tree, **transformation_params_quoted)
                 transform_log = [m.message for m in transformer.error_log.filter_from_warnings()]
-                result_str = xml_to_string(result)
-                original_str = xml_to_string(original)
+                result_str = xml_to_bytes(result)
+                original_str = xml_to_bytes(tree)
                 if result_str != original_str or transformation.always_apply:
                     batch.append(
                         SuccessTransformBatchRecord.derive_from(

@@ -7,7 +7,6 @@ from textwrap import shorten
 from typing import Any, Callable, override
 
 import requests
-from lxml import etree
 
 log = logging.getLogger(__name__)
 
@@ -242,7 +241,7 @@ class GeonetworkClient:
         """
         pass
 
-    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> etree._ElementTree:
+    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> bytes:
         log.debug(f"Processing record: {uuid}")
         params = {
             "addSchemaLocation": "true",  # FIXME: needed?
@@ -261,7 +260,7 @@ class GeonetworkClient:
             params=params,
         )
         r.raise_for_status()
-        return etree.fromstring(r.content, parser=None)
+        return r.content
 
     def _extract_uuid_from_put_response(self, payload: dict[str, Any]) -> str | None:
         """

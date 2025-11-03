@@ -13,6 +13,7 @@ from isomorphe.geonetwork import (
     MetadataType,
     Record,
 )
+from isomorphe.util import bytes_to_xml
 
 GN_FAKE_URL = "http://example.com/geonetwork/srv"
 
@@ -66,9 +67,10 @@ def test_records_order(gn_client: GeonetworkClient, clean_md_fixtures: list[Fixt
     records = gn_client.get_records()
     assert len(records) >= 2
 
-    def get_change_date_from_record(record: Record) -> str:
-        r = gn_client.get_record(record.uuid, query={"withInfo": "true"})
-        return r.xpath(XPATH_GN_DATE_STAMP, namespaces=r.nsmap)[0]
+    def get_change_date_from_record(tree: Record) -> str:
+        record = gn_client.get_record(tree.uuid, query={"withInfo": "true"})
+        tree = bytes_to_xml(record)
+        return tree.xpath(XPATH_GN_DATE_STAMP, namespaces=tree.nsmap)[0]
 
     assert records == sorted(records, key=get_change_date_from_record, reverse=True)
 
