@@ -210,11 +210,11 @@ class GeonetworkClient:
         pass
 
     @staticmethod
-    def _get_metadata_type(md: dict) -> MetadataType:
+    def _get_metadata_type(md: dict[str, Any]) -> MetadataType:
         return MetadataType(md.get("isTemplate", MetadataType.METADATA))
 
     @staticmethod
-    def _get_workflow_state(md: dict) -> WorkflowState | None:
+    def _get_workflow_state(md: dict[str, Any]) -> WorkflowState | None:
         if "mdStatus" not in md:  # workflow disabled
             return None
 
@@ -263,7 +263,7 @@ class GeonetworkClient:
         r.raise_for_status()
         return etree.fromstring(r.content, parser=None)
 
-    def _extract_uuid_from_put_response(self, payload: dict) -> str | None:
+    def _extract_uuid_from_put_response(self, payload: dict[str, Any]) -> str | None:
         """
         Create record UUID is not in the `uuid` but in `metadatasInfos`:
         ```
@@ -297,7 +297,7 @@ class GeonetworkClient:
         md_type: MetadataType,
         group: int | None,
         uuid_processing: str = "GENERATEUUID",
-    ) -> dict:
+    ) -> dict[str, Any]:
         log.debug(f"Duplicating record {uuid}: md_type={md_type.name}, group={group}")
         r = self.session.put(
             f"{self.api}/records",
@@ -413,7 +413,7 @@ class GeonetworkClient:
         r.raise_for_status()
         return r.json()
 
-    def get_groups(self) -> dict:
+    def get_groups(self) -> dict[str, Any]:
         r = self.session.get(
             f"{self.api}/groups",
             headers={"Accept": "application/json"},

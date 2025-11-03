@@ -37,7 +37,7 @@ def dummy_mbr() -> MigrateBatchRecord:
     )
 
 
-def test_log_markers(dummy_tbr):
+def test_log_markers(dummy_tbr: TransformBatchRecord):
     assert not SuccessTransformBatchRecord.derive_from(
         dummy_tbr, transformed_content=bytes(), log=["aaa", "[anything] bbb", "[] ccc"]
     ).needs_check
@@ -78,7 +78,7 @@ def test_transform_class_statuses():
     assert SkippedTransformBatchRecord.status_code_for(needs_check=False) == 13
 
 
-def test_transform_instance_statuses(dummy_tbr):
+def test_transform_instance_statuses(dummy_tbr: TransformBatchRecord):
     assert (
         FailureTransformBatchRecord.status_code_for()
         == FailureTransformBatchRecord.derive_from(dummy_tbr, error="").status_code
@@ -110,7 +110,7 @@ def test_migrate_class_statuses():
     assert SuccessMigrateBatchRecord.status_code_for() == 2
 
 
-def test_migrate_instance_statuses(dummy_mbr):
+def test_migrate_instance_statuses(dummy_mbr: MigrateBatchRecord):
     assert (
         FailureMigrateBatchRecord.status_code_for()
         == FailureMigrateBatchRecord.derive_from(dummy_mbr, error="").status_code
@@ -121,7 +121,7 @@ def test_migrate_instance_statuses(dummy_mbr):
     )
 
 
-def test_filter_transform_status(dummy_tbr):
+def test_filter_transform_status(dummy_tbr: TransformBatchRecord):
     batch = TransformBatch(
         transformation="",
         records=[
@@ -136,7 +136,7 @@ def test_filter_transform_status(dummy_tbr):
     assert all([isinstance(r, FailureTransformBatchRecord) for r in filtered])
 
 
-def test_transform_filter_status(dummy_tbr):
+def test_transform_filter_status(dummy_tbr: TransformBatchRecord):
     batch = TransformBatch(
         transformation="",
         records=[
@@ -151,7 +151,7 @@ def test_transform_filter_status(dummy_tbr):
     assert all([isinstance(r, FailureTransformBatchRecord) for r in filtered])
 
 
-def test_migrate_filter_status(dummy_mbr):
+def test_migrate_filter_status(dummy_mbr: MigrateBatchRecord):
     batch = MigrateBatch(
         mode=MigrateMode.CREATE,
         transform_job_id="",

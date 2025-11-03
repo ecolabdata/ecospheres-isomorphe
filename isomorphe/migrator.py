@@ -112,12 +112,13 @@ class Migrator:
         self,
         transformation: Transformation,
         selection: list[Record],
-        transformation_params: dict[str, str] = {},
+        transformation_params: dict[str, str] | None = None,
     ) -> TransformBatch[TransformBatchRecord]:
         """
         Transform data from a selection
         """
         log.info(f"Transforming {selection} via {transformation}")
+        transformation_params = {} if transformation_params is None else transformation_params
 
         batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
