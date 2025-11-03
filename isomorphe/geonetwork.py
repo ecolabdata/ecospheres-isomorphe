@@ -241,7 +241,7 @@ class GeonetworkClient:
         """
         pass
 
-    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> bytes:
+    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> str:
         log.debug(f"Processing record: {uuid}")
         params = {
             "addSchemaLocation": "true",  # FIXME: needed?
@@ -260,7 +260,8 @@ class GeonetworkClient:
             params=params,
         )
         r.raise_for_status()
-        return r.content
+        # FIXME: assert r.encoding == <?xml encoding=...>
+        return r.text
 
     def _extract_uuid_from_put_response(self, payload: dict[str, Any]) -> str | None:
         """
@@ -292,7 +293,7 @@ class GeonetworkClient:
     def put_record(
         self,
         uuid: str,
-        metadata: bytes,
+        metadata: str,
         md_type: MetadataType,
         group: int | None,
         uuid_processing: str = "GENERATEUUID",

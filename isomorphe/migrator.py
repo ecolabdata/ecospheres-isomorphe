@@ -3,8 +3,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-
-from lxml import etree
+from typing import Any
 
 from isomorphe.batch import (
     FailureMigrateBatchRecord,
@@ -25,7 +24,7 @@ from isomorphe.geonetwork import (
     Record,
     WorkflowStage,
 )
-from isomorphe.util import bytes_to_xml, xml_to_bytes
+from isomorphe.xml import SAXON_PROC, get_xpath, path_to_xml, string_to_xml, xml_to_string
 
 log = logging.getLogger(__name__)
 
@@ -55,15 +54,14 @@ class Transformation:
 
     @cached_property
     def params(self) -> list[TransformationParam]:
-        xslt = etree.parse(self.path, parser=None)
-        root = xslt.getroot()
         params = []
-        for param in root.xpath("/xsl:stylesheet/xsl:param", namespaces=root.nsmap):
+        for node in get_xpath(path_to_xml(self.path), "/xsl:stylesheet/xsl:param"):
             param_info = TransformationParam(
-                name=param.attrib["name"],
-                # remove string literal single quotes, they'll be added back by etree.XSLT.strparam()
-                default_value=param.attrib.get("select", "").strip("'"),
-                required=param.attrib.get("required") == "yes",
+                name=node.get_attribute_value("name"),
+                default_value=(node.get_attribute_value("select") or "").strip(
+                    "'"
+                ),  # remove string literal single quotes
+                required=node.get_attribute_value("required") == "yes",
             )
             params.append(param_info)
         return params
@@ -76,11 +74,19 @@ class Transformation:
         """
         return self.path.stem.endswith(Transformation.ALWAYS_APPLY_SUFFIX)
 
-    @property
-    def transform(self) -> etree.XSLT:
-        xslt = etree.parse(self.path, parser=None)
-        transform = etree.XSLT(xslt)
-        return transform
+    # FIXME: foreach item...
+    def transform(self, content: str, params: dict[str, Any] | None = None) -> tuple[str, list]:
+        xslt_proc = SAXON_PROC.new_xslt30_processor()
+        xslt_exec = xslt_proc.compile_stylesheet(stylesheet_file=str(self.path))
+        xslt_exec.set_save_xsl_message(True)
+        xslt_exec.set_property("!omit-xml-declaration", "no")
+        xslt_exec.set_property("!indent", "yes")
+        if params:
+            for k, v in params.items():
+                xslt_exec.set_parameter(k, SAXON_PROC.make_string_value(v))
+        result = xslt_exec.transform_to_string(xdm_node=string_to_xml(content))
+        messages = xslt_exec.get_xsl_messages()
+        return result, messages
 
 
 class Migrator:
@@ -118,7 +124,6 @@ class Migrator:
         Transform data from a selection
         """
         log.info(f"Transforming {selection} via {transformation}")
-        transformation_params = {} if transformation_params is None else transformation_params
 
         batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
@@ -151,29 +156,20 @@ class Migrator:
                 log.debug(
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
                 )
-                transformation_params_quoted = {
-                    k: etree.XSLT.strparam(v)  # type: ignore (stub is wrong for strparam)
-                    for k, v in transformation_params.items()
-                }
-                transformer = transformation.transform
-                tree = bytes_to_xml(original)
-                result = transformer(tree, **transformation_params_quoted)
-                transform_log = [m.message for m in transformer.error_log.filter_from_warnings()]
-                result_str = xml_to_bytes(result)
-                original_str = xml_to_bytes(tree)
-                if result_str != original_str or transformation.always_apply:
+                result, messages = transformation.transform(original, transformation_params)
+                if result != xml_to_string(string_to_xml(original)) or transformation.always_apply:
                     batch.append(
                         SuccessTransformBatchRecord.derive_from(
                             batch_record,
-                            transformed_content=result_str,
-                            log=transform_log,
+                            transformed_content=result,
+                            log=messages,
                         )
                     )
                 else:
                     batch.append(
                         SkippedTransformBatchRecord.derive_from(
                             batch_record,
-                            log=transform_log,
+                            log=messages,
                         )
                     )
             except Exception as e:

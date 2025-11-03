@@ -32,7 +32,7 @@ class BatchRecord:
     STATUS_CODE: ClassVar[int]
     uuid: str
     md_type: MetadataType
-    original_content: bytes
+    original_content: str
     url: str  # TODO: store at Batch level
 
     @property
@@ -118,7 +118,7 @@ class AppliedTransformBatchRecord(TransformBatchRecord):
 @dataclass(kw_only=True)
 class SuccessTransformBatchRecord(AppliedTransformBatchRecord):
     STATUS_CODE = 2
-    transformed_content: bytes
+    transformed_content: str
 
 
 class SkipReasonMessage(StrEnum):
@@ -212,7 +212,7 @@ class TransformBatch[R: TransformBatchRecord](Batch[R]):
 
 @dataclass(kw_only=True)
 class MigrateBatchRecord(BatchRecord):
-    transformed_content: bytes
+    transformed_content: str
 
 
 @dataclass(kw_only=True)
