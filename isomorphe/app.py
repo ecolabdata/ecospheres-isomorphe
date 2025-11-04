@@ -202,8 +202,8 @@ def transform_diff(job_id: str, uuid: str):
     if not result or not result.original_content or not result.transformed_content:
         abort(404)
     diff = difflib.unified_diff(
-        result.original_content.decode("utf-8").splitlines(),
-        result.transformed_content.decode("utf-8").splitlines(),
+        result.original_content.splitlines(),
+        result.transformed_content.splitlines(),
         fromfile=result.uuid,
         tofile=result.uuid,
         lineterm="",
