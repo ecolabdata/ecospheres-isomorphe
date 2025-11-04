@@ -1,3 +1,4 @@
+from itertools import batched
 from pathlib import Path
 
 from saxonche import PySaxonProcessor, PyXdmNode
@@ -23,10 +24,12 @@ def path_to_xml(path: Path | str) -> PyXdmNode:
 
 
 def get_namespaces(tree: PyXdmNode) -> dict[str, str]:
+    # Saxon API doesn't provide a way to list the namespaces, so we use XPath
     xpath_proc = SAXON_PROC.new_xpath_processor()
     xpath_proc.set_context(xdm_item=tree)
-    if result := xpath_proc.evaluate("//namespace::*"):
-        return {item.local_name: item.string_value for item in result}
+    # xpath generates a flat list of namespaces' prefix and uri: [pre1, uri1, pre2, uri2, ...]
+    matches = xpath_proc.evaluate("distinct-values(//namespace::* ! (name(.), .))") or []
+    return {ns[0].string_value: ns[1].string_value for ns in batched(matches, n=2)}
 
 
 def get_xpath(tree: PyXdmNode, xpath: str) -> list[PyXdmNode]:
@@ -34,4 +37,5 @@ def get_xpath(tree: PyXdmNode, xpath: str) -> list[PyXdmNode]:
     for k, v in get_namespaces(tree).items():
         xpath_proc.declare_namespace(k, v)
     xpath_proc.set_context(xdm_item=tree)
-    return list(xpath_proc.evaluate(xpath))
+    matches = xpath_proc.evaluate(xpath) or []
+    return matches
