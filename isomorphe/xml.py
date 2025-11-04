@@ -1,4 +1,3 @@
-from itertools import batched
 from pathlib import Path
 from typing import Any
 
@@ -28,9 +27,11 @@ def get_namespaces(tree: PyXdmNode) -> dict[str, str]:
     # Saxon API doesn't provide a way to list the namespaces, so we use XPath
     xpath_proc = SAXON_PROC.new_xpath_processor()
     xpath_proc.set_context(xdm_item=tree)
-    # xpath generates a flat list of namespaces' prefix and uri: [pre1, uri1, pre2, uri2, ...]
-    matches = xpath_proc.evaluate("distinct-values(//namespace::* ! (name(.), .))") or []
-    return {ns[0].string_value: ns[1].string_value for ns in batched(matches, n=2)}
+    # easier to operate on concatenated "prefix|uri" strings because distinct-values is picky
+    matches = xpath_proc.evaluate(
+        "distinct-values(//namespace::* ! concat(name(.), '|', string(.)))"
+    )
+    return dict([ns.string_value.split("|") for ns in matches])
 
 
 def xpath_eval(tree: PyXdmNode, xpath: str) -> list[PyXdmNode]:
