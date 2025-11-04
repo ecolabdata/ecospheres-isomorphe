@@ -82,8 +82,9 @@ class Transformation:
         xslt_exec.set_property("!omit-xml-declaration", "no")
         xslt_exec.set_property("!indent", "yes")
         if params:
-            for k, v in params.items():
-                xslt_exec.set_parameter(k, SAXON_PROC.make_string_value(v))
+            for param_name, param_value in params.items():
+                if v := param_value.strip():
+                    xslt_exec.set_parameter(param_name, SAXON_PROC.make_string_value(v))
         result = xslt_exec.transform_to_string(xdm_node=string_to_xml(content))
         messages = xslt_exec.get_xsl_messages()
         return result, messages
