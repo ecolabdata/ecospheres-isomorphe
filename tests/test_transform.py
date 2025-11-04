@@ -154,11 +154,6 @@ def test_load_transformation_params():
         ),
         TransformationParam(
             name="language-required",
-            default_value="eng",
-            required=True,
-        ),
-        TransformationParam(
-            name="language-no-default",
             default_value="",
             required=True,
         ),
