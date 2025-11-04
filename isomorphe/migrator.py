@@ -24,7 +24,14 @@ from isomorphe.geonetwork import (
     Record,
     WorkflowStage,
 )
-from isomorphe.xml import path_to_xml, string_to_xml, xml_to_string, xpath_eval, xslt_apply
+from isomorphe.xml import (
+    format_xml,
+    path_to_xml,
+    string_to_xml,
+    xml_to_string,
+    xpath_eval,
+    xslt_apply,
+)
 
 log = logging.getLogger(__name__)
 
@@ -119,7 +126,8 @@ class Migrator:
         batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
-            original = self.gn.get_record(r.uuid)
+            raw = self.gn.get_record(r.uuid)
+            original = format_xml(raw)
             batch_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
@@ -148,7 +156,7 @@ class Migrator:
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
                 )
                 result, messages = transformation.transform(original, transformation_params)
-                if result != xml_to_string(string_to_xml(original)) or transformation.always_apply:
+                if result != original or transformation.always_apply:
                     batch.append(
                         SuccessTransformBatchRecord.derive_from(
                             batch_record,

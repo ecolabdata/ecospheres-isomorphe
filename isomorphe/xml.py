@@ -56,3 +56,7 @@ def xslt_apply(
     value = xslt_exec.transform_to_value(xdm_node=tree)
     messages = [node.string_value for node in (xslt_exec.get_xsl_messages() or [])]
     return value.head, messages
+
+
+def format_xml(content: str) -> str:
+    return xml_to_string(string_to_xml(content))
