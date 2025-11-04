@@ -1,5 +1,6 @@
 from itertools import batched
 from pathlib import Path
+from typing import Any
 
 from saxonche import PySaxonProcessor, PyXdmNode
 
@@ -9,9 +10,9 @@ SAXON_PROC.set_configuration_property("http://saxon.sf.net/feature/strip-whitesp
 
 def xml_to_string(tree: PyXdmNode) -> str:
     xquery_proc = SAXON_PROC.new_xquery_processor()
-    xquery_proc.set_context(xdm_item=tree)
     xquery_proc.set_property("!omit-xml-declaration", "no")
     xquery_proc.set_property("!indent", "yes")
+    xquery_proc.set_context(xdm_item=tree)
     return xquery_proc.run_query_to_string(query_text=".")
 
 
@@ -32,10 +33,25 @@ def get_namespaces(tree: PyXdmNode) -> dict[str, str]:
     return {ns[0].string_value: ns[1].string_value for ns in batched(matches, n=2)}
 
 
-def get_xpath(tree: PyXdmNode, xpath: str) -> list[PyXdmNode]:
+def xpath_eval(tree: PyXdmNode, xpath: str) -> list[PyXdmNode]:
     xpath_proc = SAXON_PROC.new_xpath_processor()
     for k, v in get_namespaces(tree).items():
         xpath_proc.declare_namespace(k, v)
     xpath_proc.set_context(xdm_item=tree)
     matches = xpath_proc.evaluate(xpath) or []
     return matches
+
+
+def xslt_apply(
+    tree: PyXdmNode, stylesheet: PyXdmNode, params: dict[str, Any] | None = None
+) -> tuple[PyXdmNode, list[str]]:
+    xslt_proc = SAXON_PROC.new_xslt30_processor()
+    xslt_exec = xslt_proc.compile_stylesheet(stylesheet_node=stylesheet)
+    xslt_exec.set_save_xsl_message(True)
+    if params:
+        for param_name, param_value in params.items():
+            if v := param_value.strip():
+                xslt_exec.set_parameter(param_name, SAXON_PROC.make_string_value(v))
+    value = xslt_exec.transform_to_value(xdm_node=tree)
+    messages = [node.string_value for node in (xslt_exec.get_xsl_messages() or [])]
+    return value.head, messages

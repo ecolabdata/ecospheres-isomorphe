@@ -8,7 +8,7 @@ from test_transform import get_transform_results
 from isomorphe.batch import MigrateMode, SuccessTransformBatchRecord, TransformBatch
 from isomorphe.geonetwork import MetadataType
 from isomorphe.migrator import Migrator
-from isomorphe.xml import get_xpath, string_to_xml
+from isomorphe.xml import string_to_xml, xpath_eval
 
 
 def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, str]:
@@ -20,7 +20,7 @@ def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, str
 
 
 def get_datetime(content: str, xpath: str) -> datetime:
-    value = get_xpath(string_to_xml(content), xpath)[0].string_value
+    value = xpath_eval(string_to_xml(content), xpath)[0].string_value
     return datetime.fromisoformat(value)
 
 

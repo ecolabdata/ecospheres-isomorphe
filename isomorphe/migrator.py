@@ -24,7 +24,7 @@ from isomorphe.geonetwork import (
     Record,
     WorkflowStage,
 )
-from isomorphe.xml import SAXON_PROC, get_xpath, path_to_xml, string_to_xml, xml_to_string
+from isomorphe.xml import path_to_xml, string_to_xml, xml_to_string, xpath_eval, xslt_apply
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class Transformation:
     @cached_property
     def params(self) -> list[TransformationParam]:
         params = []
-        for node in get_xpath(path_to_xml(self.path), "/xsl:stylesheet/xsl:param"):
+        for node in xpath_eval(path_to_xml(self.path), "/xsl:stylesheet/xsl:param"):
             param_info = TransformationParam(
                 name=node.get_attribute_value("name"),
                 default_value=(node.get_attribute_value("select") or "").strip(
@@ -76,17 +76,8 @@ class Transformation:
 
     # FIXME: foreach item...
     def transform(self, content: str, params: dict[str, Any] | None = None) -> tuple[str, list]:
-        xslt_proc = SAXON_PROC.new_xslt30_processor()
-        xslt_exec = xslt_proc.compile_stylesheet(stylesheet_file=str(self.path))
-        xslt_exec.set_save_xsl_message(True)
-        if params:
-            for param_name, param_value in params.items():
-                if v := param_value.strip():
-                    xslt_exec.set_parameter(param_name, SAXON_PROC.make_string_value(v))
-        value = xslt_exec.transform_to_value(xdm_node=string_to_xml(content))
-        result = xml_to_string(value.head)
-        messages = [node.string_value for node in (xslt_exec.get_xsl_messages() or [])]
-        return result, messages
+        node, messages = xslt_apply(string_to_xml(content), path_to_xml(self.path), params)
+        return xml_to_string(node), messages
 
 
 class Migrator:
