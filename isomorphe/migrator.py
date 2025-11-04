@@ -79,13 +79,12 @@ class Transformation:
         xslt_proc = SAXON_PROC.new_xslt30_processor()
         xslt_exec = xslt_proc.compile_stylesheet(stylesheet_file=str(self.path))
         xslt_exec.set_save_xsl_message(True)
-        xslt_exec.set_property("!omit-xml-declaration", "no")
-        xslt_exec.set_property("!indent", "yes")
         if params:
             for param_name, param_value in params.items():
                 if v := param_value.strip():
                     xslt_exec.set_parameter(param_name, SAXON_PROC.make_string_value(v))
-        result = xslt_exec.transform_to_string(xdm_node=string_to_xml(content))
+        value = xslt_exec.transform_to_value(xdm_node=string_to_xml(content))
+        result = xml_to_string(value.head)
         messages = [node.string_value for node in (xslt_exec.get_xsl_messages() or [])]
         return result, messages
 
