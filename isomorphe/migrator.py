@@ -81,7 +81,6 @@ class Transformation:
         """
         return self.path.stem.endswith(Transformation.ALWAYS_APPLY_SUFFIX)
 
-    # FIXME: foreach item...
     def transform(self, content: str, params: dict[str, Any] | None = None) -> tuple[str, list]:
         node, messages = xslt_apply(string_to_xml(content), path_to_xml(self.path), params)
         return xml_to_string(node), messages
