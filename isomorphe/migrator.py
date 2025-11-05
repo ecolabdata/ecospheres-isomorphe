@@ -154,12 +154,12 @@ class Migrator:
                 log.debug(
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
                 )
-                result, messages = transformation.transform(original, transformation_params)
-                if result != original or transformation.always_apply:
+                transformed, messages = transformation.transform(original, transformation_params)
+                if transformed != original or transformation.always_apply:
                     batch.append(
                         SuccessTransformBatchRecord.derive_from(
                             batch_record,
-                            transformed_content=result,
+                            transformed_content=transformed,
                             log=messages,
                         )
                     )
