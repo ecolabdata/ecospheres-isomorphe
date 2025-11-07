@@ -1,3 +1,4 @@
+import codecs
 import logging
 import re
 from abc import abstractmethod
@@ -7,6 +8,8 @@ from textwrap import shorten
 from typing import Any, Callable, override
 
 import requests
+
+from isomorphe.xml import xml_encoding
 
 log = logging.getLogger(__name__)
 
@@ -260,7 +263,7 @@ class GeonetworkClient:
             params=params,
         )
         r.raise_for_status()
-        # FIXME: assert r.encoding == <?xml encoding=...>
+        self._raise_for_xml_encoding(r)
         return r.text
 
     def _extract_uuid_from_put_response(self, payload: dict[str, Any]) -> str | None:
@@ -420,6 +423,23 @@ class GeonetworkClient:
         )
         r.raise_for_status()
         return r.json()
+
+    @staticmethod
+    def _raise_for_xml_encoding(rsp: requests.Response):
+        # requests is pretty good at detecting the content of XML files, and the server
+        # should ensure file encoding is consistent with the XML declaration.
+        # But in case there is a discrepancy, it's safer to abort than risk working on
+        # a corrupted record.
+        try:
+            renc = codecs.lookup(rsp.encoding or rsp.apparent_encoding).name
+        except LookupError:
+            renc = "none"
+        try:
+            xenc = codecs.lookup(xml_encoding(rsp.content)).name
+        except LookupError:
+            xenc = "none"
+        if renc != xenc:
+            raise RuntimeError(f"Response encoding mismatch: requests says {renc}, xml says {xenc}")
 
 
 class GeonetworkClientV3(GeonetworkClient):

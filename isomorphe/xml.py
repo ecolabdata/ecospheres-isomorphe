@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any
 
@@ -60,3 +61,8 @@ def xslt_apply(
 
 def format_xml(content: str) -> str:
     return xml_to_string(string_to_xml(content))
+
+
+def xml_encoding(binary_content: bytes) -> str | None:
+    if m := re.match(rb"""<\?xml[^>]+?encoding=['"](.+?)['"]""", binary_content):
+        return m[1].decode()

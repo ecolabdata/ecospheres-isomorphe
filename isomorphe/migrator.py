@@ -125,15 +125,32 @@ class Migrator:
         batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
-            raw = self.gn.get_record(r.uuid)
-            original = format_xml(raw)
-            batch_record = TransformBatchRecord(
+
+            base_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
                 md_type=r.md_type,
                 state=r.state,
+                original_content=None,
+            )
+
+            try:
+                raw = self.gn.get_record(r.uuid)
+                original = format_xml(raw)
+            except Exception as e:
+                batch.append(
+                    FailureTransformBatchRecord.derive_from(
+                        base_record,
+                        error=str(e),
+                    )
+                )
+                continue
+
+            batch_record = TransformBatchRecord.derive_from(
+                base_record,
                 original_content=original,
             )
+
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
                 batch.append(
                     SkippedTransformBatchRecord.derive_from(
@@ -142,6 +159,7 @@ class Migrator:
                     )
                 )
                 continue
+
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.append(
                     SkippedTransformBatchRecord.derive_from(
@@ -150,6 +168,7 @@ class Migrator:
                     )
                 )
                 continue
+
             try:
                 log.debug(
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
