@@ -3,8 +3,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-
-from lxml import etree
+from typing import Any
 
 from isomorphe.batch import (
     FailureMigrateBatchRecord,
@@ -25,7 +24,14 @@ from isomorphe.geonetwork import (
     Record,
     WorkflowStage,
 )
-from isomorphe.util import xml_to_string
+from isomorphe.xml import (
+    format_xml,
+    path_to_xml,
+    string_to_xml,
+    xml_to_string,
+    xpath_eval,
+    xslt_apply,
+)
 
 log = logging.getLogger(__name__)
 
@@ -55,15 +61,14 @@ class Transformation:
 
     @cached_property
     def params(self) -> list[TransformationParam]:
-        xslt = etree.parse(self.path, parser=None)
-        root = xslt.getroot()
         params = []
-        for param in root.xpath("/xsl:stylesheet/xsl:param", namespaces=root.nsmap):
+        for node in xpath_eval(path_to_xml(self.path), "/xsl:stylesheet/xsl:param"):
             param_info = TransformationParam(
-                name=param.attrib["name"],
-                # remove string literal single quotes, they'll be added back by etree.XSLT.strparam()
-                default_value=param.attrib.get("select", "").strip("'"),
-                required=param.attrib.get("required") == "yes",
+                name=node.get_attribute_value("name"),
+                default_value=(node.get_attribute_value("select") or "").strip(
+                    "'"
+                ),  # remove string literal single quotes
+                required=node.get_attribute_value("required") == "yes",
             )
             params.append(param_info)
         return params
@@ -76,11 +81,11 @@ class Transformation:
         """
         return self.path.stem.endswith(Transformation.ALWAYS_APPLY_SUFFIX)
 
-    @property
-    def transform(self) -> etree.XSLT:
-        xslt = etree.parse(self.path, parser=None)
-        transform = etree.XSLT(xslt)
-        return transform
+    def transform(
+        self, content: str, params: dict[str, Any] | None = None
+    ) -> tuple[str, list[str]]:
+        tree, messages = xslt_apply(string_to_xml(content), path_to_xml(self.path), params)
+        return xml_to_string(tree), messages
 
 
 class Migrator:
@@ -112,7 +117,7 @@ class Migrator:
         self,
         transformation: Transformation,
         selection: list[Record],
-        transformation_params: dict[str, str] = {},
+        transformation_params: dict[str, str] | None = None,
     ) -> TransformBatch[TransformBatchRecord]:
         """
         Transform data from a selection
@@ -122,14 +127,32 @@ class Migrator:
         batch = TransformBatch[TransformBatchRecord](transformation=transformation.name)
         for r in selection:
             log.debug(f"Processing record {r.uuid}: md_type={r.md_type.name}, state={r.state}")
-            original = self.gn.get_record(r.uuid)
-            batch_record = TransformBatchRecord(
+
+            base_record = TransformBatchRecord(
                 url=self.gn.url,
                 uuid=r.uuid,
                 md_type=r.md_type,
                 state=r.state,
-                original_content=xml_to_string(original),
+                original_content=None,
             )
+
+            try:
+                raw = self.gn.get_record(r.uuid)
+                original = format_xml(raw)
+            except Exception as e:
+                batch.append(
+                    FailureTransformBatchRecord.derive_from(
+                        base_record,
+                        error=str(e),
+                    )
+                )
+                continue
+
+            batch_record = TransformBatchRecord.derive_from(
+                base_record,
+                original_content=original,
+            )
+
             if r.md_type not in (MetadataType.METADATA, MetadataType.TEMPLATE):
                 batch.append(
                     SkippedTransformBatchRecord.derive_from(
@@ -138,6 +161,7 @@ class Migrator:
                     )
                 )
                 continue
+
             if r.state and r.state.stage == WorkflowStage.WORKING_COPY:
                 batch.append(
                     SkippedTransformBatchRecord.derive_from(
@@ -146,32 +170,25 @@ class Migrator:
                     )
                 )
                 continue
+
             try:
                 log.debug(
                     f"Applying transformation {transformation.name} to {r.uuid} with params {transformation_params}"
                 )
-                transformation_params_quoted = {
-                    k: etree.XSLT.strparam(v)  # type: ignore (stub is wrong for strparam)
-                    for k, v in transformation_params.items()
-                }
-                transformer = transformation.transform
-                result = transformer(original, **transformation_params_quoted)
-                transform_log = [m.message for m in transformer.error_log.filter_from_warnings()]
-                result_str = xml_to_string(result)
-                original_str = xml_to_string(original)
-                if result_str != original_str or transformation.always_apply:
+                transformed, messages = transformation.transform(original, transformation_params)
+                if transformed != original or transformation.always_apply:
                     batch.append(
                         SuccessTransformBatchRecord.derive_from(
                             batch_record,
-                            transformed_content=result_str,
-                            log=transform_log,
+                            transformed_content=transformed,
+                            log=messages,
                         )
                     )
                 else:
                     batch.append(
                         SkippedTransformBatchRecord.derive_from(
                             batch_record,
-                            log=transform_log,
+                            log=messages,
                         )
                     )
             except Exception as e:

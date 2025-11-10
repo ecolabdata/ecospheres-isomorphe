@@ -7,8 +7,7 @@ Retourne le XML à l'identique. Prend des paramètres inutiles.
                 exclude-result-prefixes="#all">
 
   <xsl:param name="language-optional" select="'eng'"/>
-  <xsl:param name="language-required" required="yes" select="'eng'"/>
-  <xsl:param name="language-no-default" required="yes" />
+  <xsl:param name="language-required" required="yes"/>
 
   <!-- Do a copy of every nodes and attributes -->
   <xsl:template match="@*|node()">

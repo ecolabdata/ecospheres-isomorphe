@@ -101,7 +101,7 @@ def test_transform_change_language_params(migrator: Migrator, clean_md_fixtures:
     assert len(results.successes()) == len(selection)
     assert len(results.failures()) == 0
     for result in results.successes():
-        assert lang in result.transformed_content.decode("utf-8")
+        assert lang in result.transformed_content
 
 
 def test_transform_warning_error_log(migrator: Migrator):
@@ -154,11 +154,6 @@ def test_load_transformation_params():
         ),
         TransformationParam(
             name="language-required",
-            default_value="eng",
-            required=True,
-        ),
-        TransformationParam(
-            name="language-no-default",
             default_value="",
             required=True,
         ),
