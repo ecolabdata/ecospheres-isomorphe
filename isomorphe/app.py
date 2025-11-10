@@ -359,7 +359,7 @@ def documentation():
 
 @app.route("/docs/transformations/<transformation>")
 def documentation_transformation(transformation: str):
-    doc_page = app.config["TRANSFORMATIONS_PATH"] / f"{transformation}.md"
+    doc_page = app.config["TRANSFORMATIONS_PATH"] / f"iso-19139/{transformation}.md"
     if not doc_page.exists():
         abort(404)
     md_content = doc_page.read_text()
