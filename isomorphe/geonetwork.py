@@ -426,10 +426,9 @@ class GeonetworkClient:
 
     @staticmethod
     def _raise_for_xml_encoding(rsp: requests.Response):
-        # requests is pretty good at detecting the content of XML files, and the server
-        # should ensure file encoding is consistent with the XML declaration.
-        # But in case there is a discrepancy, it's safer to abort than risk working on
-        # a corrupted record.
+        # requests is pretty good at detecting the content of XML files, and the server should
+        # ensure file encoding is consistent with the XML declaration, but in case there is a
+        # discrepancy, it's safer to abort than risk working on a corrupted record.
         try:
             renc = codecs.lookup(rsp.encoding or rsp.apparent_encoding).name
         except LookupError:
