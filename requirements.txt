@@ -1,10 +1,10 @@
+cmarkgfm
 flask
 gunicorn
-lxml
+pre-commit
+pytest
 requests
 requests-mock
 rq
-pre-commit
 ruff
-pytest
-cmarkgfm
+saxonche

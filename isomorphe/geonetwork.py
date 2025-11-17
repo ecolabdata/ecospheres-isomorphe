@@ -1,3 +1,4 @@
+import codecs
 import logging
 import re
 from abc import abstractmethod
@@ -7,7 +8,8 @@ from textwrap import shorten
 from typing import Any, Callable, override
 
 import requests
-from lxml import etree
+
+from isomorphe.xml import xml_encoding
 
 log = logging.getLogger(__name__)
 
@@ -210,11 +212,11 @@ class GeonetworkClient:
         pass
 
     @staticmethod
-    def _get_metadata_type(md: dict) -> MetadataType:
+    def _get_metadata_type(md: dict[str, Any]) -> MetadataType:
         return MetadataType(md.get("isTemplate", MetadataType.METADATA))
 
     @staticmethod
-    def _get_workflow_state(md: dict) -> WorkflowState | None:
+    def _get_workflow_state(md: dict[str, Any]) -> WorkflowState | None:
         if "mdStatus" not in md:  # workflow disabled
             return None
 
@@ -242,7 +244,7 @@ class GeonetworkClient:
         """
         pass
 
-    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> etree._ElementTree:
+    def get_record(self, uuid: str, query: dict[str, Any] | None = None) -> str:
         log.debug(f"Processing record: {uuid}")
         params = {
             "addSchemaLocation": "true",  # FIXME: needed?
@@ -261,9 +263,10 @@ class GeonetworkClient:
             params=params,
         )
         r.raise_for_status()
-        return etree.fromstring(r.content, parser=None)
+        self._raise_for_xml_encoding(r)
+        return r.text
 
-    def _extract_uuid_from_put_response(self, payload: dict) -> str | None:
+    def _extract_uuid_from_put_response(self, payload: dict[str, Any]) -> str | None:
         """
         Create record UUID is not in the `uuid` but in `metadatasInfos`:
         ```
@@ -293,11 +296,11 @@ class GeonetworkClient:
     def put_record(
         self,
         uuid: str,
-        metadata: bytes,
+        metadata: str,
         md_type: MetadataType,
         group: int | None,
         uuid_processing: str = "GENERATEUUID",
-    ) -> dict:
+    ) -> dict[str, Any]:
         log.debug(f"Duplicating record {uuid}: md_type={md_type.name}, group={group}")
         r = self.session.put(
             f"{self.api}/records",
@@ -413,13 +416,29 @@ class GeonetworkClient:
         r.raise_for_status()
         return r.json()
 
-    def get_groups(self) -> dict:
+    def get_groups(self) -> dict[str, Any]:
         r = self.session.get(
             f"{self.api}/groups",
             headers={"Accept": "application/json"},
         )
         r.raise_for_status()
         return r.json()
+
+    @staticmethod
+    def _raise_for_xml_encoding(rsp: requests.Response):
+        # requests is pretty good at detecting the content of XML files, and the server should
+        # ensure file encoding is consistent with the XML declaration, but in case there is a
+        # discrepancy, it's safer to abort than risk working on a corrupted record.
+        try:
+            renc = codecs.lookup(rsp.encoding or rsp.apparent_encoding).name
+        except LookupError:
+            renc = "none"
+        try:
+            xenc = codecs.lookup(xml_encoding(rsp.content)).name
+        except LookupError:
+            xenc = "none"
+        if renc != xenc:
+            raise RuntimeError(f"Response encoding mismatch: requests says {renc}, xml says {xenc}")
 
 
 class GeonetworkClientV3(GeonetworkClient):

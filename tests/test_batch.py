@@ -21,7 +21,7 @@ def dummy_tbr() -> TransformBatchRecord:
         uuid="",
         url="",
         md_type=MetadataType.METADATA,
-        original_content=bytes(),
+        original_content="",
         state=None,
     )
 
@@ -32,31 +32,31 @@ def dummy_mbr() -> MigrateBatchRecord:
         uuid="",
         url="",
         md_type=MetadataType.METADATA,
-        original_content=bytes(),
-        transformed_content=bytes(),
+        original_content="",
+        transformed_content="",
     )
 
 
-def test_log_markers(dummy_tbr):
+def test_log_markers(dummy_tbr: TransformBatchRecord):
     assert not SuccessTransformBatchRecord.derive_from(
-        dummy_tbr, transformed_content=bytes(), log=["aaa", "[anything] bbb", "[] ccc"]
+        dummy_tbr, transformed_content="", log=["aaa", "[anything] bbb", "[] ccc"]
     ).needs_check
     assert not SuccessTransformBatchRecord.derive_from(
-        dummy_tbr, transformed_content=bytes(), log=["aaa", "[isomorphe] bbb"]
+        dummy_tbr, transformed_content="", log=["aaa", "[isomorphe] bbb"]
     ).needs_check
     assert not SuccessTransformBatchRecord.derive_from(
-        dummy_tbr, transformed_content=bytes(), log=["[isomorphe:foo]"]
+        dummy_tbr, transformed_content="", log=["[isomorphe:foo]"]
     ).needs_check
     assert SuccessTransformBatchRecord.derive_from(
-        dummy_tbr, transformed_content=bytes(), log=["[isomorphe:check]"]
+        dummy_tbr, transformed_content="", log=["[isomorphe:check]"]
     ).needs_check
     assert SuccessTransformBatchRecord.derive_from(
-        dummy_tbr, transformed_content=bytes(), log=["aaa", "bbb [isomorphe:check] ccc", "ddd"]
+        dummy_tbr, transformed_content="", log=["aaa", "bbb [isomorphe:check] ccc", "ddd"]
     ).needs_check
 
     assert SuccessTransformBatchRecord.derive_from(
         dummy_tbr,
-        transformed_content=bytes(),
+        transformed_content="",
         log=[
             "[isomorphe] aaa",
             "[isomorphe:check] bbb",
@@ -78,21 +78,19 @@ def test_transform_class_statuses():
     assert SkippedTransformBatchRecord.status_code_for(needs_check=False) == 13
 
 
-def test_transform_instance_statuses(dummy_tbr):
+def test_transform_instance_statuses(dummy_tbr: TransformBatchRecord):
     assert (
         FailureTransformBatchRecord.status_code_for()
         == FailureTransformBatchRecord.derive_from(dummy_tbr, error="").status_code
     )
     assert (
         SuccessTransformBatchRecord.status_code_for(needs_check=False)
-        == SuccessTransformBatchRecord.derive_from(
-            dummy_tbr, transformed_content=bytes()
-        ).status_code
+        == SuccessTransformBatchRecord.derive_from(dummy_tbr, transformed_content="").status_code
     )
     assert (
         SuccessTransformBatchRecord.status_code_for(needs_check=True)
         == SuccessTransformBatchRecord.derive_from(
-            dummy_tbr, transformed_content=bytes(), log=["[isomorphe:check]"]
+            dummy_tbr, transformed_content="", log=["[isomorphe:check]"]
         ).status_code
     )
     assert (
@@ -110,7 +108,7 @@ def test_migrate_class_statuses():
     assert SuccessMigrateBatchRecord.status_code_for() == 2
 
 
-def test_migrate_instance_statuses(dummy_mbr):
+def test_migrate_instance_statuses(dummy_mbr: MigrateBatchRecord):
     assert (
         FailureMigrateBatchRecord.status_code_for()
         == FailureMigrateBatchRecord.derive_from(dummy_mbr, error="").status_code
@@ -121,11 +119,11 @@ def test_migrate_instance_statuses(dummy_mbr):
     )
 
 
-def test_filter_transform_status(dummy_tbr):
+def test_filter_transform_status(dummy_tbr: TransformBatchRecord):
     batch = TransformBatch(
         transformation="",
         records=[
-            SuccessTransformBatchRecord.derive_from(dummy_tbr, transformed_content=bytes()),
+            SuccessTransformBatchRecord.derive_from(dummy_tbr, transformed_content=""),
             FailureTransformBatchRecord.derive_from(dummy_tbr, error=""),
             SkippedTransformBatchRecord.derive_from(dummy_tbr, reason=None),
             FailureTransformBatchRecord.derive_from(dummy_tbr, error=""),
@@ -136,11 +134,11 @@ def test_filter_transform_status(dummy_tbr):
     assert all([isinstance(r, FailureTransformBatchRecord) for r in filtered])
 
 
-def test_transform_filter_status(dummy_tbr):
+def test_transform_filter_status(dummy_tbr: TransformBatchRecord):
     batch = TransformBatch(
         transformation="",
         records=[
-            SuccessTransformBatchRecord.derive_from(dummy_tbr, transformed_content=bytes()),
+            SuccessTransformBatchRecord.derive_from(dummy_tbr, transformed_content=""),
             FailureTransformBatchRecord.derive_from(dummy_tbr, error=""),
             SkippedTransformBatchRecord.derive_from(dummy_tbr, reason=None),
             FailureTransformBatchRecord.derive_from(dummy_tbr, error=""),
@@ -151,7 +149,7 @@ def test_transform_filter_status(dummy_tbr):
     assert all([isinstance(r, FailureTransformBatchRecord) for r in filtered])
 
 
-def test_migrate_filter_status(dummy_mbr):
+def test_migrate_filter_status(dummy_mbr: MigrateBatchRecord):
     batch = MigrateBatch(
         mode=MigrateMode.CREATE,
         transform_job_id="",

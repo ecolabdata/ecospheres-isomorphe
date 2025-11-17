@@ -3,24 +3,25 @@ from time import sleep
 from unittest.mock import patch
 
 from conftest import GN_TEST_URL, XPATH_ISO_DATE_STAMP, Fixture
-from lxml import etree
 from test_transform import get_transform_results
 
 from isomorphe.batch import MigrateMode, SuccessTransformBatchRecord, TransformBatch
 from isomorphe.geonetwork import MetadataType
 from isomorphe.migrator import Migrator
+from isomorphe.xml import string_to_xml, xpath_eval
 
 
-def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, etree._ElementTree]:
+def get_records(migrator: Migrator, md_fixtures: list[Fixture]) -> dict[str, str]:
     records = {}
     for fixture in md_fixtures:
-        record = migrator.gn.get_record(fixture.uuid)
-        records[fixture.uuid] = record
+        content = migrator.gn.get_record(fixture.uuid)
+        records[fixture.uuid] = content
     return records
 
 
-def get_datetime(tree: etree._ElementTree, xpath: str) -> datetime:
-    return datetime.fromisoformat(tree.xpath(xpath, namespaces=tree.nsmap)[0])
+def get_datetime(content: str, xpath: str) -> datetime:
+    value = xpath_eval(string_to_xml(content), xpath)[0].string_value
+    return datetime.fromisoformat(value)
 
 
 def test_migrate_change_language_overwrite(migrator: Migrator, md_fixtures: list[Fixture]):
@@ -37,7 +38,7 @@ def test_migrate_change_language_overwrite(migrator: Migrator, md_fixtures: list
 
     # content has changed on original records (especially the metadata date stamp)
     for uuid in [f.uuid for f in md_fixtures]:
-        assert etree.tostring(records_after[uuid]) != etree.tostring(records_before[uuid])
+        assert records_before[uuid] != records_after[uuid]
         dt_before = get_datetime(records_before[uuid], XPATH_ISO_DATE_STAMP)
         dt_after = get_datetime(records_after[uuid], XPATH_ISO_DATE_STAMP)
         assert dt_after > dt_before
@@ -83,7 +84,7 @@ def test_migrate_change_language_duplicate(
     # content has not changed on original records (especially geonet:info//changedDate)
     # but new records have been created in the test group (see below)
     for uuid in [f.uuid for f in clean_md_fixtures]:
-        assert etree.tostring(records_after[uuid]) == etree.tostring(records_before[uuid])
+        assert records_after[uuid] == records_before[uuid]
 
     # new records have been created in the test group
     records = migrator.gn.get_records(query={"facet.q": f"groupOwner/{group_fixture}"})
@@ -103,7 +104,7 @@ def test_migrate_error_overwrite(migrator: Migrator, md_fixtures: list[Fixture])
 
     # content has not changed on original records (especially geonet:info//changedDate)
     for uuid in [f.uuid for f in md_fixtures]:
-        assert etree.tostring(records_after[uuid]) == etree.tostring(records_before[uuid])
+        assert records_after[uuid] == records_before[uuid]
 
 
 def test_migrate_error_duplicate(
@@ -124,7 +125,7 @@ def test_migrate_error_duplicate(
 
     # content has not changed on original records (especially geonet:info//changedDate)
     for uuid in [f.uuid for f in clean_md_fixtures]:
-        assert etree.tostring(records_after[uuid]) == etree.tostring(records_before[uuid])
+        assert records_after[uuid] == records_before[uuid]
 
     # no records have been created in the test group
     records = migrator.gn.get_records(query={"facet.q": f"groupOwner/{group_fixture}"})
