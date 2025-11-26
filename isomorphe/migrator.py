@@ -132,6 +132,7 @@ class Migrator:
                 url=self.gn.url,
                 uuid=r.uuid,
                 md_type=r.md_type,
+                title=r.title,
                 state=r.state,
                 original_content=None,
             )
@@ -222,6 +223,7 @@ class Migrator:
                 url=self.gn.url,
                 uuid=r.uuid,
                 md_type=r.md_type,
+                title=r.title,
                 original_content=r.original_content,
                 transformed_content=r.transformed_content,
             )

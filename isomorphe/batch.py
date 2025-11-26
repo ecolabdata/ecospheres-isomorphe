@@ -32,6 +32,7 @@ class BatchRecord:
     STATUS_CODE: ClassVar[int]
     uuid: str
     md_type: MetadataType
+    title: str
     original_content: str | None
     url: str  # TODO: store at Batch level
 
