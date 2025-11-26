@@ -320,7 +320,7 @@ class GeonetworkClient:
     def update_record(
         self,
         uuid: str,
-        metadata: bytes,
+        metadata: str,
         md_type: MetadataType,
         update_date_stamp: bool,
         state: WorkflowState | None = None,
