@@ -20,6 +20,7 @@ def dummy_tbr() -> TransformBatchRecord:
     return TransformBatchRecord(
         uuid="",
         url="",
+        title="",
         md_type=MetadataType.METADATA,
         original_content="",
         state=None,
@@ -31,6 +32,7 @@ def dummy_mbr() -> MigrateBatchRecord:
     return MigrateBatchRecord(
         uuid="",
         url="",
+        title="",
         md_type=MetadataType.METADATA,
         original_content="",
         transformed_content="",

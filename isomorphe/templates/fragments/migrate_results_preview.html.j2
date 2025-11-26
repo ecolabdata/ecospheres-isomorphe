@@ -38,11 +38,11 @@
                 {% if job.result.mode == MigrateMode.CREATE %}
                   <td>
                     <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
-                       target="_blank" rel="noopener">{{ record.uuid }}</a></td>
+                       target="_blank" rel="noopener">{{ record.title|truncate(75, False, "...") }}</a></td>
                 {% endif %}
                 <td>
                   <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.transformed_uuid }}"
-                     target="_blank" rel="noopener">{{ record.transformed_uuid }}</a>
+                     target="_blank" rel="noopener">{{ record.title|truncate(75, False, "...") }}</a>
                 </td>
               </tr>
             {% endfor %}

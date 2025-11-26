@@ -20,7 +20,7 @@
               <th scope="col">Statut</th>
               <th scope="col">Fiche</th>
               <th scope="col">Original</th>
-              <th scope="col">Résultat</th>
+              <th scope="col">Transformé</th>
               <th scope="col">Différences</th>
               <th scope="col">Messages</th>
             </tr>
@@ -38,7 +38,7 @@
                 </td>
                 <td>
                   <a href="{{ url }}/fre/catalog.search#/metadata/{{ record.uuid }}"
-                     target="_blank" rel="noopener"> {{ record.uuid }} </a>
+                     target="_blank" rel="noopener"> {{ record.title|truncate(75, False, "...") }} </a>
                 </td>
                 <td>
                   <a href="{{ url_for('transform_original', job_id=job.id, uuid=record.uuid) }}"
