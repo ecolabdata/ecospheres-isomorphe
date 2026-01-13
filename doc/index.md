@@ -49,6 +49,10 @@ Les transformations sont concues pour être idempotentes&nbsp;: exécuter plusie
 Les transformations sont implémentées sous la forme de *Transformations XSL* (XSLT)&nbsp;; reprenant ainsi le mécanisme employé par SEMICeu pour implémenter l'algorithme de conversion ISO-19139 vers GeoDCAT-AP, et par Geonetwork pour des fonctionnalités telles que les "Suggestions" ou les "Transformations en batch".
 Une personne déjà familière des technologies employées dans cet écosystème peut donc si elle le souhaite analyser directement le code des transformations mises à disposition par ISOmorphe.
 
+Code source&nbsp;:
+- https://github.com/ecolabdata/ecospheres-isomorphe/
+- https://github.com/ecolabdata/ecospheres-xslt/
+
 
 ## <a name="utilisation"></a>Comment utiliser ISOmorphe ?
 
