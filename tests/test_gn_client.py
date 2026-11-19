@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import requests_mock
 from conftest import XPATH_GN_DATE_STAMP, Fixture
+from requests.cookies import RequestsCookieJar
 
 from isomorphe.geonetwork import (
     GeonetworkClient,
@@ -15,35 +16,93 @@ from isomorphe.geonetwork import (
 )
 from isomorphe.xml import string_to_xml, xpath_eval
 
-GN_FAKE_URL = "http://example.com/geonetwork/srv"
+GN_FAKE_DOMAIN = "example.com"
+GN_FAKE_PATH = "/geonetwork"
+GN_FAKE_URL = f"http://{GN_FAKE_DOMAIN}{GN_FAKE_PATH}/srv"
+
+
+def connect(
+    requests_mock: requests_mock.Mocker,
+    version: str | None = "4.4.5",
+    needs_auth: bool = False,
+    cookies: RequestsCookieJar | None = None,
+):
+    # GeonetworkClient._server_version(...)
+    json = {"system/platform/version": version} if version else {}
+    requests_mock.get(f"{GN_FAKE_URL}/api/site", json=json)
+    # client.authenticate(...)
+    status_code = 403 if needs_auth else 200
+    requests_mock.post(f"{GN_FAKE_URL}/api/info", status_code=status_code, cookies=cookies)
+
+    return GeonetworkClient.connect(GN_FAKE_URL)
+
+
+def xsrf_cookies(paths: list[str]) -> RequestsCookieJar:
+    cookies = RequestsCookieJar()
+    for path in paths:
+        cookies.set("XSRF-TOKEN", f"token{path}", domain=GN_FAKE_DOMAIN, path=path)
+    return cookies
 
 
 def test_client_v3(requests_mock: requests_mock.Mocker):
-    requests_mock.post(f"{GN_FAKE_URL}/api/info", status_code=200)
-    requests_mock.get(f"{GN_FAKE_URL}/api/site", json={"system/platform/version": "3.10.4"})
-    client = GeonetworkClient.connect(GN_FAKE_URL)
+    client = connect(requests_mock, version="3.10.4")
     assert client.version == 3
 
 
 def test_client_v4(requests_mock: requests_mock.Mocker):
-    requests_mock.post(f"{GN_FAKE_URL}/api/info", status_code=200)
-    requests_mock.get(f"{GN_FAKE_URL}/api/site", json={"system/platform/version": "4.4.5"})
-    client = GeonetworkClient.connect(GN_FAKE_URL)
+    client = connect(requests_mock, version="4.4.5")
     assert client.version == 4
 
 
 def test_client_unsupported(requests_mock: requests_mock.Mocker):
-    requests_mock.post(f"{GN_FAKE_URL}/api/info", status_code=200)
-    requests_mock.get(f"{GN_FAKE_URL}/api/site", json={"system/platform/version": "2.10"})
     with pytest.raises(GeonetworkConnectionError):
-        GeonetworkClient.connect(GN_FAKE_URL)
+        connect(requests_mock, version="2.10")
 
 
 def test_client_unknown(requests_mock: requests_mock.Mocker):
-    requests_mock.post(f"{GN_FAKE_URL}/api/info", status_code=200)
-    requests_mock.get(f"{GN_FAKE_URL}/api/site", json={})
     with pytest.raises(GeonetworkConnectionError):
-        GeonetworkClient.connect(GN_FAKE_URL)
+        connect(requests_mock, version=None)
+
+
+def test_xsrf_token_present(requests_mock: requests_mock.Mocker):
+    client = connect(requests_mock, needs_auth=True, cookies=xsrf_cookies([GN_FAKE_PATH]))
+    assert client.session.headers["X-XSRF-TOKEN"] == f"token{GN_FAKE_PATH}"
+
+
+def test_xsrf_token_missing_required(requests_mock: requests_mock.Mocker):
+    with pytest.raises(GeonetworkConnectionError):
+        connect(requests_mock, needs_auth=True)
+
+
+def test_xsrf_token_missing_optional(requests_mock: requests_mock.Mocker):
+    # accept missing token if the authentication POST request didn't return an error
+    client = connect(requests_mock, needs_auth=False)
+    assert "X-XSRF-TOKEN" not in client.session.headers
+
+
+def test_xsrf_token_other_paths(requests_mock: requests_mock.Mocker):
+    # don't leak tokens from other paths (including near-matches)
+    with pytest.raises(GeonetworkConnectionError):
+        connect(
+            requests_mock,
+            needs_auth=True,
+            cookies=xsrf_cookies(["/geo", "/geonetwork2", "/datahub"]),
+        )
+
+
+def test_xsrf_token_subpath(requests_mock: requests_mock.Mocker):
+    # a "/" token should be valid for "/geonetwork" (and "/whatever"...)
+    client = connect(requests_mock, needs_auth=True, cookies=xsrf_cookies(["/"]))
+    assert client.session.headers["X-XSRF-TOKEN"] == "token/"
+
+
+@pytest.mark.parametrize(
+    "cookies_list", [[GN_FAKE_PATH, "/"], ["/", GN_FAKE_PATH]], ids=["first", "last"]
+)
+def test_xsrf_token_multiple(requests_mock: requests_mock.Mocker, cookies_list):
+    # most specific path wins
+    client = connect(requests_mock, needs_auth=True, cookies=xsrf_cookies(cookies_list))
+    assert client.session.headers["X-XSRF-TOKEN"] == f"token{GN_FAKE_PATH}"
 
 
 def test_duplicate_uuid(
