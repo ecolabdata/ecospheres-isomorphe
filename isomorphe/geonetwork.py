@@ -8,6 +8,7 @@ from textwrap import shorten
 from typing import Any, Callable, override
 
 import requests
+from requests.cookies import RequestsCookieJar, get_cookie_header
 
 from isomorphe.xml import xml_encoding
 
@@ -144,7 +145,7 @@ class GeonetworkClient:
                 f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
             )
 
-        xsrf_token = r.cookies.get("XSRF-TOKEN")
+        xsrf_token = self._get_cookie(self.session.cookies, "XSRF-TOKEN", self.api)
         log.debug(f"XSRF token found: {xsrf_token is not None}")
         if xsrf_token:
             self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
@@ -439,6 +440,22 @@ class GeonetworkClient:
             xenc = "none"
         if renc != xenc:
             raise RuntimeError(f"Response encoding mismatch: requests says {renc}, xml says {xenc}")
+
+    @staticmethod
+    def _get_cookie(jar: RequestsCookieJar, name: str, url: str) -> str | None:
+        """Return the first value of the `name` cookie scoped to `url`.
+
+        This implementation is more robust than `RequestsCookieJar.get(name, domain?, path?)` as it
+        delegates cookie selection (scoping and ordering) to the cookie jar itself, so we get
+        exactly what any RFC-abiding client would send to `url`.
+        """
+        header = get_cookie_header(jar, requests.Request("GET", url).prepare())
+        for pair in (header or "").split(";"):
+            key, _, value = pair.strip().partition("=")
+            if key == name:
+                # first match is most specific for `url` path (per RFC 6265 5.4)
+                return value
+        return None
 
 
 class GeonetworkClientV3(GeonetworkClient):
