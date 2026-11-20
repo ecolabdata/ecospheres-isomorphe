@@ -145,7 +145,7 @@ class GeonetworkClient:
                 f"Redirection détectée vers {r.headers['Location']}. Merci d'utiliser l'URL canonique du serveur."
             )
 
-        xsrf_token = self._get_cookie(r.cookies, "XSRF-TOKEN", self.api)
+        xsrf_token = self._get_cookie(self.session.cookies, "XSRF-TOKEN", self.api)
         log.debug(f"XSRF token found: {xsrf_token is not None}")
         if xsrf_token:
             self.session.headers.update({"X-XSRF-TOKEN": xsrf_token})
